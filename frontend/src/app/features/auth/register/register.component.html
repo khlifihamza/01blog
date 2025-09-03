@@ -1,0 +1,42 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="logo-section">
+      <div class="logo">01</div>
+    </div>
+    <div class="welcome-section">
+      <h1>Create your account</h1>
+      <p>Sign up for 01Blog</p>
+    </div>
+    <form (ngSubmit)="onSubmit()" [formGroup]="registerForm" class="login-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Username</mat-label>
+        <input matInput type="text" id="username" formControlName="username" placeholder="Enter your username">
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" id="email" formControlName="email" placeholder="Enter your email">
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Password</mat-label>
+        <input matInput [type]="passwordVisible ? 'text' : 'password'" id="password" formControlName="password" placeholder="Enter your password">
+        <button mat-icon-button matSuffix type="button" (click)="togglePasswordVisibility()">
+          <mat-icon>{{ passwordVisible ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Confirm Password</mat-label>
+        <input matInput [type]="confirmPasswordVisible ? 'text' : 'password'" id="confirmPassword" formControlName="confirmPassword" placeholder="Confirm your password">
+        <button mat-icon-button matSuffix type="button" (click)="toggleConfirmPasswordVisibility()">
+          <mat-icon>{{ confirmPasswordVisible ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+      </mat-form-field>
+      <button mat-raised-button color="primary" type="submit" class="sign-in-btn" [disabled]="!registerForm.valid">
+        Sign up
+      </button>
+      <div class="signup-link">
+        Already have an account?
+        <a href="" (click)="navigateToLogin(); $event.preventDefault()">Sign in</a>
+      </div>
+    </form>
+  </div>
+</div>

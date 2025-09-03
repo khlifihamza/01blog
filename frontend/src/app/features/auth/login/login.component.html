@@ -1,0 +1,64 @@
+<div class="login-container">
+  <mat-card class="login-card">
+    <div class="logo-section">
+      <div class="logo">01</div>
+    </div>
+    
+    <div class="welcome-section">
+      <h1>Welcome back</h1>
+      <p>Sign in to your 01Blog account</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email or Username</mat-label>
+        <input 
+          matInput 
+          type="text" 
+          id="identifier" 
+          formControlName="identifier" 
+          placeholder="Enter your email or username"
+        >
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Password</mat-label>
+        <input 
+          matInput 
+          [type]="passwordVisible ? 'text' : 'password'"
+          formControlName="password"
+          placeholder="Enter your password"
+        >
+        <button 
+          type="button" 
+          mat-icon-button 
+          matSuffix
+          (click)="togglePasswordVisibility()"
+          [attr.aria-label]="'Hide password'"
+        >
+          <mat-icon>{{passwordVisible ? 'visibility_off' : 'visibility'}}</mat-icon>
+        </button>
+        <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+          Password is required
+        </mat-error>
+        <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')">
+          Password must be at least 6 characters
+        </mat-error>
+      </mat-form-field>
+
+      <button 
+        mat-raised-button 
+        type="submit" 
+        class="sign-in-btn" 
+        [disabled]="!loginForm.valid"
+      >
+        Sign in
+      </button>
+
+      <div class="signup-link">
+        Don't have an account? 
+        <a href="" (click)="navigateToSignUp(); $event.preventDefault()">Sign up</a>
+      </div>
+    </form>
+  </mat-card>
+</div>
