@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity{
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String username;
 
     @Column(nullable = false)
@@ -20,6 +20,13 @@ public class User extends BaseEntity{
     
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    public User(String username, String email, String password, Role role){
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+    }
 
     public String getUsername() {
         return username;
