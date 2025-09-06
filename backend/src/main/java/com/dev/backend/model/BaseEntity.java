@@ -1,6 +1,5 @@
 package com.dev.backend.model;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -13,10 +12,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
 @EntityListeners(AuditingEntityListener.class)
 @MappedSuperclass
-public abstract class BaseEntity implements Serializable {
+public abstract class BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -26,9 +26,17 @@ public abstract class BaseEntity implements Serializable {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate(){
+        this.updatedAt = LocalDateTime.now();
     }
 
     public UUID getId() {
@@ -37,5 +45,9 @@ public abstract class BaseEntity implements Serializable {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 }
