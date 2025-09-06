@@ -4,9 +4,9 @@ import { RegisterComponent } from './features/auth/register/register.component';
 
 export const routes: Routes = [
   {
-    path: 'auth/login', component: LoginComponent,
+    path: 'api/auth/login', component: LoginComponent,
   },
   {
-    path: 'auth/register', component: RegisterComponent,
+    path: 'api/auth/register', component: RegisterComponent,
   },
 ];

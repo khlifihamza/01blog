@@ -46,6 +46,6 @@ export class LoginComponent {
   }
 
   navigateToSignUp() {
-    this.router.navigate(['/auth/register']);
+    this.router.navigate(['/api/auth/register']);
   }
 }
