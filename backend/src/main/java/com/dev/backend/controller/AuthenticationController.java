@@ -7,11 +7,15 @@ import com.dev.backend.dto.ApiResponse;
 import com.dev.backend.service.AuthenticationService;
 import com.dev.backend.service.JwtService;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.apache.tomcat.util.http.SameSiteCookies;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -20,6 +24,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
 
 @RequestMapping("/api/auth")
 @RestController
@@ -59,12 +65,16 @@ public class AuthenticationController {
 
         String jwtToken = jwtService.generateToken(authenticatedUser);
 
-        Cookie cookie = new Cookie("token", jwtToken);
-        cookie.setMaxAge((int) jwtService.getExpirationTime() / 1000);
-        cookie.setSecure(false);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        response.addCookie(cookie);
+        ResponseCookie cookie = ResponseCookie.from("token", jwtToken)
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .maxAge(jwtService.getExpirationTime() / 1000)
+                    .sameSite(SameSiteCookies.STRICT.toString())
+                    .build();
+
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
         ApiResponse apiResponse = new ApiResponse("Logged successfully");
         return ResponseEntity.ok(apiResponse);
     }
@@ -80,5 +90,22 @@ public class AuthenticationController {
         response.addCookie(cookie);
         ApiResponse apiResponse = new ApiResponse("Logout successful!");
         return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/check-auth")
+    public ResponseEntity<?> checkAuth(@CookieValue(value = "token", required = false) String token,@AuthenticationPrincipal User currentUser) {
+        try {
+            if (token == null || token.isEmpty()) {
+                return ResponseEntity.status(401).body(new ApiResponse("No token provided"));
+            }
+            if (currentUser == null) {
+                return ResponseEntity.status(401).body(new ApiResponse("User not found"));
+            }
+            return ResponseEntity.ok(new ApiResponse(currentUser.getRole().toString()));
+        } catch (JwtException e) {
+            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
+        }
     }
 }
