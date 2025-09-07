@@ -5,6 +5,11 @@ export interface RegistrationRequest{
     confirmPassword: String
 }
 
-export interface RegistrationResponse{
+export interface ApiResponse{
     message: String
+}
+
+export interface LoginRequest{
+    identifier: String,
+    password: String,
 }

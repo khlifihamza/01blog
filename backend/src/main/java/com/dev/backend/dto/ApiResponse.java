@@ -1,5 +1,5 @@
 package com.dev.backend.dto;
 
-public record RegisterResponse(
+public record ApiResponse(
     String message
 ) {}
