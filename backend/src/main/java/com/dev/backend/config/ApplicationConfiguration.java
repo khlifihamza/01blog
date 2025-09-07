@@ -21,9 +21,10 @@ public class ApplicationConfiguration {
 
     @Bean
     UserDetailsService userDetailsService() {
-        //TODO CHECK EMAIL
-        return username -> userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return username -> (username.contains("@")) ? userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"))
+                : userRepository.findByUsername(username)
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     @Bean

@@ -28,6 +28,10 @@ public class User extends BaseEntity implements UserDetails{
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    public User(){
+        
+    }
+
     public User(String username, String email, String password, Role role){
         this.username = username;
         this.email = email;
