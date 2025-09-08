@@ -6,6 +6,7 @@ export interface RegistrationRequest{
 }
 
 export interface ApiResponse{
+    user: any
     message: String
 }
 

@@ -9,7 +9,6 @@ import { map, catchError } from 'rxjs/operators';
 })
 export class GuestGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
-
   canActivate(): Observable<boolean> {
     return this.authService.isAuthenticated().pipe(
       map(() => {

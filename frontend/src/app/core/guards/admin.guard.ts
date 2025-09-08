@@ -4,28 +4,22 @@ import { AuthService } from '../services/auth.service';
 import { catchError, map, Observable, of } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AdminGuard implements CanActivate {
-  
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-
+  constructor(private authService: AuthService, private router: Router) {}
   canActivate(): Observable<boolean> {
-      return this.authService.isAuthenticated().pipe(
-        map((response) => {
-            if (response.message === "ADMIN"){
-                return true;   
-            }
-            this.router.navigate(['/']);
-            return false;
-        }),
-        catchError(() => {
-          this.router.navigate(['/']);
-          return of(false);
-        })
-      );
-    }
+    return this.authService.isAuthenticated().pipe(
+      map(() => {
+        if (this.authService.isAdmin()){
+            return true;
+        }
+        this.router.navigate(['/']);
+        return false;
+      }),
+      catchError(() => {
+        return of(false);
+      })
+    );
+  }
 }
