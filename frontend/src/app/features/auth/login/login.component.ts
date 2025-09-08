@@ -62,12 +62,16 @@ export class LoginComponent {
     this.authService.login(registrationRequest).subscribe({
       next: (response) => {
         this.loading = false;
-        this.snackBar.open(response.message.toString(), 'Close', { duration: 5000 });
-        this.router.navigate(['/']);
+        const message = response?.message ? String(response.message) : 'Login successful';
+        this.snackBar.open(message, 'Close', { duration: 5000 });
+        this.authService.isAuthenticated().subscribe({
+          next: () => this.router.navigate(['/']),
+          error: () => this.router.navigate(['/'])
+        });
       },
       error: (error) => {
         this.loading = false;
-        this.snackBar.open(error.message, 'Close', { duration: 5000 });
+        this.snackBar.open(error?.message || 'Login failed', 'Close', { duration: 5000 });
       },
     });
   }

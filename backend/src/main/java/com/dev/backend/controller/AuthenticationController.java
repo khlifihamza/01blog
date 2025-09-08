@@ -73,10 +73,9 @@ public class AuthenticationController {
                     .sameSite(SameSiteCookies.STRICT.toString())
                     .build();
 
-            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-
-        ApiResponse apiResponse = new ApiResponse("Logged successfully");
-        return ResponseEntity.ok(apiResponse);
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        authenticatedUser.setPassword(null);
+        return ResponseEntity.ok(authenticatedUser);
     }
 
     @GetMapping("/logout")
@@ -96,16 +95,17 @@ public class AuthenticationController {
     public ResponseEntity<?> checkAuth(@CookieValue(value = "token", required = false) String token,@AuthenticationPrincipal User currentUser) {
         try {
             if (token == null || token.isEmpty()) {
-                return ResponseEntity.status(401).body(new ApiResponse("No token provided"));
+                return ResponseEntity.status(401).body("No token provided");
             }
             if (currentUser == null) {
-                return ResponseEntity.status(401).body(new ApiResponse("User not found"));
+                return ResponseEntity.status(401).body("User not found");
             }
-            return ResponseEntity.ok(new ApiResponse(currentUser.getRole().toString()));
+            currentUser.setPassword(null);
+            return ResponseEntity.ok(currentUser);
         } catch (JwtException e) {
-            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
+            return ResponseEntity.status(401).body("Invalid or expired token");
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
+            return ResponseEntity.status(500).body("Server error: " + e.getMessage());
         }
     }
 }
