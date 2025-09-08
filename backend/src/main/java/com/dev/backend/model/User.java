@@ -1,5 +1,6 @@
 package com.dev.backend.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -7,15 +8,17 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "users")
-public class User extends BaseEntity implements UserDetails{
+public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false, unique = true)
     private String username;
 
@@ -24,15 +27,18 @@ public class User extends BaseEntity implements UserDetails{
 
     @Column(nullable = false)
     private String password;
-    
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    public User(){
-        
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Post> posts = new ArrayList<>();
+
+    public User() {
+
     }
 
-    public User(String username, String email, String password, Role role){
+    public User(String username, String email, String password, Role role) {
         this.username = username;
         this.email = email;
         this.password = password;
@@ -70,6 +76,14 @@ public class User extends BaseEntity implements UserDetails{
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public List<Post> getPosts() {
+        return posts;
+    }
+
+    public void setPosts(List<Post> posts) {
+        this.posts = posts;
     }
 
     @Override
