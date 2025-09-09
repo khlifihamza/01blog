@@ -1,16 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, lastValueFrom, Observable, tap } from 'rxjs';
-import { ApiResponse, RegistrationRequest, LoginRequest } from '../../shared/models/user.model';
+import { Observable } from 'rxjs';
+import { ApiResponse, RegistrationRequest, LoginRequest, LoginResponse } from '../../shared/models/user.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private url = 'http://localhost:8080/api/auth';
-
-  private currentUserSubject = new BehaviorSubject<any>(null);
-  public currentUser$ = this.currentUserSubject.asObservable();
+  private role: String = "USER";
 
   constructor(private http: HttpClient) {}
 
@@ -18,50 +16,27 @@ export class AuthService {
     return this.http.post<ApiResponse>(this.url + '/register', userData);
   }
 
-  login(credentials: LoginRequest): Observable<ApiResponse> {
-    return this.http
-      .post<any>(
-        `${this.url}/login`,
-        credentials,
-        {
-          withCredentials: true,
-        }
-      )
-      .pipe(
-        tap((response) => {
-          if (response.user) {
-            this.currentUserSubject.next(response.user);
-          }
-        })
-      );
+  login(credentials: LoginRequest): Observable<any> {
+    return this.http.post<any>(`${this.url}/login`, credentials);
   }
 
-  logout(): Observable<ApiResponse> {
-    return this.http.get<ApiResponse>(this.url + '/logout', { withCredentials: true }).pipe(
-    tap(() => {
-      this.currentUserSubject.next(null);
-    }));
+  logout(): void {
+    localStorage.removeItem("token");
   }
 
-  get currentUserValue() {
-      return this.currentUserSubject.value;
+  getToken(): string | null {
+    return localStorage.getItem("token");
   }
 
-  isLoggedIn(): boolean {
-    return !!this.currentUserValue;
+  isAuthenticated(): boolean {
+    return !!this.getToken();
   }
 
-  isAdmin(): boolean{
-    return this.currentUserValue.role == "ADMIN";
+  setRole(role: String): void{
+    this.role = role;
   }
 
-  isAuthenticated(): Observable<any> {
-    return this.http.get<any>(`${this.url}/check-auth`, { withCredentials: true }).pipe(
-      tap((user) => {
-        if (user) {
-          this.currentUserSubject.next(user);
-        }
-      })
-    );
+  isAdmin(): boolean {
+    return this.role == "ADMIN";
   }
 }

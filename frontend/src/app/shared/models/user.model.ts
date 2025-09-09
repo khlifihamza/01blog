@@ -5,8 +5,12 @@ export interface RegistrationRequest{
     confirmPassword: String
 }
 
+export interface LoginResponse{
+    token: String
+    role: String
+}
+
 export interface ApiResponse{
-    user: any
     message: String
 }
 

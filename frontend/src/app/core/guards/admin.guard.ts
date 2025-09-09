@@ -8,18 +8,12 @@ import { catchError, map, Observable, of } from 'rxjs';
 })
 export class AdminGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
-  canActivate(): Observable<boolean> {
-    return this.authService.isAuthenticated().pipe(
-      map(() => {
-        if (this.authService.isAdmin()){
-            return true;
-        }
-        this.router.navigate(['/']);
-        return false;
-      }),
-      catchError(() => {
-        return of(false);
-      })
-    );
+  canActivate(): boolean {
+    if (this.authService.isAdmin()) {
+      return true;
+    }
+
+    this.router.navigate(['/']);
+    return false;
   }
 }

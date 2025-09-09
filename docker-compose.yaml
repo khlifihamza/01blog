@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database service
+  db:
+    container_name: postgres-spring-boot   
+    image: postgres:16.2-alpine # Specifies the PostgreSQL image and version
+    restart: always # Ensures the container restarts automatically
+    environment:
+      POSTGRES_DB: DB01B # Sets the database name
+      POSTGRES_USER: hkhlifi # Sets the database user
+      POSTGRES_PASSWORD: DBFOR01B # Sets the database password
+    ports:
+      - "5332:5432" # Maps host port 5432 to container port 5432
+    volumes:
+      - db_data:/var/lib/postgresql/data # Persists database data in a named volume
+
+volumes:
+  db_data: # Defines the named volume for PostgreSQL data persistence
