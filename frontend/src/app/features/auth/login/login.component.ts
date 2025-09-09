@@ -62,16 +62,15 @@ export class LoginComponent {
     this.authService.login(registrationRequest).subscribe({
       next: (response) => {
         this.loading = false;
-        const message = response?.message ? String(response.message) : 'Login successful';
-        this.snackBar.open(message, 'Close', { duration: 5000 });
-        this.authService.isAuthenticated().subscribe({
-          next: () => this.router.navigate(['/']),
-          error: () => this.router.navigate(['/'])
-        });
+        this.snackBar.open('Login successful', 'Close', { duration: 5000 });
+        localStorage.setItem("token", response.token.toString());
+        this.authService.setRole(response.role);
+        console.log(this.authService.isAdmin());
+        this.router.navigate(['/']);
       },
       error: (error) => {
         this.loading = false;
-        this.snackBar.open(error?.message || 'Login failed', 'Close', { duration: 5000 });
+        this.snackBar.open(error?.error || 'Login failed', 'Close', { duration: 5000 });
       },
     });
   }
