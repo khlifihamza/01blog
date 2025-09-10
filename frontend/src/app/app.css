@@ -1,0 +1,21 @@
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8fafc;
+}
+
+.main-content {
+  flex: 1;
+  transition: all 0.3s ease;
+}
+
+.main-content.with-navbar {
+  padding-top: 0;
+}
+
+@media (max-width: 768px) {
+  .main-content.with-navbar {
+    padding-top: 0;
+  }
+}
