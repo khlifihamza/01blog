@@ -10,6 +10,8 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -67,7 +69,7 @@ public class PostController {
         }
     }
 
-     @PostMapping("/upload")
+    @PostMapping("/upload")
     public ResponseEntity<?> upload(@RequestParam("files") List<MultipartFile> files,
             @AuthenticationPrincipal User currentUser) {
         if (files == null || files.isEmpty()) {
@@ -81,18 +83,18 @@ public class PostController {
                         ? fileName.substring(fileName.lastIndexOf("."))
                         : "";
                 String id = UUID.randomUUID() + extension;
-                
+
                 String contentType = file.getContentType();
                 String subDir = "";
                 if (contentType != null) {
                     subDir = (contentType.startsWith("image")) ? "/images" : "/videos";
                 }
 
-                Path path = Paths.get(uploadDir + subDir, id );
+                Path path = Paths.get(uploadDir + subDir, id);
 
                 Files.createDirectories(path.getParent());
                 Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-                
+
                 fileNames.add(id);
             }
             return ResponseEntity.ok(fileNames);
@@ -101,12 +103,56 @@ public class PostController {
         }
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPost(@PathVariable UUID id,
+            @AuthenticationPrincipal User currentUser) {
+        try {
+            Post post = postService.getPost(id);
+            return ResponseEntity.ok(post);
+        } catch (JwtException e) {
+            return ResponseEntity.status(401).body("Invalid or expired token");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Server error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/file/{mediaName}")
+    public ResponseEntity<?> getFile(@PathVariable String mediaName,
+            @AuthenticationPrincipal User currentUser) {
+        try {
+            Path path = (Files.exists(Paths.get(uploadDir + "/images").resolve(mediaName).normalize()))
+                    ? Paths.get(uploadDir + "/images").resolve(mediaName).normalize()
+                    : Paths.get(uploadDir + "/videos").resolve(mediaName).normalize();
+
+            if (path == null || !Files.exists(path)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            UrlResource resource = new UrlResource(path.toUri());
+
+            String contentType = Files.probeContentType(path);
+            
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .body(resource);
+
+        } catch (JwtException e) {
+            return ResponseEntity.status(401).body("Invalid or expired token");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Server error: " + e.getMessage());
+        }
+    }
+
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updatePost(@PathVariable UUID id, @Validated @RequestBody PostRequest postDto,
             @AuthenticationPrincipal User currentUser) {
         try {
-            Post createdPost = postService.updatePost(id, postDto);
-            return ResponseEntity.ok(createdPost);
+            Post updatedPost = postService.updatePost(id, postDto);
+            return ResponseEntity.ok(updatedPost);
         } catch (JwtException e) {
             return ResponseEntity.status(401).body("Invalid or expired token");
         } catch (Exception e) {
