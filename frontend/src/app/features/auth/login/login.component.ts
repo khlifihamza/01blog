@@ -67,7 +67,6 @@ export class LoginComponent {
         this.snackBar.open('Login successful', 'Close', { duration: 5000 });
         localStorage.setItem("token", response.token.toString());
         this.authService.setRole(response.role);
-        console.log(this.authService.isAdmin());
         this.router.navigate(['/']);
       },
       error: (error) => {

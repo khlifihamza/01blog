@@ -1,5 +1,10 @@
 export interface CreatePostPayload {
   title: string;
   content: string;
-  media?: string | null;
+  mediaFiles?: string;
+}
+export interface MediaItem {
+  file: File;
+  preview: string;
+  type: string;
 }

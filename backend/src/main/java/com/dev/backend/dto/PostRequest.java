@@ -1,5 +1,6 @@
 package com.dev.backend.dto;
 
+
 import jakarta.validation.constraints.NotBlank;
 
 public record PostRequest(
@@ -7,5 +8,5 @@ public record PostRequest(
     String title,
     @NotBlank(message = "Content cannot be blank")
     String content,
-    String media
+    String mediaFiles
 ) {}

@@ -18,4 +18,8 @@ export class PostService {
   getMyPosts(): Observable<any> {
     return this.http.get<any>(`${this.url}/profile`);
   }
+
+  uploadFiles(files: FormData): Observable<any>{
+    return this.http.post<any>(`${this.url}/upload`, files);
+  }
 }
