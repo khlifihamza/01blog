@@ -1,7 +1,7 @@
 export interface CreatePostPayload {
   title: string;
   content: string;
-  mediaFiles?: string;
+  files?: String[];
 }
 export interface MediaItem {
   file: File;

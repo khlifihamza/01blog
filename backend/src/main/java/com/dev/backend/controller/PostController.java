@@ -1,5 +1,10 @@
 package com.dev.backend.controller;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,7 +20,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.dev.backend.dto.PostRequest;
 import com.dev.backend.model.Post;
@@ -57,6 +64,40 @@ public class PostController {
             return ResponseEntity.status(401).body("Invalid or expired token");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Server error: " + e.getMessage());
+        }
+    }
+
+     @PostMapping("/upload")
+    public ResponseEntity<?> upload(@RequestParam("files") List<MultipartFile> files,
+            @AuthenticationPrincipal User currentUser) {
+        if (files == null || files.isEmpty()) {
+            return ResponseEntity.badRequest().body("there is no files to upload");
+        }
+        try {
+            List<String> fileNames = new ArrayList<>();
+            for (MultipartFile file : files) {
+                String fileName = file.getOriginalFilename();
+                String extension = (fileName != null && fileName.contains("."))
+                        ? fileName.substring(fileName.lastIndexOf("."))
+                        : "";
+                String id = UUID.randomUUID() + extension;
+                
+                String contentType = file.getContentType();
+                String subDir = "";
+                if (contentType != null) {
+                    subDir = (contentType.startsWith("image")) ? "/images" : "/videos";
+                }
+
+                Path path = Paths.get(uploadDir + subDir, id );
+
+                Files.createDirectories(path.getParent());
+                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                
+                fileNames.add(id);
+            }
+            return ResponseEntity.ok(fileNames);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("error uploading files");
         }
     }
 

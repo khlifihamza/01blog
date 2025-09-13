@@ -17,7 +17,7 @@ public class Post extends BaseEntity {
     private String content;
 
     @Column(columnDefinition = "TEXT")
-    private String mediaFiles;
+    private String files;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -39,8 +39,8 @@ public class Post extends BaseEntity {
         return content;
     }
 
-    public String getMediaFiles() {
-        return mediaFiles;
+    public String getFiles() {
+        return files;
     }
 
     public User getUser() {
@@ -55,8 +55,8 @@ public class Post extends BaseEntity {
         this.content = content;
     }
 
-    public void setMediaFiles(String mediaFiles) {
-        this.mediaFiles = mediaFiles;
+    public void setFiles(String files) {
+        this.files = files;
     }
 
     public void setUser(User user) {

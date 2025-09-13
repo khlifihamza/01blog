@@ -20,7 +20,7 @@ public class PostService {
         Post post = new Post();
         post.setTitle(postDto.title());
         post.setContent(postDto.content());
-        post.setMediaFiles(postDto.mediaFiles());
+        post.setFiles(String.join(", ", postDto.files()));
         post.setUser(user);
         return postRepository.save(post);
     }
@@ -29,7 +29,7 @@ public class PostService {
         Post post = postRepository.findById(id).orElseThrow();
         post.setTitle(updatedPost.title());
         post.setContent(updatedPost.content());
-        post.setMediaFiles(updatedPost.mediaFiles());
+        post.setFiles(String.join(", ", updatedPost.files()));
         return postRepository.save(post);
     }
 

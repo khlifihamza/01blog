@@ -8,5 +8,5 @@ public record PostRequest(
     String title,
     @NotBlank(message = "Content cannot be blank")
     String content,
-    String mediaFiles
+    String[] files
 ) {}

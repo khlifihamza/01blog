@@ -93,21 +93,28 @@ export class CreatePostComponent implements OnInit {
   }
 
   onSubmit(): void {
-    const formData = new FormData();
-    this.mediaFiles().forEach((f) => formData.append('files', f.file));
-    this.postService.uploadFiles(formData).subscribe({
-      next: (response) => console.log(response),
-      error: (error) => console.log(error),
-    });
-    const createPostPayload: CreatePostPayload = {
-      title: this.postForm.value.title,
-      content: this.postForm.value.content,
+    const createPost = (filesIds: string[]) => {
+      const createPostPayload: CreatePostPayload = {
+        title: this.postForm.value.title,
+        content: this.postForm.value.content,
+        files: filesIds,
+      };
+
+      this.postService.createPost(createPostPayload).subscribe({
+        next: (response) => console.log(response),
+        error: (error) => console.log(error),
+      });
     };
 
-    this.postService.createPost(createPostPayload).subscribe({
-      next: (response) => console.log(response),
-      error: (error) => console.log(error),
-    });
-    console.log('Publish payload:', createPostPayload);
+    if (this.mediaFiles().length > 0) {
+      const formData = new FormData();
+      this.mediaFiles().forEach((f) => formData.append('files', f.file));
+      this.postService.uploadFiles(formData).subscribe({
+        next: (response) => createPost(response),
+        error: (error) => console.log(error),
+      });
+    } else {
+      createPost([]);
+    }
   }
 }
