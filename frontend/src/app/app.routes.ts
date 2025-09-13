@@ -6,6 +6,7 @@ import { GuestGuard } from './core/guards/guest.guard';
 import { HomeComponent } from './features/home/home.component';
 import { AdminComponent } from './features/admin/admin.component';
 import { AdminGuard } from './core/guards/admin.guard';
+import { CreatePostComponent } from './features/post/createpost/create-post.component';
 
 export const routes: Routes = [
   {
@@ -19,5 +20,8 @@ export const routes: Routes = [
   },
   {
     path: 'admin' , component: AdminComponent, canActivate: [AdminGuard]
+  },
+  {
+    path: 'post/create', component: CreatePostComponent, canActivate: [AuthGuard]
   }
 ];

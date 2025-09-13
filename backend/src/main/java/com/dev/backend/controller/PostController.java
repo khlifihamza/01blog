@@ -1,9 +1,15 @@
 package com.dev.backend.controller;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -14,7 +20,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.dev.backend.dto.PostRequest;
 import com.dev.backend.model.Post;
@@ -28,6 +36,8 @@ import io.jsonwebtoken.JwtException;
 public class PostController {
     @Autowired
     private PostService postService;
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     @GetMapping("/profile")
     public ResponseEntity<?> getAuthUserPosts(@AuthenticationPrincipal User currentUser) {
@@ -45,8 +55,8 @@ public class PostController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createPost(@Validated @RequestBody PostRequest postDto,@AuthenticationPrincipal User currentUser) {
-        System.out.println(currentUser.toString());
+    public ResponseEntity<?> createPost(@Validated @RequestBody PostRequest postDto,
+            @AuthenticationPrincipal User currentUser) {
         try {
             Post createdPost = postService.savePost(postDto, currentUser);
             return ResponseEntity.ok(createdPost);
@@ -57,8 +67,43 @@ public class PostController {
         }
     }
 
+     @PostMapping("/upload")
+    public ResponseEntity<?> upload(@RequestParam("files") List<MultipartFile> files,
+            @AuthenticationPrincipal User currentUser) {
+        if (files == null || files.isEmpty()) {
+            return ResponseEntity.badRequest().body("there is no files to upload");
+        }
+        try {
+            List<String> fileNames = new ArrayList<>();
+            for (MultipartFile file : files) {
+                String fileName = file.getOriginalFilename();
+                String extension = (fileName != null && fileName.contains("."))
+                        ? fileName.substring(fileName.lastIndexOf("."))
+                        : "";
+                String id = UUID.randomUUID() + extension;
+                
+                String contentType = file.getContentType();
+                String subDir = "";
+                if (contentType != null) {
+                    subDir = (contentType.startsWith("image")) ? "/images" : "/videos";
+                }
+
+                Path path = Paths.get(uploadDir + subDir, id );
+
+                Files.createDirectories(path.getParent());
+                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                
+                fileNames.add(id);
+            }
+            return ResponseEntity.ok(fileNames);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("error uploading files");
+        }
+    }
+
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updatePost(@PathVariable UUID id, @Validated @RequestBody PostRequest postDto,@AuthenticationPrincipal User currentUser){
+    public ResponseEntity<?> updatePost(@PathVariable UUID id, @Validated @RequestBody PostRequest postDto,
+            @AuthenticationPrincipal User currentUser) {
         try {
             Post createdPost = postService.updatePost(id, postDto);
             return ResponseEntity.ok(createdPost);
@@ -70,7 +115,7 @@ public class PostController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deletePost(@PathVariable UUID id){
+    public ResponseEntity<?> deletePost(@PathVariable UUID id) {
         try {
             postService.deletePost(id);
             return ResponseEntity.ok("Post deleted");

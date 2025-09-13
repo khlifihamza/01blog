@@ -13,10 +13,11 @@ public class Post extends BaseEntity {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    private String media;
+    @Column(columnDefinition = "TEXT")
+    private String files;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -38,8 +39,8 @@ public class Post extends BaseEntity {
         return content;
     }
 
-    public String getMedia() {
-        return media;
+    public String getFiles() {
+        return files;
     }
 
     public User getUser() {
@@ -54,8 +55,8 @@ public class Post extends BaseEntity {
         this.content = content;
     }
 
-    public void setMedia(String media) {
-        this.media = media;
+    public void setFiles(String files) {
+        this.files = files;
     }
 
     public void setUser(User user) {

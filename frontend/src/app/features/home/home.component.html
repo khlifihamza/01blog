@@ -1,0 +1,114 @@
+<div class="feed-container">
+  <div class="feed-content">
+    <!-- Create Post Section -->
+    <div class="create-post-section">
+      <div class="create-post-card">
+        <div class="create-post-content">
+          <div class="create-post-prompt" (click)="openCreatePost()">
+            <div class="user-avatar">
+              <img
+                src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?w=150"
+                alt="Your avatar"
+                class="avatar-image"
+              />
+            </div>
+            <div class="prompt-input">
+              <span class="prompt-placeholder">What have you learned today?</span>
+            </div>
+            <button class="create-button">
+              <mat-icon>add</mat-icon>
+              <span>Post</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Posts Feed -->
+    <div class="posts-feed" ></div>
+    <!--<div
+          class="posts-feed"
+          *ngIf="posts.length > 0; else noPosts"
+          infiniteScroll
+          [infiniteScrollDistance]="2"
+          [infiniteScrollThrottle]="300"
+          [infiniteScrollDisabled]="!hasMorePosts || loading"
+          (scrolled)="loadMorePosts()"
+        >
+          <app-post-card
+            *ngFor="let post of posts"
+            [post]="post"
+            [canEdit]="false"
+          >
+          </app-post-card>
+
+          <div class="infinite-scroll-loading" *ngIf="loading">
+            <mat-spinner diameter="32"></mat-spinner>
+            <span>Loading more posts...</span>
+          </div>
+
+          <div class="end-of-posts" *ngIf="!hasMorePosts && posts.length > 0">
+            <mat-icon>check_circle</mat-icon>
+            <span>You're all caught up!</span>
+          </div>
+        </div>
+
+        <ng-template #noPosts>
+          <div class="no-posts">
+            <div class="no-posts-card">
+              <div class="no-posts-content">
+                <div class="no-posts-content">
+                  <div class="no-posts-illustration">
+                    <mat-icon class="no-posts-icon">article</mat-icon>
+                  </div>
+                  <h2 class="no-posts-title">Welcome to 01Blog!</h2>
+                  <p class="welcome-text">
+                    Start following other learners to see their posts in your
+                    feed, or create your first post to share your learning
+                    journey with the community.
+                  </p>
+                  <div class="no-posts-actions">
+                    <button mat-raised-button color="primary" (click)="openCreatePost()">
+                      <mat-icon>add</mat-icon>
+                      Create Your First Post
+                    </button>
+                    <button mat-button routerLink="/explore">
+                      <mat-icon>explore</mat-icon>
+                      Explore Users
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </div> -->
+
+    <!-- Sidebar -->
+    <div class="feed-sidebar">
+      <!-- Suggested Users -->
+      <div class="sidebar-card suggested-users-card">
+        <div class="sidebar-card-header">
+          <h3 class="sidebar-title">
+            <mat-icon class="title-icon">people_outline</mat-icon>
+            Suggested for You
+          </h3>
+        </div>
+        <div class="sidebar-card-content">
+          <div class="suggested-users">
+            <div *ngFor="let user of suggestedUsers" class="user-suggestion">
+              <div class="suggestion-avatar">
+                <img [src]="user.avatar" [alt]="user.firstName" class="avatar-image" />
+              </div>
+              <div class="suggestion-info">
+                <div class="suggestion-name">{{ user.firstName }} {{ user.lastName }}</div>
+                <div class="suggestion-username">{{ user.username }}</div>
+              </div>
+              <button mat-button color="primary" class="follow-button">Follow</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

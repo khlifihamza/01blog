@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { LoginRequest } from '../../../shared/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-login',
@@ -22,6 +23,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css'],
@@ -65,7 +67,6 @@ export class LoginComponent {
         this.snackBar.open('Login successful', 'Close', { duration: 5000 });
         localStorage.setItem("token", response.token.toString());
         this.authService.setRole(response.role);
-        console.log(this.authService.isAdmin());
         this.router.navigate(['/']);
       },
       error: (error) => {

@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RegistrationRequest } from '../../../shared/models/user.model';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-register',
@@ -20,6 +21,7 @@ import { RegistrationRequest } from '../../../shared/models/user.model';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css'],
