@@ -40,4 +40,8 @@ public class PostService {
     public List<Post> getPosts(User user){
         return postRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
     }
+
+    public Post getPost(UUID id){
+        return postRepository.findById(id).orElseThrow();
+    }
 }
