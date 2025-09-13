@@ -1,113 +1,5 @@
 <div class="auth-container">
   <div class="auth-wrapper">
-    <div class="auth-card mat-elevation-z4">
-      <div class="auth-header">
-        <h1 class="auth-title">Welcome Back</h1>
-        <p class="auth-subtitle">Sign in to continue your journey</p>
-      </div>
-
-      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
-        <mat-form-field appearance="fill" class="full-width">
-          <mat-label>Username</mat-label>
-          <input
-            matInput
-            formControlName="username"
-            id="username"
-            placeholder="Enter your username"
-            required
-          />
-          <mat-icon matSuffix>person_outline</mat-icon>
-          <mat-error *ngIf="registerForm.get('username')?.hasError('required')">
-            Username is required
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="fill" class="full-width">
-          <mat-label>Email</mat-label>
-          <input
-            matInput
-            formControlName="email"
-            id="email"
-            placeholder="Enter your email"
-            required
-          />
-          <mat-icon matSuffix>person_outline</mat-icon>
-          <mat-error *ngIf="registerForm.get('email')?.hasError('required')">
-            Email is required
-          </mat-error>
-        </mat-form-field>
-        
-        <mat-form-field appearance="fill" class="full-width">
-          <mat-label>Password</mat-label>
-          <input
-            matInput
-            [type]="passwordVisible ? 'text' : 'password'"
-            id="password"
-            formControlName="password"
-            placeholder="Enter your password"
-            required
-          />
-          <button
-            mat-icon-button
-            matSuffix
-            (click)="passwordVisible = !passwordVisible"
-            type="button"
-            aria-label="Toggle password visibility"
-          >
-            <mat-icon>{{ passwordVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
-          </button>
-          <mat-error *ngIf="registerForm.get('password')?.hasError('required')">
-            Password is required
-          </mat-error>
-          <mat-error *ngIf="registerForm.get('password')?.hasError('minlength')">
-            Password must be at least 8 characters long
-          </mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="fill" class="full-width">
-          <mat-label>Confirm Password</mat-label>
-          <input
-            matInput
-            [type]="confirmPasswordVisible ? 'text' : 'password'"
-            formControlName="confirmPassword"
-            id="confirmPassword"
-            placeholder="Confirm your password"
-            required
-          />
-          <button
-            mat-icon-button
-            matSuffix
-            (click)="confirmPasswordVisible = !confirmPasswordVisible"
-            type="button"
-            aria-label="Toggle password visibility"
-          >
-            <mat-icon>{{ confirmPasswordVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
-          </button>
-          <mat-error *ngIf="registerForm.get('confirmPassword')?.hasError('required')">
-            Confirm Password is required
-          </mat-error>
-        </mat-form-field>
-
-        <button
-          mat-raised-button
-          color="primary"
-          type="submit"
-          [disabled]="registerForm.invalid || loading"
-          class="auth-button"
-        >
-          <mat-progress-spinner diameter="24" *ngIf="loading"></mat-progress-spinner>
-          <span *ngIf="!loading">Sign Up</span>
-        </button>
-      </form>
-
-      <div class="auth-footer">
-        <p>
-          Don't have an account?
-          <a href="" (click)="navigateToLogin(); $event.preventDefault()" class="auth-link">Sign in</a>
-        </p>
-      </div>
-    </div>
-
     <div class="brand-section">
       <div class="brand-content">
         <div class="brand-logo">
@@ -132,6 +24,118 @@
             <span>Analytics & insights</span>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="auth-card mat-elevation-z4">
+      <div class="auth-header">
+        <h1 class="auth-title">Welcome Back</h1>
+        <p class="auth-subtitle">Sign in to continue your journey</p>
+      </div>
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Username</mat-label>
+          <input
+            matInput
+            formControlName="username"
+            id="username"
+            placeholder="Enter your username"
+            required
+          />
+          <mat-icon matSuffix>person_outline</mat-icon>
+          @if(registerForm.get('username')?.hasError('required')){
+          <mat-error> Username is required </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Email</mat-label>
+          <input
+            matInput
+            formControlName="email"
+            id="email"
+            placeholder="Enter your email"
+            required
+          />
+          <mat-icon matSuffix>person_outline</mat-icon>
+          @if(registerForm.get('email')?.hasError('required')){
+          <mat-error> Email is required </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            [type]="passwordVisible ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            placeholder="Enter your password"
+            required
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="passwordVisible = !passwordVisible"
+            type="button"
+            aria-label="Toggle password visibility"
+          >
+            <mat-icon>{{ passwordVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+          @if(registerForm.get('password')?.hasError('required')){
+          <mat-error> Password is required </mat-error>
+          } @if(registerForm.get('password')?.hasError('minlength')){
+          <mat-error> Password must be at least 8 characters long </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Confirm Password</mat-label>
+          <input
+            matInput
+            [type]="confirmPasswordVisible ? 'text' : 'password'"
+            formControlName="confirmPassword"
+            id="confirmPassword"
+            placeholder="Confirm your password"
+            required
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            (click)="confirmPasswordVisible = !confirmPasswordVisible"
+            type="button"
+            aria-label="Toggle password visibility"
+          >
+            <mat-icon>{{ confirmPasswordVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
+          </button>
+          @if(registerForm.get('confirmPassword')?.hasError('required')){
+          <mat-error> Confirm Password is required </mat-error>
+          }
+        </mat-form-field>
+
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="registerForm.invalid || loading"
+          class="auth-button"
+        >
+          @if(loading){
+          <mat-progress-spinner diameter="24"></mat-progress-spinner>
+          } @if(!loading){
+          <span *ngIf="!loading">Sign Up</span>
+          }
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p>
+          Don't have an account?
+          <a href="" (click)="navigateToLogin(); $event.preventDefault()" class="auth-link"
+            >Sign in</a
+          >
+        </p>
       </div>
     </div>
   </div>

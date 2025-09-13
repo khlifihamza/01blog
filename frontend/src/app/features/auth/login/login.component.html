@@ -44,9 +44,9 @@
             required
           />
           <mat-icon matSuffix>person_outline</mat-icon>
-          <mat-error *ngIf="loginForm.get('identifier')?.hasError('required')">
-            Username or email is required
-          </mat-error>
+          @if(loginForm.get('identifier')?.hasError('required')){
+          <mat-error> Username or email is required </mat-error>
+          }
         </mat-form-field>
 
         <mat-form-field appearance="fill" class="full-width">
@@ -67,12 +67,11 @@
           >
             <mat-icon>{{ passwordVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
           </button>
-          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
-            Password is required
-          </mat-error>
-          <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')">
-            Password must be at least 8 characters long
-          </mat-error>
+          @if(loginForm.get('password')?.hasError('required')){
+          <mat-error> Password is required </mat-error>
+          } @if(loginForm.get('password')?.hasError('minlength')){
+          <mat-error> Password must be at least 8 characters long </mat-error>
+          }
         </mat-form-field>
 
         <button
@@ -82,15 +81,20 @@
           [disabled]="loginForm.invalid || loading"
           class="auth-button"
         >
-          <mat-progress-spinner diameter="24" *ngIf="loading"></mat-progress-spinner>
-          <span *ngIf="!loading">Sign In</span>
+          @if(loading){
+          <mat-progress-spinner diameter="24"></mat-progress-spinner>
+          } @if(!loading){
+          <span>Sign In</span>
+          }
         </button>
       </form>
 
       <div class="auth-footer">
         <p>
           Don't have an account?
-          <a href="" (click)="navigateToSignUp(); $event.preventDefault()" class="auth-link">Create one</a>
+          <a href="" (click)="navigateToSignUp(); $event.preventDefault()" class="auth-link"
+            >Create one</a
+          >
         </p>
       </div>
     </div>

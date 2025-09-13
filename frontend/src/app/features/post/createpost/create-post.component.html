@@ -4,9 +4,9 @@
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Post Title</mat-label>
         <input matInput formControlName="title" placeholder="What's your post about?" />
-        <mat-error *ngIf="postForm.get('title')?.hasError('required')">
-          Title is required
-        </mat-error>
+        @if(postForm.get('title')?.hasError('required')){
+        <mat-error> Title is required </mat-error>
+        }
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
@@ -17,9 +17,9 @@
           rows="6"
           placeholder="Share your thoughts, experiences, or what you've learned..."
         ></textarea>
-        <mat-error *ngIf="postForm.get('content')?.hasError('required')">
-          Content is required
-        </mat-error>
+        @if(postForm.get('content')?.hasError('required')){
+        <mat-error> Content is required </mat-error>
+        }
       </mat-form-field>
 
       <div>
@@ -81,8 +81,11 @@
       (click)="onSubmit()"
       [disabled]="postForm.invalid || loading"
     >
-      <mat-spinner diameter="20" *ngIf="loading"></mat-spinner>
-      <span *ngIf="!loading">{{ isEditing ? 'Update' : 'Post' }}</span>
+      @if(loading){
+      <mat-spinner diameter="20"></mat-spinner>
+      } @if(!loading){
+      <span>{{ isEditing ? 'Update' : 'Post' }}</span>
+      }
     </button>
   </mat-dialog-actions>
 </div>
