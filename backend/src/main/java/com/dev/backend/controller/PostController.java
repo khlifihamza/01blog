@@ -47,7 +47,22 @@ public class PostController {
             if (currentUser == null) {
                 return ResponseEntity.status(401).body("User not found");
             }
-            List<Post> posts = postService.getPosts(currentUser);
+            List<Post> posts = postService.getPosts(currentUser.getId());
+            return ResponseEntity.ok(posts);
+        } catch (JwtException e) {
+            return ResponseEntity.status(401).body("Invalid or expired token");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Server error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<?> getUserPosts(@PathVariable UUID id, @AuthenticationPrincipal User currentUser) {
+        try {
+            if (currentUser == null) {
+                return ResponseEntity.status(401).body("User not found");
+            }
+            List<Post> posts = postService.getPosts(id);
             return ResponseEntity.ok(posts);
         } catch (JwtException e) {
             return ResponseEntity.status(401).body("Invalid or expired token");
@@ -131,7 +146,7 @@ public class PostController {
             UrlResource resource = new UrlResource(path.toUri());
 
             String contentType = Files.probeContentType(path);
-            
+
             if (contentType == null) {
                 contentType = "application/octet-stream";
             }

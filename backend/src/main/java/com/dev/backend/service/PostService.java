@@ -37,8 +37,8 @@ public class PostService {
         postRepository.deleteById(id);
     }
 
-    public List<Post> getPosts(User user){
-        return postRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+    public List<Post> getPosts(UUID id){
+        return postRepository.findByUserIdOrderByCreatedAtDesc(id);
     }
 
     public Post getPost(UUID id){
