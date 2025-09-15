@@ -64,7 +64,7 @@ export class LoginComponent {
     this.authService.login(registrationRequest).subscribe({
       next: (response) => {
         this.loading = false;
-        this.snackBar.open('Login successful', 'Close');
+        this.snackBar.open('Login successful', 'Close', { duration: 5000 });
         localStorage.setItem("token", response.token.toString());
         this.authService.setRole(response.role);
         this.router.navigate(['/']);

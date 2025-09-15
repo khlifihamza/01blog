@@ -13,8 +13,14 @@ public class Post extends BaseEntity {
     @Column(nullable = false)
     private String title;
 
+    @Column(nullable = false)
+    private String excerpt;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Column(nullable = false)
+    private String thumbnail;
 
     @Column(columnDefinition = "TEXT")
     private String files;
@@ -61,5 +67,21 @@ public class Post extends BaseEntity {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getThumbnail() {
+        return thumbnail;
+    }
+
+    public void setThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
+    }
+
+    public String getExcerpt() {
+        return excerpt;
+    }
+
+    public void setExcerpt(String excerpt) {
+        this.excerpt = excerpt;
     }
 }

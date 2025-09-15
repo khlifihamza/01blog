@@ -1,142 +1,224 @@
-import { Component, OnInit } from "@angular/core";
-import { CommonModule } from "@angular/common";
-import { RouterModule } from "@angular/router";
-import { MatCardModule } from "@angular/material/card";
-import { MatButtonModule } from "@angular/material/button";
-import { MatIconModule } from "@angular/material/icon";
-import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
-import { MatDialog } from "@angular/material/dialog";
-import { MatSnackBar } from "@angular/material/snack-bar";
-import { PostService } from "../../core/services/post.service";
-import { CreatePostComponent } from "../post/createpost/create-post.component";
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterModule } from '@angular/router';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { FeedPost } from '../../shared/models/post.model';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatMenuModule } from '@angular/material/menu';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule, MatLabel } from '@angular/material/form-field';
+import { MatToolbarModule } from '@angular/material/toolbar';
 
 @Component({
-  selector: "app-feed",
+  selector: 'app-feed',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     RouterModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatBadgeModule,
+    MatMenuModule,
+    MatLabel,
+    MatFormFieldModule,
+    MatToolbarModule,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
 export class HomeComponent implements OnInit {
-  // posts: Post[] = [];
-  loading = false;
-  hasMorePosts = true;
-  currentPage = 1;
-  pageSize = 5;
+  searchQuery = '';
+  selectedCategory = '';
+  isLoading = false;
+  notificationCount = 3;
+  isAdmin = true; // Mock admin status
+  allPosts: FeedPost[] = [];
+  filteredPosts: FeedPost[] = [];
 
-  trendingTopics = [
-    { name: "angular", count: 156 },
-    { name: "typescript", count: 89 },
-    { name: "learning", count: 234 },
-    { name: "webdev", count: 167 },
-    { name: "frontend", count: 145 },
-  ];
+  constructor(private router: Router) {}
 
-  suggestedUsers = [
-    {
-      id: "3",
-      username: "sarah_wilson",
-      firstName: "Sarah",
-      lastName: "Wilson",
-      avatar:
-        "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?w=150",
-    },
-    {
-      id: "4",
-      username: "mike_chen",
-      firstName: "Mike",
-      lastName: "Chen",
-      avatar:
-        "https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?w=150",
-    },
-  ];
-
-  constructor(
-    private postService: PostService,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar
-  ) {}
-
-  ngOnInit(): void {
-    // this.loadPosts();
+  ngOnInit() {
+    this.loadMockData();
+    this.filterPosts();
   }
 
-  // loadPosts(): void {
-  //   this.loading = true;
-  //   this.postService.getAllPosts().subscribe({
-  //     next: (posts) => {
-  //       this.posts = posts.slice(0, this.pageSize);
-  //       this.loading = false;
-  //       this.hasMorePosts = posts.length > this.pageSize;
-  //       this.hasMorePosts = posts.length > this.pageSize;
-  //     },
-  //     error: (error) => {
-  //       this.loading = false;
-  //       this.snackBar.open("Failed to load posts", "Close", { duration: 3000 });
-  //     },
-  //   });
-  // }
+  loadMockData() {
+    // Mock data for demonstration
+    this.allPosts = [
+      {
+        id: "1",
+        title: 'My Journey from Zero to Full-Stack Developer in 6 Months',
+        excerpt:
+          "How I transformed from a complete beginner to landing my first developer job. Here's everything I learned along the way...",
+        content: '',
+        author: {
+          username: 'Sarah Chen',
+          avatar:
+            'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
+        },
+        createdAt: new Date('2024-01-15'),
+        readTime: 8,
+        likes: 234,
+        comments: 45,
+        thumbnail:
+          'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg?auto=compress&cs=tinysrgb&w=800',
+      },
+      {
+        id: "2",
+        title: 'Building My First React App: Lessons Learned',
+        excerpt:
+          'The challenges, mistakes, and victories of creating my first React application. A honest reflection on the learning process...',
+        content: '',
+        author: {
+          username: 'Marcus Johnson',
+          avatar:
+            'https://images.pexels.com/photos/1040880/pexels-photo-1040880.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
+        },
+        createdAt: new Date('2024-01-12'),
+        readTime: 6,
+        likes: 189,
+        comments: 32,
+        thumbnail:
+          'https://images.pexels.com/photos/11035380/pexels-photo-11035380.jpeg?auto=compress&cs=tinysrgb&w=800',
+      },
+      {
+        id: "3",
+        title: '5 Study Techniques That Actually Work for Programming',
+        excerpt:
+          'After trying countless methods, these are the study techniques that finally clicked for me when learning to code...',
+        content: '',
+        author: {
+          username: 'Emma Rodriguez',
+          avatar:
+            'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
+        },
+        createdAt: new Date('2024-01-10'),
+        readTime: 5,
+        likes: 156,
+        comments: 28,
+        thumbnail:
+          'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=800',
+      },
+      {
+        id: "4",
+        title: 'Landing My Dream Internship at a Tech Startup',
+        excerpt:
+          'The complete guide to preparing for tech internships, from portfolio building to interview preparation...',
+        content: '',
+        author: {
+          username: 'David Kim',
+          avatar:
+            'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
+        },
+        createdAt: new Date('2024-01-08'),
+        readTime: 7,
+        likes: 298,
+        comments: 67,
+        thumbnail:
+          'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800',
+      },
+      {
+        id: "5",
+        title: 'Why I Chose 01Student Over Traditional Computer Science',
+        excerpt:
+          "My decision to join 01Student instead of pursuing a traditional CS degree, and how it's working out so far...",
+        content: '',
+        author: {
+          username: 'Aisha Patel',
+          avatar:
+            'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
+        },
+        createdAt: new Date('2024-01-05'),
+        readTime: 4,
+        likes: 167,
+        comments: 41,
+        thumbnail:
+          'https://images.pexels.com/photos/1181298/pexels-photo-1181298.jpeg?auto=compress&cs=tinysrgb&w=800',
+      },
+      {
+        id: "6",
+        title: 'My First Hackathon Experience: What I Learned',
+        excerpt:
+          "48 hours of coding, pizza, and problem-solving. Here's what my first hackathon taught me about teamwork and development...",
+        content: '',
+        author: {
+          username: 'Alex Thompson',
+          avatar:
+            'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
+        },
+        createdAt: new Date('2024-01-03'),
+        readTime: 6,
+        likes: 203,
+        comments: 35,
+        thumbnail:
+          'https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&cs=tinysrgb&w=800',
+      },
+    ];
+  }
 
-  // loadMorePosts(): void {
-  //   if (this.loading || !this.hasMorePosts) return;
+  onSearch() {
+    this.filterPosts();
+  }
 
-  //   this.loading = true;
-  //   this.currentPage++;
+  filterPosts() {
+    let filtered = [...this.allPosts];
 
-  //   // Simulate API call with delay
-  //   this.postService.getAllPosts().subscribe({
-  //     next: (allPosts) => {
-  //       const startIndex = (this.currentPage - 1) * this.pageSize;
-  //       const endIndex = startIndex + this.pageSize;
-  //       const newPosts = allPosts.slice(startIndex, endIndex);
+    // Filter by search query
+    if (this.searchQuery.trim()) {
+      const query = this.searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (post) =>
+          post.title.toLowerCase().includes(query) ||
+          post.excerpt.toLowerCase().includes(query) ||
+          post.author.username.toLowerCase().includes(query)
+      );
+    }
 
-  //       if (newPosts.length > 0) {
-  //         this.posts = [...this.posts, ...newPosts];
-  //       }
+    this.filteredPosts = filtered;
+  }
 
-  //       this.hasMorePosts = endIndex < allPosts.length;
-  //       this.loading = false;
+  formatDate(date: Date): string {
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  //       if (!this.hasMorePosts) {
-  //         this.snackBar.open("You're all caught up!", "Close", {
-  //           duration: 2000,
-  //         });
-  //       }
-  //     },
-  //     error: (error) => {
-  //       this.loading = false;
-  //       this.currentPage--; // Revert page increment on error
-  //       this.snackBar.open("Failed to load more posts", "Close", {
-  //         duration: 3000,
-  //       });
-  //     },
-  //   });
-  // }
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+    return date.toLocaleDateString();
+  }
 
-  openCreatePost(): void {
-    const dialogRef = this.dialog.open(CreatePostComponent, {
-      width: "1000px",
-      maxWidth: "90vw",
-      data: {},
-    });
+  openPost(post: FeedPost) {
+    this.router.navigate(['/post', post.id]);
+  }
 
-    // dialogRef.afterClosed().subscribe((result) => {
-    //   if (result) {
-    //     // Reset and reload posts after creation
-    //     this.currentPage = 1;
-    //     this.hasMorePosts = true;
-    //     this.loadPosts();
-    //     this.currentPage = 1;
-    //     this.hasMorePosts = true;
-    //     this.loadPosts();
-    //   }
-    // });
+  writeStory() {
+    this.router.navigate(['/create']);
+  }
+
+  logout() {
+    this.router.navigate(['/login']);
+  }
+
+  viewProfile() {
+    this.router.navigate(['/profile']);
+  }
+
+  editProfile() {
+    this.router.navigate(['/edit-profile']);
+  }
+
+  openNotifications() {
+    this.router.navigate(['/notifications']);
+  }
+
+  openAdminDashboard() {
+    this.router.navigate(['/admin']);
   }
 }

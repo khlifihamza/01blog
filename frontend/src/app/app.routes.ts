@@ -6,22 +6,34 @@ import { GuestGuard } from './core/guards/guest.guard';
 import { HomeComponent } from './features/home/home.component';
 import { AdminComponent } from './features/admin/admin.component';
 import { AdminGuard } from './core/guards/admin.guard';
-import { CreatePostComponent } from './features/post/createpost/create-post.component';
+import { CreatePostComponent } from './features/post/create-post/create-post.component';
+import { PostDetailComponent } from './features/post/post-detail/post-detail.component';
 
 export const routes: Routes = [
   {
-    path: 'login', component: LoginComponent, canActivate: [GuestGuard]
+    path: 'login',
+    component: LoginComponent,
+    canActivate: [GuestGuard],
   },
   {
-    path: 'register', component: RegisterComponent, canActivate: [GuestGuard]
+    path: 'register',
+    component: RegisterComponent,
+    canActivate: [GuestGuard],
   },
   {
-    path: '', component: HomeComponent, canActivate: [AuthGuard]
+    path: '',
+    component: HomeComponent,
+    canActivate: [AuthGuard],
   },
   {
-    path: 'admin' , component: AdminComponent, canActivate: [AdminGuard]
+    path: 'admin',
+    component: AdminComponent,
+    canActivate: [AdminGuard],
   },
   {
-    path: 'post/create', component: CreatePostComponent, canActivate: [AuthGuard]
-  }
+    path: 'create',
+    component: CreatePostComponent,
+    canActivate: [AuthGuard],
+  },
+  { path: 'post/:id', component: PostDetailComponent },
 ];

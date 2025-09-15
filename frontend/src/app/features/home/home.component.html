@@ -1,114 +1,155 @@
-<div class="feed-container">
-  <div class="feed-content">
-    <!-- Create Post Section -->
-    <div class="create-post-section">
-      <div class="create-post-card">
-        <div class="create-post-content">
-          <div class="create-post-prompt" (click)="openCreatePost()">
-            <div class="user-avatar">
-              <img
-                src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?w=150"
-                alt="Your avatar"
-                class="avatar-image"
+<div class="blog-container">
+      <!-- Header -->
+      <mat-toolbar class="blog-header">
+        <div class="header-content">
+          <div class="brand">
+            <mat-icon class="logo-icon">article</mat-icon>
+            <span class="brand-text">01Blog</span>
+          </div>
+
+          <div class="header-actions">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Search stories...</mat-label>
+              <input
+                matInput
+                [(ngModel)]="searchQuery"
+                (input)="onSearch()"
+                placeholder="What are you looking for?"
               />
-            </div>
-            <div class="prompt-input">
-              <span class="prompt-placeholder">What have you learned today?</span>
-            </div>
-            <button class="create-button">
-              <mat-icon>add</mat-icon>
-              <span>Post</span>
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+
+            <button
+              mat-raised-button
+              color="primary"
+              class="write-btn"
+              (click)="writeStory()"
+            >
+              <mat-icon>edit</mat-icon>
+              Write
             </button>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Posts Feed -->
-    <div class="posts-feed" ></div>
-    <!--<div
-          class="posts-feed"
-          *ngIf="posts.length > 0; else noPosts"
-          infiniteScroll
-          [infiniteScrollDistance]="2"
-          [infiniteScrollThrottle]="300"
-          [infiniteScrollDisabled]="!hasMorePosts || loading"
-          (scrolled)="loadMorePosts()"
-        >
-          <app-post-card
-            *ngFor="let post of posts"
-            [post]="post"
-            [canEdit]="false"
-          >
-          </app-post-card>
+            <button
+              mat-icon-button
+              (click)="openNotifications()"
+              [matBadge]="notificationCount"
+              matBadgeColor="warn"
+              [matBadgeHidden]="notificationCount === 0"
+            >
+              <mat-icon>notifications</mat-icon>
+            </button>
 
-          <div class="infinite-scroll-loading" *ngIf="loading">
-            <mat-spinner diameter="32"></mat-spinner>
-            <span>Loading more posts...</span>
-          </div>
+            <button mat-icon-button [matMenuTriggerFor]="userMenu">
+              <img
+                src="https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=40&h=40&dpr=2"
+                alt="Profile"
+                class="profile-avatar"
+              />
+            </button>
 
-          <div class="end-of-posts" *ngIf="!hasMorePosts && posts.length > 0">
-            <mat-icon>check_circle</mat-icon>
-            <span>You're all caught up!</span>
-          </div>
-        </div>
-
-        <ng-template #noPosts>
-          <div class="no-posts">
-            <div class="no-posts-card">
-              <div class="no-posts-content">
-                <div class="no-posts-content">
-                  <div class="no-posts-illustration">
-                    <mat-icon class="no-posts-icon">article</mat-icon>
-                  </div>
-                  <h2 class="no-posts-title">Welcome to 01Blog!</h2>
-                  <p class="welcome-text">
-                    Start following other learners to see their posts in your
-                    feed, or create your first post to share your learning
-                    journey with the community.
-                  </p>
-                  <div class="no-posts-actions">
-                    <button mat-raised-button color="primary" (click)="openCreatePost()">
-                      <mat-icon>add</mat-icon>
-                      Create Your First Post
-                    </button>
-                    <button mat-button routerLink="/explore">
-                      <mat-icon>explore</mat-icon>
-                      Explore Users
-                    </button>
-                  </div>
+            <mat-menu #userMenu="matMenu">
+              <div class="user-menu-header">
+                <img
+                  src="https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=60&h=60&dpr=2"
+                  alt="Profile"
+                  class="menu-avatar"
+                />
+                <div class="user-info">
+                  <span class="user-name">Sarah Chen</span>
                 </div>
               </div>
-            </div>
+              <button mat-menu-item (click)="viewProfile()">
+                <mat-icon>person</mat-icon>
+                <span>Profile</span>
+              </button>
+              <button mat-menu-item (click)="editProfile()">
+                <mat-icon>edit</mat-icon>
+                <span>Edit Profile</span>
+              </button>
+              <button mat-menu-item>
+                <mat-icon>bookmark</mat-icon>
+                <span>Bookmarks</span>
+              </button>
+              <button mat-menu-item (click)="openNotifications()">
+                <mat-icon
+                  [matBadge]="notificationCount"
+                  matBadgeColor="warn"
+                  [matBadgeHidden]="notificationCount === 0"
+                  >notifications</mat-icon
+                >
+                <span>Notifications</span>
+              </button>
+              @if(isAdmin){
+              <button mat-menu-item (click)="openAdminDashboard()">
+                <mat-icon>admin_panel_settings</mat-icon>
+                <span>Admin Dashboard</span>
+              </button>
+              }
+              <button mat-menu-item>
+                <mat-icon>settings</mat-icon>
+                <span>Settings</span>
+              </button>
+              <button mat-menu-item>
+                <mat-icon>help</mat-icon>
+                <span>Help & Support</span>
+              </button>
+              <button mat-menu-item (click)="logout()">
+                <mat-icon>logout</mat-icon>
+                <span>Sign out</span>
+              </button>
+            </mat-menu>
           </div>
-        </ng-template>
-      </div> -->
-
-    <!-- Sidebar -->
-    <div class="feed-sidebar">
-      <!-- Suggested Users -->
-      <div class="sidebar-card suggested-users-card">
-        <div class="sidebar-card-header">
-          <h3 class="sidebar-title">
-            <mat-icon class="title-icon">people_outline</mat-icon>
-            Suggested for You
-          </h3>
         </div>
-        <div class="sidebar-card-content">
-          <div class="suggested-users">
-            <div *ngFor="let user of suggestedUsers" class="user-suggestion">
-              <div class="suggestion-avatar">
-                <img [src]="user.avatar" [alt]="user.firstName" class="avatar-image" />
+      </mat-toolbar>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Featured Post -->
+        <div class="featured-section">
+          <h2 class="section-title">Stories</h2>
+          @for (post of filteredPosts; track post.id) {
+          <mat-card
+            class="featured-card"
+            (click)="openPost(post)"
+          >
+            <div class="featured-content">
+              <div class="featured-text">
+                <div class="post-meta">
+                  <img
+                    [src]="post.author.avatar"
+                    [alt]="post.author.username"
+                    class="author-avatar-small"
+                  />
+                  <span class="author-name">{{ post.author.username }}</span>
+                  <span class="publish-date">{{
+                    formatDate(post.createdAt)
+                  }}</span>
+                </div>
+
+                <h1 class="featured-title">{{ post.title }}</h1>
+                <p class="featured-excerpt">{{ post.excerpt }}</p>
+
+                <div class="post-stats">
+                  <span class="read-time">{{ post.readTime }} min read</span>
+                  <span class="separator">•</span>
+                  <span class="likes">
+                    <mat-icon>favorite_border</mat-icon>
+                    {{ post.likes }}
+                  </span>
+                  <span class="separator">•</span>
+                  <span class="comments">
+                    <mat-icon>comment</mat-icon>
+                    {{ post.comments }}
+                  </span>
+                </div>
               </div>
-              <div class="suggestion-info">
-                <div class="suggestion-name">{{ user.firstName }} {{ user.lastName }}</div>
-                <div class="suggestion-username">{{ user.username }}</div>
+
+              <div class="featured-image">
+                <img [src]="post.thumbnail" [alt]="post.title" />
               </div>
-              <button mat-button color="primary" class="follow-button">Follow</button>
             </div>
-          </div>
+          </mat-card>
+          }
         </div>
       </div>
     </div>
-  </div>
-</div>
