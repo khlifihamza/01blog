@@ -5,6 +5,7 @@ import com.dev.backend.model.User;
 import com.dev.backend.dto.LoginRequest;
 import com.dev.backend.dto.RegisterRequest;
 import com.dev.backend.model.Role;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

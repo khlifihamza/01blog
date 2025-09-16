@@ -23,7 +23,6 @@ public class PostService {
         post.setFiles(String.join(", ", postDto.files()));
         post.setUser(user);
         post.setThumbnail(postDto.thumbnail());
-        post.setExcerpt(postDto.excerpt());
         return postRepository.save(post);
     }
 
@@ -33,7 +32,6 @@ public class PostService {
         post.setContent(updatedPost.content());
         post.setFiles(String.join(", ", updatedPost.files()));
         post.setThumbnail(updatedPost.thumbnail());
-        post.setExcerpt(updatedPost.excerpt());
         return postRepository.save(post);
     }
 

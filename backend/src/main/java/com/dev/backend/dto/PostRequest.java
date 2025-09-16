@@ -6,8 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 public record PostRequest(
     @NotBlank(message = "Title cannot be blank")
     String title,
-    @NotBlank(message = "preview cannot be blank")
-    String excerpt,
     @NotBlank(message = "Content cannot be blank")
     String content,
     @NotBlank(message = "thumbnail cannot be blank")

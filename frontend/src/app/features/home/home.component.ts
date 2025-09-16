@@ -11,6 +11,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule, MatLabel } from '@angular/material/form-field';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatInputModule } from '@angular/material/input';
 
 @Component({
   selector: 'app-feed',
@@ -28,6 +29,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
     MatLabel,
     MatFormFieldModule,
     MatToolbarModule,
+    MatInputModule
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
@@ -54,8 +56,6 @@ export class HomeComponent implements OnInit {
       {
         id: "1",
         title: 'My Journey from Zero to Full-Stack Developer in 6 Months',
-        excerpt:
-          "How I transformed from a complete beginner to landing my first developer job. Here's everything I learned along the way...",
         content: '',
         author: {
           username: 'Sarah Chen',
@@ -72,8 +72,6 @@ export class HomeComponent implements OnInit {
       {
         id: "2",
         title: 'Building My First React App: Lessons Learned',
-        excerpt:
-          'The challenges, mistakes, and victories of creating my first React application. A honest reflection on the learning process...',
         content: '',
         author: {
           username: 'Marcus Johnson',
@@ -90,8 +88,6 @@ export class HomeComponent implements OnInit {
       {
         id: "3",
         title: '5 Study Techniques That Actually Work for Programming',
-        excerpt:
-          'After trying countless methods, these are the study techniques that finally clicked for me when learning to code...',
         content: '',
         author: {
           username: 'Emma Rodriguez',
@@ -108,8 +104,6 @@ export class HomeComponent implements OnInit {
       {
         id: "4",
         title: 'Landing My Dream Internship at a Tech Startup',
-        excerpt:
-          'The complete guide to preparing for tech internships, from portfolio building to interview preparation...',
         content: '',
         author: {
           username: 'David Kim',
@@ -126,8 +120,6 @@ export class HomeComponent implements OnInit {
       {
         id: "5",
         title: 'Why I Chose 01Student Over Traditional Computer Science',
-        excerpt:
-          "My decision to join 01Student instead of pursuing a traditional CS degree, and how it's working out so far...",
         content: '',
         author: {
           username: 'Aisha Patel',
@@ -144,8 +136,6 @@ export class HomeComponent implements OnInit {
       {
         id: "6",
         title: 'My First Hackathon Experience: What I Learned',
-        excerpt:
-          "48 hours of coding, pizza, and problem-solving. Here's what my first hackathon taught me about teamwork and development...",
         content: '',
         author: {
           username: 'Alex Thompson',
@@ -175,7 +165,6 @@ export class HomeComponent implements OnInit {
       filtered = filtered.filter(
         (post) =>
           post.title.toLowerCase().includes(query) ||
-          post.excerpt.toLowerCase().includes(query) ||
           post.author.username.toLowerCase().includes(query)
       );
     }
@@ -199,7 +188,7 @@ export class HomeComponent implements OnInit {
   }
 
   writeStory() {
-    this.router.navigate(['/create']);
+    this.router.navigate(['/post/create']);
   }
 
   logout() {

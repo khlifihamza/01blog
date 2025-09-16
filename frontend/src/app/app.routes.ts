@@ -8,6 +8,7 @@ import { AdminComponent } from './features/admin/admin.component';
 import { AdminGuard } from './core/guards/admin.guard';
 import { CreatePostComponent } from './features/post/create-post/create-post.component';
 import { PostDetailComponent } from './features/post/post-detail/post-detail.component';
+import { EditPostComponent } from './features/post/edit-post/edit-post.component';
 
 export const routes: Routes = [
   {
@@ -31,9 +32,10 @@ export const routes: Routes = [
     canActivate: [AdminGuard],
   },
   {
-    path: 'create',
+    path: 'post/create',
     component: CreatePostComponent,
     canActivate: [AuthGuard],
   },
   { path: 'post/:id', component: PostDetailComponent },
+  { path: 'edit-post/:id', component: EditPostComponent },
 ];

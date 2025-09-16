@@ -13,9 +13,6 @@ public class Post extends BaseEntity {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
-    private String excerpt;
-
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
@@ -75,13 +72,5 @@ public class Post extends BaseEntity {
 
     public void setThumbnail(String thumbnail) {
         this.thumbnail = thumbnail;
-    }
-
-    public String getExcerpt() {
-        return excerpt;
-    }
-
-    public void setExcerpt(String excerpt) {
-        this.excerpt = excerpt;
     }
 }

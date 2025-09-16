@@ -22,9 +22,9 @@
             <mat-icon>edit</mat-icon>
             <span>Edit Post</span>
           </button>
-          <button mat-menu-item (click)="sharePost()">
-            <mat-icon>share</mat-icon>
-            <span>Share</span>
+          <button mat-menu-item (click)="deletePost()" *ngIf="isAuthor">
+            <mat-icon>delete</mat-icon>
+            <span>Delete Post</span>
           </button>
           <!-- <button mat-menu-item (click)="reportPost()">
             <mat-icon>flag</mat-icon>
@@ -66,14 +66,13 @@
       </header>
 
       <!-- Featured Image -->
-      <div class="featured-image" *ngIf="post.thumbnail">
-        <img [src]="post.thumbnail" [alt]="post.title" />
+      <div class="featured-image">
+        <img [src]="'http://localhost:8080/api/post/file/' + post.thumbnail" [alt]="post.title" />
       </div>
 
       <!-- Article Content -->
       <div class="article-content">
-        <p class="article-excerpt">{{ post.excerpt }}</p>
-        <div class="article-body" [innerHTML]="formatContent(post.content)"></div>
+        <div class="article-body" [innerHTML]="safeContent"></div>
       </div>
 
       <!-- Engagement Actions -->
@@ -92,11 +91,6 @@
           <button mat-button class="engagement-btn" (click)="scrollToComments()">
             <mat-icon>comment</mat-icon>
             <span>{{ post.comments }}</span>
-          </button>
-
-          <button mat-button class="engagement-btn" (click)="sharePost()">
-            <mat-icon>share</mat-icon>
-            <span>Share</span>
           </button>
         </div>
       </div>

@@ -1,6 +1,5 @@
 export interface CreatePostPayload {
   title: string;
-  excerpt: string;
   content: string;
   thumbnail: string;
   files?: String[];
@@ -19,7 +18,6 @@ export interface UploadResponse {
 export interface FeedPost {
   id: string;
   title: string;
-  excerpt: string;
   content: string;
   author: {
     username: string;
@@ -32,10 +30,9 @@ export interface FeedPost {
   thumbnail: string;
 }
 
-export interface BlogPost {
+export interface DetailPost {
   id: string;
   title: string;
-  excerpt: string;
   content: string;
   author: {
     username: string;
@@ -44,11 +41,20 @@ export interface BlogPost {
     followers: number;
     following: number;
   };
-  publishedDate: Date;
+  publishedDate: string;
   readTime: number;
   likes: number;
   comments: number;
   thumbnail: string;
   isLiked: boolean;
   isBookmarked: boolean;
+  isAuthor: boolean;
+}
+
+export interface EditPost {
+  id: string;
+  title: string;
+  content: string;
+  thumbnail: string;
+  fileNames: string[];
 }

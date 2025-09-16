@@ -1,4 +1,4 @@
-import { Component, signal, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -16,6 +16,7 @@ import { DndUploadDirective } from '../../../core/directives/dnd-upload.directiv
 import { Router } from '@angular/router';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { addLinkTosrc, getExcerpt } from '../../../shared/utils/formathtml';
 
 @Component({
   selector: 'app-create-post',
@@ -63,7 +64,8 @@ export class CreatePostComponent {
     private fb: FormBuilder,
     private postService: PostService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private cd: ChangeDetectorRef,
   ) {
     this.blogForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(100)]],
@@ -124,7 +126,7 @@ export class CreatePostComponent {
 
   onAddClick(event: Event) {
     event.stopPropagation();
-    this.editorDiv?.nativeElement.focus();
+    this.cd.detectChanges();
   }
 
   onThumbnailSelect(event: Event) {
@@ -285,18 +287,10 @@ export class CreatePostComponent {
       this.isLoading = true;
       const createPost = (res: UploadResponse) => {
         let htmlString = this.editorDiv.nativeElement.innerHTML;
-        let index = 0;
 
-        let content = htmlString.replace(/src=["']([^"']+)["']/g, (match) => {
-          if (index < res.fileNames.length) {
-            const newUrl = res.fileNames[index++];
-            return `src="http://localhost:8080/api/post/file/${newUrl}"`;
-          }
-          return match;
-        });
+        let content = addLinkTosrc(htmlString, res.fileNames);
         const createPostPayload: CreatePostPayload = {
           title: this.blogForm.value.title,
-          excerpt: (this.currentContent.length > 120) ? this.currentContent.substring(0, 120) : this.currentContent,
           content: content,
           thumbnail: res.thumbnail,
           files: res.fileNames,
@@ -308,19 +302,18 @@ export class CreatePostComponent {
             this.snackBar.open('Blog created successful', 'Close', { duration: 5000 });
             this.goBack();
           },
-          error: (error) => console.log(error),
+          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 })
         });
       };
 
       const formData = new FormData();
       if (this.thumbnailFile) formData.append('thumbnail', this.thumbnailFile);
-      console.log(this.mediaFiles().length);
       if (this.mediaFiles().length > 0) {
         this.mediaFiles().forEach((f) => formData.append('files', f.file));
       }
       this.postService.uploadFiles(formData).subscribe({
         next: (response) => createPost(response),
-        error: (error) => console.log(error),
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
       });
     }
   }

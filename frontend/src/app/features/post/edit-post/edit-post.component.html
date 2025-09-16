@@ -1,0 +1,135 @@
+<div class="create-blog-container">
+  <!-- Header -->
+  <mat-toolbar class="create-header">
+    <div class="header-content">
+      <div class="header-left">
+        <button mat-icon-button (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <span class="header-title">Update Your Story</span>
+      </div>
+
+      <div class="header-actions">
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="updatePost()"
+          [disabled]="!isContentValid() || isLoading"
+        >
+          <mat-icon>publish</mat-icon>
+          Update
+        </button>
+      </div>
+    </div>
+  </mat-toolbar>
+
+  <!-- Main Content -->
+  <div class="create-content">
+    <form [formGroup]="editForm" class="blog-form">
+      <!-- Title -->
+      <mat-form-field appearance="outline" class="title-field">
+        <mat-label>Story Title</mat-label>
+        <input matInput formControlName="title" placeholder="Tell your story in a few words..." />
+        <mat-error *ngIf="editForm.get('title')?.hasError('required')">
+          Title is required
+        </mat-error>
+        <mat-error *ngIf="editForm.get('title')?.hasError('maxlength')">
+          Title must be less than 100 characters
+        </mat-error>
+      </mat-form-field>
+
+      <!-- Thumbnail Upload -->
+      <div class="media-section">
+        <h3>Add Thumbnail</h3>
+        <div class="upload-area" (click)="fileInput.click()" [class.has-media]="thumbnailPreview">
+          <input
+            #fileInput
+            formControlName="thumbnail"
+            type="file"
+            accept="image/*"
+            (change)="onThumbnailSelect($event)"
+            style="display: none"
+          />
+
+          <div *ngIf="!thumbnailPreview" class="upload-placeholder">
+            <mat-icon>cloud_upload</mat-icon>
+            <p>Click to upload image</p>
+            <small>Supports: JPG, PNG, GIF</small>
+          </div>
+
+          <div *ngIf="thumbnailPreview" class="media-preview">
+            <img [src]="thumbnailPreview" alt="Preview" />
+            <button mat-icon-button class="remove-media" (click)="removeThumbnail($event)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content Editor -->
+      <div class="content-section">
+        <h3>Tell Your Story</h3>
+        <div class="editor-container">
+          <div
+            #editorDiv
+            class="editable-content"
+            contenteditable="true"
+            (input)="onContentChange($event)"
+            (keyup)="updateCursorPosition()"
+            (mouseup)="updateCursorPosition()"
+            (focus)="onFocus()"
+            appDndUpload (filesDropped)="onFilesDropped($event)"
+            [class.empty]="isContentEmpty"
+            [innerHTML]="safeContent"
+          ></div>
+
+          <!-- Floating Add Button -->
+          <button
+            #addButton
+            mat-icon-button
+            class="floating-add-btn"
+            [style.top.px]="buttonPosition.top"
+            [style.left.px]="buttonPosition.left"
+            [style.display]="showAddButton ? 'flex' : 'none'"
+            [matMenuTriggerFor]="mediaMenu"
+            (click)="onAddClick($event)"
+          >
+            <mat-icon>add</mat-icon>
+          </button>
+
+          <!-- Media Menu -->
+          <mat-menu #mediaMenu="matMenu">
+            <button mat-menu-item (click)="triggerImageUpload()">
+              <mat-icon>image</mat-icon>
+              <span>Add Image</span>
+            </button>
+            <button mat-menu-item (click)="triggerVideoUpload()">
+              <mat-icon>videocam</mat-icon>
+              <span>Add Video</span>
+            </button>
+          </mat-menu>
+
+          <!-- Hidden File Inputs -->
+          <input
+            #imageInput
+            type="file"
+            accept="image/*"
+            style="display: none"
+            (change)="handleImageUpload($event)"
+          />
+          <input
+            #videoInput
+            type="file"
+            accept="video/*"
+            style="display: none"
+            (change)="handleVideoUpload($event)"
+          />
+        </div>
+
+        <div class="content-validation" *ngIf="showValidationError">
+          <span class="error-text">Content must be at least 100 characters</span>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

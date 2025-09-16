@@ -27,7 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dev.backend.dto.PostRequest;
-import com.dev.backend.dto.PostResponse;
+import com.dev.backend.dto.ApiResponse;
+import com.dev.backend.dto.DetailPostResponse;
+import com.dev.backend.dto.EditPostResponse;
 import com.dev.backend.dto.UploadResponse;
 import com.dev.backend.dto.UserDto;
 import com.dev.backend.model.Post;
@@ -53,34 +55,35 @@ public class PostController {
             List<Post> posts = postService.getPosts(currentUser.getId());
             return ResponseEntity.ok(posts);
         } catch (JwtException e) {
-            return ResponseEntity.status(401).body("Invalid or expired token");
+            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Server error: " + e.getMessage());
+            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
         }
     }
 
     // @GetMapping("/profile/{username}")
-    // public ResponseEntity<?> getUserPosts(@PathVariable String username, @AuthenticationPrincipal User currentUser) {
-    //     try {
-    //         List<Post> posts = postService.getPosts(username);
-    //         return ResponseEntity.ok(posts);
-    //     } catch (JwtException e) {
-    //         return ResponseEntity.status(401).body("Invalid or expired token");
-    //     } catch (Exception e) {
-    //         return ResponseEntity.status(500).body("Server error: " + e.getMessage());
-    //     }
+    // public ResponseEntity<?> getUserPosts(@PathVariable String username,
+    // @AuthenticationPrincipal User currentUser) {
+    // try {
+    // List<Post> posts = postService.getPosts(username);
+    // return ResponseEntity.ok(posts);
+    // } catch (JwtException e) {
+    // return ResponseEntity.status(401).body("Invalid or expired token");
+    // } catch (Exception e) {
+    // return ResponseEntity.status(500).body("Server error: " + e.getMessage());
+    // }
     // }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createPost(@Validated @RequestBody PostRequest postDto,
+    public ResponseEntity<ApiResponse> createPost(@Validated @RequestBody PostRequest postDto,
             @AuthenticationPrincipal User currentUser) {
         try {
             postService.savePost(postDto, currentUser);
-            return ResponseEntity.ok("created successefully");
+            return ResponseEntity.ok(new ApiResponse("created successefully"));
         } catch (JwtException e) {
-            return ResponseEntity.status(401).body("Invalid or expired token");
+            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Server error: " + e.getMessage());
+            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
         }
     }
 
@@ -96,7 +99,7 @@ public class PostController {
                     : "";
             thumbnailId = UUID.randomUUID() + thumbnailExtension;
 
-            Path path = Paths.get(uploadDir + "/thumbnails", thumbnailId);
+            Path path = Paths.get(uploadDir + "/images", thumbnailId);
 
             Files.createDirectories(path.getParent());
             Files.copy(thumbnail.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
@@ -126,7 +129,7 @@ public class PostController {
             UploadResponse response = new UploadResponse(thumbnailId, fileNames);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("error uploading files");
+            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
         }
     }
 
@@ -135,14 +138,17 @@ public class PostController {
             @AuthenticationPrincipal User currentUser) {
         try {
             Post post = postService.getPost(id);
-            UserDto author = new UserDto(post.getUser().getUsername(), "");
-            PostResponse postResponse = new PostResponse(post.getId(), post.getTitle(), post.getExcerpt(),
-                    post.getContent(), author, post.getCreatedAt(), post.getThumbnail());
+            UserDto author = new UserDto(post.getUser().getUsername(),
+                    "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2",
+                    "no bio yet", 0, 0);
+            boolean isAuthor = currentUser.getId().equals(post.getUser().getId());
+            DetailPostResponse postResponse = new DetailPostResponse(post.getId(), post.getTitle(), post.getContent(),
+                    author, post.getCreatedAt().toString(), post.getThumbnail(), 0, 0, 0, false, false, isAuthor);
             return ResponseEntity.ok(postResponse);
         } catch (JwtException e) {
-            return ResponseEntity.status(401).body("Invalid or expired token");
+            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Server error: " + e.getMessage());
+            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
         }
     }
 
@@ -171,9 +177,23 @@ public class PostController {
                     .body(resource);
 
         } catch (JwtException e) {
-            return ResponseEntity.status(401).body("Invalid or expired token");
+            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Server error: " + e.getMessage());
+            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/edit/{id}")
+    public ResponseEntity<?> getPostToEdit(@PathVariable UUID id, @AuthenticationPrincipal User currentUser) {
+        try {
+            Post post = postService.getPost(id);
+            EditPostResponse editpost = new EditPostResponse(post.getId(), post.getTitle(), post.getContent(),
+                    post.getThumbnail(), post.getFiles().split(", "));
+            return ResponseEntity.ok(editpost);
+        } catch (JwtException e) {
+            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
         }
     }
 
@@ -181,12 +201,12 @@ public class PostController {
     public ResponseEntity<?> updatePost(@PathVariable UUID id, @Validated @RequestBody PostRequest postDto,
             @AuthenticationPrincipal User currentUser) {
         try {
-            Post updatedPost = postService.updatePost(id, postDto);
-            return ResponseEntity.ok(updatedPost);
+            postService.updatePost(id, postDto);
+            return ResponseEntity.ok(new ApiResponse("Blog updated successful"));
         } catch (JwtException e) {
-            return ResponseEntity.status(401).body("Invalid or expired token");
+            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Server error: " + e.getMessage());
+            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
         }
     }
 
@@ -194,11 +214,11 @@ public class PostController {
     public ResponseEntity<?> deletePost(@PathVariable UUID id) {
         try {
             postService.deletePost(id);
-            return ResponseEntity.ok("Post deleted");
+            return ResponseEntity.ok(new ApiResponse("Post deleted"));
         } catch (JwtException e) {
-            return ResponseEntity.status(401).body("Invalid or expired token");
+            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Server error: " + e.getMessage());
+            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
         }
     }
 }
