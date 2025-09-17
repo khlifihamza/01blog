@@ -1,6 +1,4 @@
-/* Global Styles for 01Blog */
-/* @import '~@angular/material/prebuilt-themes/indigo-pink.css'; */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "@angular/material/prebuilt-themes/azure-blue.css";
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
 :root {
@@ -15,6 +13,17 @@
   --primary-800: #1565c0;
   --primary-900: #0d47a1;
   
+  --secondary-color: #00acc1;
+  --accent-color: #ff7043;
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --error-color: #f44336;
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --background: #fafafa;
+  --surface: #ffffff;
+  --border: #e0e0e0;
+
   --accent-50: #fff3e0;
   --accent-100: #ffe0b2;
   --accent-200: #ffcc80;

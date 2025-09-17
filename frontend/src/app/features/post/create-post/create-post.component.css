@@ -79,12 +79,12 @@
 }
 
 .upload-area:hover {
-  border-color: var(--primary-color);
+  border-color: var(--primary-800);
   background: #f8f9ff;
 }
 
 .upload-area.has-media {
-  border: 2px solid var(--primary-color);
+  border: 2px solid var(--primary-800);
   padding: 0;
   position: relative;
 }

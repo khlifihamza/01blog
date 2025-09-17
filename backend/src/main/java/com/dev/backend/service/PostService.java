@@ -5,7 +5,6 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import com.dev.backend.dto.PostRequest;
 import com.dev.backend.model.Post;
 import com.dev.backend.model.User;
@@ -44,7 +43,7 @@ public class PostService {
     }
 
     // public List<Post> getPosts(String username) {
-    //     return postRepository.findByUsernameOrderByCreatedAtDesc(username);
+    // return postRepository.findByUsernameOrderByCreatedAtDesc(username);
     // }
 
     public Post getPost(UUID id) {

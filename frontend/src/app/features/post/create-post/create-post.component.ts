@@ -1,4 +1,11 @@
-import { Component, signal, ViewChild, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  signal,
+  ViewChild,
+  ElementRef,
+  HostListener,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -16,7 +23,7 @@ import { DndUploadDirective } from '../../../core/directives/dnd-upload.directiv
 import { Router } from '@angular/router';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { addLinkTosrc, getExcerpt } from '../../../shared/utils/formathtml';
+import { addLinkTosrc } from '../../../shared/utils/formathtml';
 
 @Component({
   selector: 'app-create-post',
@@ -65,7 +72,7 @@ export class CreatePostComponent {
     private postService: PostService,
     private router: Router,
     private snackBar: MatSnackBar,
-    private cd: ChangeDetectorRef,
+    private cd: ChangeDetectorRef
   ) {
     this.blogForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(100)]],
@@ -89,22 +96,19 @@ export class CreatePostComponent {
   updateCursorPosition() {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
-      // this.showAddButton = false;
       return;
     }
 
     const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
+
+    const rangeRect = range.getBoundingClientRect();
     const editorRect = this.editorDiv.nativeElement.getBoundingClientRect();
 
-    if (rect.width === 0 && rect.height > 0) {
+    if (rangeRect.height > 0) {
       this.buttonPosition = {
-        top: rect.top - editorRect.top + 4,
+        top: rangeRect.top - editorRect.top + rangeRect.height / 2 - 16,
         left: -45,
       };
-      this.showAddButton = true;
-    } else {
-      // this.showAddButton = false;
     }
   }
 
@@ -178,7 +182,6 @@ export class CreatePostComponent {
       reader.readAsDataURL(file);
     }
 
-    // Reset input
     input.value = '';
   }
 
@@ -197,7 +200,6 @@ export class CreatePostComponent {
       reader.readAsDataURL(file);
     }
 
-    // Reset input
     input.value = '';
   }
 
@@ -206,14 +208,24 @@ export class CreatePostComponent {
     if (!selection || selection.rangeCount === 0) return;
 
     const range = selection.getRangeAt(0);
-    // const mediaId = `media-${++this.mediaCounter}`;
 
-    // Create media container
+    if (this.editorDiv.nativeElement == range.commonAncestorContainer) {
+      this.snackBar.open("can't insert media in the start of the stoty", 'Close', {
+        duration: 5000,
+      });
+      return;
+    }
+
+    if (range.commonAncestorContainer.nodeName == '#text') {
+      this.snackBar.open("can't insert media next to text", 'Close', {
+        duration: 5000,
+      });
+      return;
+    }
     const mediaDiv = document.createElement('div');
     mediaDiv.className = 'media-element';
     mediaDiv.contentEditable = 'false';
 
-    // Create media element
     let mediaElement: HTMLImageElement | HTMLVideoElement;
     if (type === 'image') {
       mediaElement = document.createElement('img');
@@ -228,16 +240,12 @@ export class CreatePostComponent {
       mediaElement.style.maxWidth = '100%';
       mediaElement.style.height = 'auto';
     }
-
-    // Create delete button
     const deleteBtn = document.createElement('button');
     deleteBtn.className =
       'delete-btn mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-unthemed';
     deleteBtn.setAttribute('mat-icon-button', '');
     deleteBtn.type = 'button';
     deleteBtn.setAttribute('aria-label', 'Delete');
-
-    // Create mat-icon element
     const iconElement = document.createElement('mat-icon');
     iconElement.textContent = 'delete';
     iconElement.className =
@@ -255,31 +263,23 @@ export class CreatePostComponent {
 
     mediaDiv.appendChild(mediaElement);
     mediaDiv.appendChild(deleteBtn);
-
-    // Insert at cursor position
     range.deleteContents();
     range.insertNode(mediaDiv);
-
-    // Add a line break after media for better UX
     const br = document.createElement('br');
     range.setStartAfter(mediaDiv);
     range.insertNode(br);
-
-    // Move cursor after the media element and line break
     const newRange = document.createRange();
     newRange.setStartAfter(br);
     newRange.collapse(true);
     selection.removeAllRanges();
     selection.addRange(newRange);
-
-    // Update content
     this.onContentChange({ target: this.editorDiv.nativeElement } as any);
 
     this.mediaCounter++;
   }
 
   isContentValid(): boolean {
-    return this.currentContent.length >= 100;
+    return this.thumbnailFile != null && this.currentContent.length >= 100;
   }
 
   publishPost() {
@@ -302,7 +302,7 @@ export class CreatePostComponent {
             this.snackBar.open('Blog created successful', 'Close', { duration: 5000 });
             this.goBack();
           },
-          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 })
+          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
         });
       };
 

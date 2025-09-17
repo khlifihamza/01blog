@@ -10,7 +10,6 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -61,7 +60,7 @@ public class PostController {
         }
     }
 
-    // @GetMapping("/profile/{username}")
+    // @GetMapping("/profile/@{username}")
     // public ResponseEntity<?> getUserPosts(@PathVariable String username,
     // @AuthenticationPrincipal User currentUser) {
     // try {
@@ -164,17 +163,16 @@ public class PostController {
                 return ResponseEntity.notFound().build();
             }
 
-            UrlResource resource = new UrlResource(path.toUri());
-
-            String contentType = Files.probeContentType(path);
-
-            if (contentType == null) {
-                contentType = "application/octet-stream";
+            String mimeType = Files.probeContentType(path);
+            if (mimeType == null) {
+                mimeType = "application/octet-stream";
             }
 
+            byte[] fileBytes = Files.readAllBytes(path);
+
             return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .body(resource);
+                    .contentType(MediaType.parseMediaType(mimeType))
+                    .body(fileBytes);
 
         } catch (JwtException e) {
             return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));

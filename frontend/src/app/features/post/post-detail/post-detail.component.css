@@ -27,7 +27,7 @@
 }
 
 .bookmarked {
-  color: var(--primary-color);
+  color: var(--primary-800);
 }
 
 .post-content {
@@ -50,7 +50,7 @@
 
 .category-badge {
   display: inline-block;
-  background: var(--primary-color);
+  background: var(--primary-800);
   color: white;
   padding: 6px 16px;
   border-radius: 20px;

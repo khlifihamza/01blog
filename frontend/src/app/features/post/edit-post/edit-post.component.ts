@@ -140,27 +140,45 @@ export class EditPostComponent implements OnInit {
         });
       };
 
-      const formData = new FormData();
-      if (this.thumbnailFile) formData.append('thumbnail', this.thumbnailFile);
-      if (this.mediaFiles().length > 0) {
-        this.mediaFiles().forEach((f) => formData.append('files', f.file));
-      }
-      if (this.thumbnailFile || this.mediaFiles().length > 0) {
-        this.postService.uploadFiles(formData).subscribe({
-          next: (response) => {
-            if (this.thumbnailFile) {
-              this.oldThumbnail = response.thumbnail;
-            }
-            if (this.mediaFiles().length > 0) {
-              this.oldFileNames = response.fileNames;
-            }
-            updatePost();
+      if (!this.thumbnailFile) {
+        this.postService.getOldThumbnail(this.oldThumbnail!).subscribe({
+          next: (blob) => {
+            this.thumbnailFile = new File([blob], this.oldThumbnail!, { type: blob.type });
+            this.uploadAndUpdate(updatePost);
           },
-          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+          error: (err) => console.error('Download failed:', err),
         });
       } else {
-        updatePost();
+        this.uploadAndUpdate(updatePost);
       }
+    }
+  }
+
+  private uploadAndUpdate(updatePost: () => void) {
+    const formData = new FormData();
+
+    if (this.thumbnailFile) {
+      formData.append('thumbnail', this.thumbnailFile);
+    }
+    if (this.mediaFiles().length > 0) {
+      this.mediaFiles().forEach((f) => formData.append('files', f.file));
+    }
+
+    if (formData.has('thumbnail') || formData.has('files')) {
+      this.postService.uploadFiles(formData).subscribe({
+        next: (response) => {
+          if (this.thumbnailFile) {
+            this.oldThumbnail = response.thumbnail;
+          }
+          if (this.mediaFiles().length > 0) {
+            this.oldFileNames = response.fileNames;
+          }
+          updatePost();
+        },
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      });
+    } else {
+      updatePost();
     }
   }
 
@@ -182,6 +200,7 @@ export class EditPostComponent implements OnInit {
       reader.readAsDataURL(file);
     }
     this.editorDiv?.nativeElement.focus();
+    this.existingThumbnail = true;
   }
 
   onContentChange(event: Event) {
@@ -199,22 +218,19 @@ export class EditPostComponent implements OnInit {
   updateCursorPosition() {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
-      // this.showAddButton = false;
       return;
     }
 
     const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
+
+    const rangeRect = range.getBoundingClientRect();
     const editorRect = this.editorDiv.nativeElement.getBoundingClientRect();
 
-    if (rect.width === 0 && rect.height > 0) {
+    if (rangeRect.height > 0) {
       this.buttonPosition = {
-        top: rect.top - editorRect.top + 4,
+        top: rangeRect.top - editorRect.top + rangeRect.height / 2 - 16,
         left: -45,
       };
-      this.showAddButton = true;
-    } else {
-      // this.showAddButton = false;
     }
   }
 
@@ -290,6 +306,21 @@ export class EditPostComponent implements OnInit {
     if (!selection || selection.rangeCount === 0) return;
 
     const range = selection.getRangeAt(0);
+
+    if (this.editorDiv.nativeElement == range.commonAncestorContainer ) {
+      this.snackBar.open("can't insert media in the start of the stoty", 'Close', {
+        duration: 5000,
+      });
+      return;
+    }
+
+    if (range.commonAncestorContainer.nodeName == "#text") {
+      this.snackBar.open("can't insert media next to text", 'Close', {
+        duration: 5000,
+      });
+      return;
+    }
+
     const mediaDiv = document.createElement('div');
     mediaDiv.className = 'media-element';
     mediaDiv.contentEditable = 'false';
@@ -368,7 +399,9 @@ export class EditPostComponent implements OnInit {
   }
 
   private setupExistingMediaDeleteButtons() {
-    const deleteButtons = this.editorDiv.nativeElement.querySelectorAll('.media-element .delete-btn');
+    const deleteButtons = this.editorDiv.nativeElement.querySelectorAll(
+      '.media-element .delete-btn'
+    );
     deleteButtons.forEach((element: Element) => {
       const button = element as HTMLButtonElement;
       button.onclick = null;
