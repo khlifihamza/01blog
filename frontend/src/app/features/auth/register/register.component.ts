@@ -82,7 +82,7 @@ export class RegisterComponent {
     this.loading = true;
 
     this.authService.register(registrationRequest).subscribe({
-      next: (response) => {
+      next: () => {
         this.loading = false;
         this.snackBar.open('Account created successfully!', 'Close', { duration: 5000 });
         this.navigateToLogin();

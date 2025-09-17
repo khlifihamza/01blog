@@ -1,0 +1,150 @@
+<div class="post-detail-container">
+  <!-- Header -->
+  <mat-toolbar class="post-header">
+    <div class="header-content">
+      <button mat-icon-button (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+
+      <div class="header-actions">
+        <button mat-icon-button (click)="toggleBookmark()">
+          <mat-icon [class.bookmarked]="post?.isBookmarked">
+            {{ post?.isBookmarked ? 'bookmark' : 'bookmark_border' }}
+          </mat-icon>
+        </button>
+
+        <button mat-icon-button [matMenuTriggerFor]="postMenu">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+
+        <mat-menu #postMenu="matMenu">
+          <button mat-menu-item (click)="editPost()" *ngIf="isAuthor">
+            <mat-icon>edit</mat-icon>
+            <span>Edit Post</span>
+          </button>
+          <button mat-menu-item (click)="deletePost()" *ngIf="isAuthor">
+            <mat-icon>delete</mat-icon>
+            <span>Delete Post</span>
+          </button>
+          <!-- <button mat-menu-item (click)="reportPost()">
+            <mat-icon>flag</mat-icon>
+            <span>Report</span>
+          </button> -->
+          <button mat-menu-item (click)="copyLink()">
+            <mat-icon>link</mat-icon>
+            <span>Copy Link</span>
+          </button>
+        </mat-menu>
+      </div>
+    </div>
+  </mat-toolbar>
+
+  <!-- Post Content -->
+  <div class="post-content" *ngIf="post">
+    <article class="post-article">
+      <!-- Post Header -->
+      <header class="article-header">
+        <h1 class="article-title">{{ post.title }}</h1>
+
+        <div class="article-meta">
+          <div class="author-info">
+            <img [src]="post.author.avatar" [alt]="post.author.username" class="author-avatar" />
+            <div class="author-details">
+              <div class="author-name">{{ post.author.username }}</div>
+              <div class="publish-info">
+                <span>{{ formatDate(post.publishedDate) }}</span>
+                <span class="separator">•</span>
+                <span>{{ post.readTime }} min read</span>
+              </div>
+            </div>
+          </div>
+
+          <button mat-raised-button color="primary" class="follow-btn" (click)="toggleFollow()">
+            {{ isFollowing ? 'Following' : 'Follow' }}
+          </button>
+        </div>
+      </header>
+
+      <!-- Featured Image -->
+      <div class="featured-image">
+        <img [src]="'http://localhost:8080/api/post/file/' + post.thumbnail" [alt]="post.title" />
+      </div>
+
+      <!-- Article Content -->
+      <div class="article-content">
+        <div class="article-body" [innerHTML]="safeContent"></div>
+      </div>
+
+      <!-- Engagement Actions -->
+      <div class="engagement-section">
+        <div class="engagement-actions">
+          <button
+            mat-button
+            class="engagement-btn"
+            [class.liked]="post.isLiked"
+            (click)="toggleLike()"
+          >
+            <mat-icon>{{ post.isLiked ? 'favorite' : 'favorite_border' }}</mat-icon>
+            <span>{{ post.likes }}</span>
+          </button>
+
+          <button mat-button class="engagement-btn" (click)="scrollToComments()">
+            <mat-icon>comment</mat-icon>
+            <span>{{ post.comments }}</span>
+          </button>
+        </div>
+      </div>
+    </article>
+
+    <!-- Author Profile Card -->
+    <mat-card class="author-card">
+      <div class="author-card-content">
+        <img [src]="post.author.avatar" [alt]="post.author.username" class="author-card-avatar" />
+        <div class="author-card-info">
+          <h3 class="author-card-name">{{ post.author.username }}</h3>
+          <p class="author-card-bio">{{ post.author.bio }}</p>
+
+          <div class="author-stats">
+            <span>{{ post.author.followers }} Followers</span>
+            <span class="separator">•</span>
+            <span>{{ post.author.following }} Following</span>
+          </div>
+        </div>
+
+        <button mat-raised-button color="primary" (click)="toggleFollow()">
+          {{ isFollowing ? 'Following' : 'Follow' }}
+        </button>
+      </div>
+    </mat-card>
+
+    <!-- Comments Section -->
+    <div class="comments-section" id="comments">
+      <h3 class="comments-title">Comments ({{ post.comments }})</h3>
+
+      <div class="comment-form">
+        <textarea placeholder="Share your thoughts..." rows="3"></textarea>
+        <button mat-raised-button color="primary">Post Comment</button>
+      </div>
+
+      <div class="comments-list">
+        <div class="comment" *ngFor="let comment of mockComments">
+          <img [src]="comment.avatar" [alt]="comment.author" class="comment-avatar" />
+          <div class="comment-content">
+            <div class="comment-header">
+              <span class="comment-author">{{ comment.author }}</span>
+              <span class="comment-date">{{ comment.date }}</span>
+            </div>
+            <p class="comment-text">{{ comment.text }}</p>
+            <div class="comment-actions">
+              <button mat-button class="comment-action">
+                <mat-icon>thumb_up</mat-icon>
+                {{ comment.likes }}
+              </button>
+              <button mat-button class="comment-action">Reply</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

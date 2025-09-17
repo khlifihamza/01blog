@@ -123,7 +123,7 @@
         >
           @if(loading){
           <mat-progress-spinner diameter="24"></mat-progress-spinner>
-          } @if(!loading){
+          } @else{
           <span *ngIf="!loading">Sign Up</span>
           }
         </button>

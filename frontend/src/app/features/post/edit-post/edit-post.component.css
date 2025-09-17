@@ -1,0 +1,258 @@
+.create-blog-container {
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+.create-header {
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.header-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.create-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.blog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.title-field {
+  width: 100%;
+}
+
+.title-field .mat-mdc-form-field-input-control input {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.content-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.upload-area {
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.upload-area:hover {
+  border-color: var(--primary-800);
+  background: #f8f9ff;
+}
+
+.upload-area.has-media {
+  border: 2px solid var(--primary-800);
+  padding: 0;
+  position: relative;
+}
+
+.upload-placeholder mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #999;
+  margin-bottom: 16px;
+}
+
+.upload-placeholder p {
+  font-size: 16px;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.upload-placeholder small {
+  color: var(--text-secondary);
+}
+
+.media-preview {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.media-preview img {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+  display: block;
+}
+
+.editor-container {
+  position: relative;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  min-height: 400px;
+  background: white;
+}
+
+.remove-media {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+}
+
+.editable-content {
+  min-height: 380px;
+  padding: 20px;
+  font-size: 16px;
+  line-height: 1.6;
+  font-family: 'Roboto', sans-serif;
+  outline: none;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.editable-content.empty:before {
+  content: attr(data-placeholder);
+  color: #999;
+  pointer-events: none;
+  position: absolute;
+}
+
+.editable-content:focus {
+  outline: none;
+}
+
+.editor-container:focus-within {
+  border-color: #1976d2;
+  border-width: 2px;
+}
+
+.floating-add-btn {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+  opacity: 0.7;
+}
+
+.floating-add-btn:hover {
+  background: #e0e0e0;
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.floating-add-btn mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.content-validation {
+  margin-top: 8px;
+}
+
+.error-text {
+  color: #f44336;
+  font-size: 12px;
+}
+
+/* Media Elements */
+.media-element {
+  margin: 16px 0;
+  text-align: center;
+  position: relative;
+}
+
+.media-element img,
+.media-element video {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.media-element .remove-media {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+  border-radius: 50%;
+}
+
+.media-element .remove-media mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    padding: 0 16px;
+  }
+
+  .create-content {
+    padding: 24px 16px;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .header-actions button span {
+    display: none;
+  }
+
+  .floating-add-btn {
+    width: 28px;
+    height: 28px;
+    min-height: 28px;
+  }
+}
