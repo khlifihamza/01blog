@@ -1,5 +1,6 @@
 package com.dev.backend.controller;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,8 +38,6 @@ import com.dev.backend.model.User;
 import com.dev.backend.service.PostService;
 import com.dev.backend.service.UserService;
 
-import io.jsonwebtoken.JwtException;
-
 @RestController
 @RequestMapping("/api/post")
 public class PostController {
@@ -52,167 +51,120 @@ public class PostController {
     @GetMapping("/profile/{username}")
     public ResponseEntity<?> getUserPosts(@PathVariable String username,
             @AuthenticationPrincipal User currentUser) {
-        try {
-            User user = userService.getUserByUsername(username);
-            List<Post> posts = postService.getPosts(user.getId());
-            List<ProfilePostResponse> postsResponse = new ArrayList<>();
-            for (Post post : posts) {
-                ProfilePostResponse postResponse = new ProfilePostResponse(post.getId(), post.getTitle(),
-                        post.getCreatedAt().toString(), 0, 0, 0, post.getThumbnail());
-                postsResponse.add(postResponse);
-            }
-            return ResponseEntity.ok(postsResponse);
-        } catch (JwtException e) {
-            return ResponseEntity.status(401).body("Invalid or expired token");
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Server error: " + e.getMessage());
+        User user = userService.getUserByUsername(username);
+        List<Post> posts = postService.getPosts(user.getId());
+        List<ProfilePostResponse> postsResponse = new ArrayList<>();
+        for (Post post : posts) {
+            ProfilePostResponse postResponse = new ProfilePostResponse(post.getId(), post.getTitle(),
+                    post.getCreatedAt().toString(), 0, 0, 0, post.getThumbnail());
+            postsResponse.add(postResponse);
         }
+        return ResponseEntity.ok(postsResponse);
     }
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse> createPost(@Validated @RequestBody PostRequest postDto,
             @AuthenticationPrincipal User currentUser) {
-        try {
-            postService.savePost(postDto, currentUser);
-            return ResponseEntity.ok(new ApiResponse("created successefully"));
-        } catch (JwtException e) {
-            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
-        }
+        postService.savePost(postDto, currentUser);
+        return ResponseEntity.ok(new ApiResponse("created successefully"));
     }
 
     @PostMapping("/upload")
     public ResponseEntity<?> upload(@RequestParam(name = "files", required = false) List<MultipartFile> files,
             @RequestParam("thumbnail") MultipartFile thumbnail,
-            @AuthenticationPrincipal User currentUser) {
-        try {
-            String thumbnailId = "";
-            String thumbnailName = thumbnail.getOriginalFilename();
-            String thumbnailExtension = (thumbnailName != null && thumbnailName.contains("."))
-                    ? thumbnailName.substring(thumbnailName.lastIndexOf("."))
-                    : "";
-            thumbnailId = UUID.randomUUID() + thumbnailExtension;
+            @AuthenticationPrincipal User currentUser) throws IOException {
+        String thumbnailId = "";
+        String thumbnailName = thumbnail.getOriginalFilename();
+        String thumbnailExtension = (thumbnailName != null && thumbnailName.contains("."))
+                ? thumbnailName.substring(thumbnailName.lastIndexOf("."))
+                : "";
+        thumbnailId = UUID.randomUUID() + thumbnailExtension;
 
-            Path path = Paths.get(uploadDir + "/images", thumbnailId);
+        Path path = Paths.get(uploadDir + "/images", thumbnailId);
 
-            Files.createDirectories(path.getParent());
-            Files.copy(thumbnail.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-            List<String> fileNames = new ArrayList<>();
-            if (files != null && !files.isEmpty()) {
-                for (MultipartFile file : files) {
-                    String fileName = file.getOriginalFilename();
-                    String extension = (fileName != null && fileName.contains("."))
-                            ? fileName.substring(fileName.lastIndexOf("."))
-                            : "";
-                    String id = UUID.randomUUID() + extension;
+        Files.createDirectories(path.getParent());
+        Files.copy(thumbnail.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+        List<String> fileNames = new ArrayList<>();
+        if (files != null && !files.isEmpty()) {
+            for (MultipartFile file : files) {
+                String fileName = file.getOriginalFilename();
+                String extension = (fileName != null && fileName.contains("."))
+                        ? fileName.substring(fileName.lastIndexOf("."))
+                        : "";
+                String id = UUID.randomUUID() + extension;
 
-                    String contentType = file.getContentType();
-                    String subDir = "";
-                    if (contentType != null) {
-                        subDir = (contentType.startsWith("image")) ? "/images" : "/videos";
-                    }
-
-                    path = Paths.get(uploadDir + subDir, id);
-
-                    Files.createDirectories(path.getParent());
-                    Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-
-                    fileNames.add(id);
+                String contentType = file.getContentType();
+                String subDir = "";
+                if (contentType != null) {
+                    subDir = (contentType.startsWith("image")) ? "/images" : "/videos";
                 }
+
+                path = Paths.get(uploadDir + subDir, id);
+
+                Files.createDirectories(path.getParent());
+                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+
+                fileNames.add(id);
             }
-            UploadResponse response = new UploadResponse(thumbnailId, fileNames);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
         }
+        UploadResponse response = new UploadResponse(thumbnailId, fileNames);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getPost(@PathVariable UUID id,
             @AuthenticationPrincipal User currentUser) {
-        try {
-            Post post = postService.getPost(id);
-            UserDto author = new UserDto(post.getUser().getUsername(),
-                    "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2",
-                    "no bio yet", 0, 0);
-            boolean isAuthor = currentUser.getId().equals(post.getUser().getId());
-            DetailPostResponse postResponse = new DetailPostResponse(post.getId(), post.getTitle(), post.getContent(),
-                    author, post.getCreatedAt().toString(), post.getThumbnail(), 0, 0, 0, false, false, isAuthor);
-            return ResponseEntity.ok(postResponse);
-        } catch (JwtException e) {
-            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
-        }
+        Post post = postService.getPost(id);
+        UserDto author = new UserDto(post.getUser().getUsername(),
+                "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2",
+                "no bio yet", 0, 0);
+        boolean isAuthor = currentUser.getId().equals(post.getUser().getId());
+        DetailPostResponse postResponse = new DetailPostResponse(post.getId(), post.getTitle(), post.getContent(),
+                author, post.getCreatedAt().toString(), post.getThumbnail(), 0, 0, 0, false, false, isAuthor);
+        return ResponseEntity.ok(postResponse);
     }
 
     @GetMapping("/file/{mediaName}")
     public ResponseEntity<?> getFile(@PathVariable String mediaName,
-            @AuthenticationPrincipal User currentUser) {
-        try {
-            Path path = (Files.exists(Paths.get(uploadDir + "/images").resolve(mediaName).normalize()))
-                    ? Paths.get(uploadDir + "/images").resolve(mediaName).normalize()
-                    : Paths.get(uploadDir + "/videos").resolve(mediaName).normalize();
+            @AuthenticationPrincipal User currentUser) throws IOException {
+        Path path = (Files.exists(Paths.get(uploadDir + "/images").resolve(mediaName).normalize()))
+                ? Paths.get(uploadDir + "/images").resolve(mediaName).normalize()
+                : Paths.get(uploadDir + "/videos").resolve(mediaName).normalize();
 
-            if (path == null || !Files.exists(path)) {
-                return ResponseEntity.notFound().build();
-            }
-
-            String mimeType = Files.probeContentType(path);
-            if (mimeType == null) {
-                mimeType = "application/octet-stream";
-            }
-
-            byte[] fileBytes = Files.readAllBytes(path);
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(mimeType))
-                    .body(fileBytes);
-
-        } catch (JwtException e) {
-            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
+        if (path == null || !Files.exists(path)) {
+            return ResponseEntity.notFound().build();
         }
+
+        String mimeType = Files.probeContentType(path);
+        if (mimeType == null) {
+            mimeType = "application/octet-stream";
+        }
+
+        byte[] fileBytes = Files.readAllBytes(path);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(mimeType))
+                .body(fileBytes);
     }
 
     @GetMapping("/edit/{id}")
     public ResponseEntity<?> getPostToEdit(@PathVariable UUID id, @AuthenticationPrincipal User currentUser) {
-        try {
-            Post post = postService.getPost(id);
-            EditPostResponse editpost = new EditPostResponse(post.getId(), post.getTitle(), post.getContent(),
-                    post.getThumbnail(), post.getFiles().split(", "));
-            return ResponseEntity.ok(editpost);
-        } catch (JwtException e) {
-            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
-        }
+        Post post = postService.getPost(id);
+        EditPostResponse editpost = new EditPostResponse(post.getId(), post.getTitle(), post.getContent(),
+                post.getThumbnail(), post.getFiles().split(", "));
+        return ResponseEntity.ok(editpost);
     }
 
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updatePost(@PathVariable UUID id, @Validated @RequestBody PostRequest postDto,
             @AuthenticationPrincipal User currentUser) {
-        try {
-            postService.updatePost(id, postDto);
-            return ResponseEntity.ok(new ApiResponse("Blog updated successful"));
-        } catch (JwtException e) {
-            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
-        }
+        postService.updatePost(id, postDto);
+        return ResponseEntity.ok(new ApiResponse("Blog updated successful"));
     }
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deletePost(@PathVariable UUID id) {
-        try {
-            postService.deletePost(id);
-            return ResponseEntity.ok(new ApiResponse("Post deleted"));
-        } catch (JwtException e) {
-            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
-        }
+        postService.deletePost(id);
+        return ResponseEntity.ok(new ApiResponse("Post deleted"));
     }
 }

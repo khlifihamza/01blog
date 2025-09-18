@@ -11,5 +11,4 @@ import com.dev.backend.model.Post;
 @Repository
 public interface PostRepository extends JpaRepository<Post, UUID>{
     List<Post> findByUserIdOrderByCreatedAtDesc(UUID userId);
-    // List<Post> findByUsernameOrderByCreatedAtDesc(String username);
 }

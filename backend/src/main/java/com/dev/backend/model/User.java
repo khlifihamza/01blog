@@ -38,6 +38,20 @@ public class User extends BaseEntity implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Post> posts = new ArrayList<>();
 
+    @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Follow> following = new ArrayList<>();
+    
+    @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Follow> followers = new ArrayList<>();
+
+    public List<Follow> getFollowers() {
+        return followers;
+    }
+
+    public List<Follow> getFollowing() {
+        return following;
+    }
+
     public List<Post> getPosts() {
         return posts;
     }
