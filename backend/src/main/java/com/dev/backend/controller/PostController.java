@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dev.backend.dto.PostRequest;
+import com.dev.backend.dto.ProfilePostResponse;
 import com.dev.backend.dto.ApiResponse;
 import com.dev.backend.dto.DetailPostResponse;
 import com.dev.backend.dto.EditPostResponse;
@@ -34,6 +35,7 @@ import com.dev.backend.dto.UserDto;
 import com.dev.backend.model.Post;
 import com.dev.backend.model.User;
 import com.dev.backend.service.PostService;
+import com.dev.backend.service.UserService;
 
 import io.jsonwebtoken.JwtException;
 
@@ -42,36 +44,30 @@ import io.jsonwebtoken.JwtException;
 public class PostController {
     @Autowired
     private PostService postService;
+    @Autowired
+    private UserService userService;
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    @GetMapping("/profile")
-    public ResponseEntity<?> getAuthUserPosts(@AuthenticationPrincipal User currentUser) {
+    @GetMapping("/profile/{username}")
+    public ResponseEntity<?> getUserPosts(@PathVariable String username,
+            @AuthenticationPrincipal User currentUser) {
         try {
-            if (currentUser == null) {
-                return ResponseEntity.status(401).body("User not found");
+            User user = userService.getUserByUsername(username);
+            List<Post> posts = postService.getPosts(user.getId());
+            List<ProfilePostResponse> postsResponse = new ArrayList<>();
+            for (Post post : posts) {
+                ProfilePostResponse postResponse = new ProfilePostResponse(post.getId(), post.getTitle(),
+                        post.getCreatedAt().toString(), 0, 0, 0, post.getThumbnail());
+                postsResponse.add(postResponse);
             }
-            List<Post> posts = postService.getPosts(currentUser.getId());
-            return ResponseEntity.ok(posts);
+            return ResponseEntity.ok(postsResponse);
         } catch (JwtException e) {
-            return ResponseEntity.status(401).body(new ApiResponse("Invalid or expired token"));
+            return ResponseEntity.status(401).body("Invalid or expired token");
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(new ApiResponse("Server error: " + e.getMessage()));
+            return ResponseEntity.status(500).body("Server error: " + e.getMessage());
         }
     }
-
-    // @GetMapping("/profile/@{username}")
-    // public ResponseEntity<?> getUserPosts(@PathVariable String username,
-    // @AuthenticationPrincipal User currentUser) {
-    // try {
-    // List<Post> posts = postService.getPosts(username);
-    // return ResponseEntity.ok(posts);
-    // } catch (JwtException e) {
-    // return ResponseEntity.status(401).body("Invalid or expired token");
-    // } catch (Exception e) {
-    // return ResponseEntity.status(500).body("Server error: " + e.getMessage());
-    // }
-    // }
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse> createPost(@Validated @RequestBody PostRequest postDto,

@@ -58,3 +58,13 @@ export interface EditPost {
   thumbnail: string;
   fileNames: string[];
 }
+
+export interface ProfilePost {
+  id: string;
+  title: string;
+  createdAt: string;
+  readTime: number;
+  likes: number;
+  comments: number;
+  thumbnail: string;
+}

@@ -1,14 +1,15 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './features/auth/login/login.component';
-import { RegisterComponent } from './features/auth/register/register.component';
+import { LoginComponent } from './features/auth/login/login';
+import { RegisterComponent } from './features/auth/register/register';
 import { AuthGuard } from './core/guards/auth.guard';
 import { GuestGuard } from './core/guards/guest.guard';
-import { HomeComponent } from './features/home/home.component';
-import { AdminComponent } from './features/admin/admin.component';
+import { HomeComponent } from './features/home/home';
+import { AdminComponent } from './features/admin/admin';
 import { AdminGuard } from './core/guards/admin.guard';
-import { CreatePostComponent } from './features/post/create-post/create-post.component';
-import { PostDetailComponent } from './features/post/post-detail/post-detail.component';
-import { EditPostComponent } from './features/post/edit-post/edit-post.component';
+import { CreatePostComponent } from './features/post/create-post/create-post';
+import { PostDetailComponent } from './features/post/post-detail/post-detail';
+import { EditPostComponent } from './features/post/edit-post/edit-post';
+import { ProfileComponent } from './features/profile/profile';
 
 export const routes: Routes = [
   {
@@ -36,6 +37,7 @@ export const routes: Routes = [
     component: CreatePostComponent,
     canActivate: [AuthGuard],
   },
-  { path: 'post/:id', component: PostDetailComponent },
-  { path: 'edit-post/:id', component: EditPostComponent },
+  { path: 'post/:id', component: PostDetailComponent, canActivate: [AuthGuard] },
+  { path: 'edit-post/:id', component: EditPostComponent, canActivate: [AuthGuard] },
+  { path: 'profile/:username', component: ProfileComponent, canActivate: [AuthGuard] },
 ];

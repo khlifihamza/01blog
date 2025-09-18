@@ -48,9 +48,9 @@
 
         <div class="article-meta">
           <div class="author-info">
-            <img [src]="post.author.avatar" [alt]="post.author.username" class="author-avatar" />
+            <img [src]="post.author.avatar" [alt]="post.author.username" class="author-avatar" (click)="viewProfile()"/>
             <div class="author-details">
-              <div class="author-name">{{ post.author.username }}</div>
+              <div class="author-name" (click)="viewProfile()">{{ post.author.username }}</div>
               <div class="publish-info">
                 <span>{{ formatDate(post.publishedDate) }}</span>
                 <span class="separator">•</span>

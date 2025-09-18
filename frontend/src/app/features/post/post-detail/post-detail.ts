@@ -27,8 +27,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatChipsModule,
     MatDialogModule,
   ],
-  templateUrl: './post-detail.component.html',
-  styleUrl: './post-detail.component.css',
+  templateUrl: './post-detail.html',
+  styleUrl: './post-detail.css',
 })
 export class PostDetailComponent implements OnInit {
   post: DetailPost | null = null;
@@ -160,5 +160,9 @@ export class PostDetailComponent implements OnInit {
 
   editPost() {
     this.router.navigate(['/edit-post', this.post?.id]);
+  }
+
+  viewProfile() {
+    this.router.navigate(['/profile', this.post?.author.username]);
   }
 }

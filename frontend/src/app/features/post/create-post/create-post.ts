@@ -43,8 +43,8 @@ import { addLinkTosrc } from '../../../shared/utils/formathtml';
     MatMenuModule,
     MatToolbarModule,
   ],
-  templateUrl: './create-post.component.html',
-  styleUrls: ['./create-post.component.css'],
+  templateUrl: './create-post.html',
+  styleUrls: ['./create-post.css'],
 })
 export class CreatePostComponent {
   @ViewChild('editorDiv') editorDiv!: ElementRef<HTMLDivElement>;

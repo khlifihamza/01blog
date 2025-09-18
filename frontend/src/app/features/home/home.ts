@@ -31,8 +31,8 @@ import { MatInputModule } from '@angular/material/input';
     MatToolbarModule,
     MatInputModule
   ],
-  templateUrl: './home.component.html',
-  styleUrl: './home.component.css',
+  templateUrl: './home.html',
+  styleUrl: './home.css',
 })
 export class HomeComponent implements OnInit {
   searchQuery = '';
