@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -12,6 +12,7 @@ import { DetailPost } from '../../../shared/models/post.model';
 import { PostService } from '../../../core/services/post.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { FollowService } from '../../../core/services/follow.service';
 // import { ReportDialogComponent } from './report-dialog.component';
 
 @Component({
@@ -32,7 +33,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 })
 export class PostDetailComponent implements OnInit {
   post: DetailPost | null = null;
-  isFollowing = false;
+  isFollowing = signal(false);
   isAuthor = true;
   safeContent: SafeHtml | null = null;
   mockComments = [
@@ -60,7 +61,8 @@ export class PostDetailComponent implements OnInit {
     private router: Router,
     private sanitizer: DomSanitizer,
     private cd: ChangeDetectorRef,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private followService: FollowService,
   ) {}
 
   ngOnInit() {
@@ -74,6 +76,7 @@ export class PostDetailComponent implements OnInit {
     this.postService.getPost(postId).subscribe({
       next: (post) => {
         this.isAuthor = post.isAuthor;
+        this.isFollowing.set(post.author.isFollowed);
         this.post = post;
         this.safeContent = this.sanitizer.bypassSecurityTrustHtml(
           this.formatContent(this.post.content)
@@ -113,8 +116,28 @@ export class PostDetailComponent implements OnInit {
     }
   }
 
-  toggleFollow() {
-    this.isFollowing = !this.isFollowing;
+  followUser() {
+    if (!this.isFollowing()) {
+      this.followService.follow(this.post!.author.username).subscribe({
+        next: () => {
+          this.isFollowing.set(!this.isFollowing());
+          if (this.post?.author) {
+            this.post!.author.followers += this.isFollowing() ? 1 : -1;
+          }
+        },
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      });
+    } else {
+      this.followService.unfollow(this.post!.author.username).subscribe({
+        next: () => {
+          this.isFollowing.set(!this.isFollowing());
+          if (this.post?.author) {
+            this.post!.author.followers += this.isFollowing() ? 1 : -1;
+          }
+        },
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      });
+    }
   }
 
   deletePost() {

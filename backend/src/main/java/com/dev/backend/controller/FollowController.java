@@ -22,14 +22,14 @@ public class FollowController {
     private UserService userService;
 
     @GetMapping("/follow/{username}")
-    public ResponseEntity<?> followUser(@PathVariable String username, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<ApiResponse> followUser(@PathVariable String username, @AuthenticationPrincipal User currentUser) {
         User userToFollow = userService.getUserByUsername(username);
         followService.followUser(currentUser.getId(), userToFollow.getId());
         return ResponseEntity.ok(new ApiResponse("Follewed successefully"));
     }
 
     @GetMapping("/unfollow/{username}")
-    public ResponseEntity<?> unfollowUser(@PathVariable String username, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<ApiResponse> unfollowUser(@PathVariable String username, @AuthenticationPrincipal User currentUser) {
         User userToFollow = userService.getUserByUsername(username);
         followService.unfollowUser(currentUser.getId(), userToFollow.getId());
         return ResponseEntity.ok(new ApiResponse("Unfollewed successefully"));

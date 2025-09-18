@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +10,8 @@ import { ProfilePost } from '../../shared/models/post.model';
 import { UserProfile } from '../../shared/models/user.model';
 import { PostService } from '../../core/services/post.service';
 import { ProfileService } from '../../core/services/profile.service';
+import { FollowService } from '../../core/services/follow.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-profile',
@@ -27,16 +29,18 @@ import { ProfileService } from '../../core/services/profile.service';
 })
 export class ProfileComponent implements OnInit {
   profile: UserProfile | null = null;
-  isFollowing = false;
+  isFollowing = signal(false);
   userPosts: ProfilePost[] = [];
   username = '';
 
   constructor(
     private router: Router,
     private postService: PostService,
+    private followService: FollowService,
     private route: ActivatedRoute,
     private cd: ChangeDetectorRef,
-    private profileService: ProfileService
+    private profileService: ProfileService,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
@@ -52,6 +56,7 @@ export class ProfileComponent implements OnInit {
     this.profileService.getProfileDetails(this.username).subscribe({
       next: (profile) => {
         this.profile = profile;
+        this.isFollowing.set(profile.isFollowed);
         this.cd.detectChanges();
       },
       error: (error) => console.log(error),
@@ -77,9 +82,26 @@ export class ProfileComponent implements OnInit {
   }
 
   followUser() {
-    this.isFollowing = !this.isFollowing;
-    if (this.profile) {
-      this.profile.followers += this.isFollowing ? 1 : -1;
+    if (!this.isFollowing()) {
+      this.followService.follow(this.profile!.username).subscribe({
+        next: () => {
+          this.isFollowing.set(!this.isFollowing());
+          if (this.profile) {
+            this.profile.followers += this.isFollowing() ? 1 : -1;
+          }
+        },
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      });
+    } else {
+      this.followService.unfollow(this.profile!.username).subscribe({
+        next: () => {
+          this.isFollowing.set(!this.isFollowing());
+          if (this.profile) {
+            this.profile.followers += this.isFollowing() ? 1 : -1;
+          }
+        },
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      });
     }
   }
 

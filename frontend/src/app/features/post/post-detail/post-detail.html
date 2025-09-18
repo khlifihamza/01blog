@@ -48,7 +48,12 @@
 
         <div class="article-meta">
           <div class="author-info">
-            <img [src]="post.author.avatar" [alt]="post.author.username" class="author-avatar" (click)="viewProfile()"/>
+            <img
+              [src]="post.author.avatar"
+              [alt]="post.author.username"
+              class="author-avatar"
+              (click)="viewProfile()"
+            />
             <div class="author-details">
               <div class="author-name" (click)="viewProfile()">{{ post.author.username }}</div>
               <div class="publish-info">
@@ -59,8 +64,8 @@
             </div>
           </div>
 
-          <button mat-raised-button color="primary" class="follow-btn" (click)="toggleFollow()">
-            {{ isFollowing ? 'Following' : 'Follow' }}
+          <button mat-raised-button color="primary" class="follow-btn" (click)="followUser()">
+            {{ isFollowing() ? 'Following' : 'Follow' }}
           </button>
         </div>
       </header>
@@ -99,9 +104,14 @@
     <!-- Author Profile Card -->
     <mat-card class="author-card">
       <div class="author-card-content">
-        <img [src]="post.author.avatar" [alt]="post.author.username" class="author-card-avatar" />
+        <img
+          [src]="post.author.avatar"
+          [alt]="post.author.username"
+          class="author-card-avatar"
+          (click)="viewProfile()"
+        />
         <div class="author-card-info">
-          <h3 class="author-card-name">{{ post.author.username }}</h3>
+          <h3 class="author-card-name" (click)="viewProfile()">{{ post.author.username }}</h3>
           <p class="author-card-bio">{{ post.author.bio }}</p>
 
           <div class="author-stats">
@@ -111,8 +121,8 @@
           </div>
         </div>
 
-        <button mat-raised-button color="primary" (click)="toggleFollow()">
-          {{ isFollowing ? 'Following' : 'Follow' }}
+        <button mat-raised-button color="primary" (click)="followUser()">
+          {{ isFollowing() ? 'Following' : 'Follow' }}
         </button>
       </div>
     </mat-card>

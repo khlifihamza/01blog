@@ -38,7 +38,7 @@
         @if(!profile.isOwner){
         <div class="profile-actions">
           <button mat-raised-button color="primary" (click)="followUser()">
-            {{ isFollowing ? 'Following' : 'Follow' }}
+            {{ isFollowing() ? 'Following' : 'Follow' }}
           </button>
         </div>
         }

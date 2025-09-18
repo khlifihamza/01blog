@@ -40,6 +40,7 @@ export interface DetailPost {
     bio: string;
     followers: number;
     following: number;
+    isFollowed: boolean;
   };
   publishedDate: string;
   readTime: number;

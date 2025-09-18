@@ -49,4 +49,8 @@ public class FollowService {
             followRepository.delete(followRow);
         }
     }
+
+    public boolean isCurrentUserFollowUser(UUID followerId, UUID followingId) {
+        return followRepository.existsByFollowerIdAndFollowingId(followerId, followingId);
+    }
 }

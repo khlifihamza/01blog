@@ -35,6 +35,7 @@ import com.dev.backend.dto.UploadResponse;
 import com.dev.backend.dto.UserDto;
 import com.dev.backend.model.Post;
 import com.dev.backend.model.User;
+import com.dev.backend.service.FollowService;
 import com.dev.backend.service.PostService;
 import com.dev.backend.service.UserService;
 
@@ -43,13 +44,18 @@ import com.dev.backend.service.UserService;
 public class PostController {
     @Autowired
     private PostService postService;
+
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private FollowService followService;
+
     @Value("${file.upload-dir}")
     private String uploadDir;
 
     @GetMapping("/profile/{username}")
-    public ResponseEntity<?> getUserPosts(@PathVariable String username,
+    public ResponseEntity<List<ProfilePostResponse>> getUserPosts(@PathVariable String username,
             @AuthenticationPrincipal User currentUser) {
         User user = userService.getUserByUsername(username);
         List<Post> posts = postService.getPosts(user.getId());
@@ -70,7 +76,8 @@ public class PostController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<?> upload(@RequestParam(name = "files", required = false) List<MultipartFile> files,
+    public ResponseEntity<UploadResponse> upload(
+            @RequestParam(name = "files", required = false) List<MultipartFile> files,
             @RequestParam("thumbnail") MultipartFile thumbnail,
             @AuthenticationPrincipal User currentUser) throws IOException {
         String thumbnailId = "";
@@ -112,12 +119,14 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getPost(@PathVariable UUID id,
+    public ResponseEntity<DetailPostResponse> getPost(@PathVariable UUID id,
             @AuthenticationPrincipal User currentUser) {
         Post post = postService.getPost(id);
+        User user = post.getUser();
         UserDto author = new UserDto(post.getUser().getUsername(),
                 "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2",
-                "no bio yet", 0, 0);
+                "no bio yet", user.getFollowers().size(), user.getFollowing().size(),
+                followService.isCurrentUserFollowUser(currentUser.getId(), user.getId()));
         boolean isAuthor = currentUser.getId().equals(post.getUser().getId());
         DetailPostResponse postResponse = new DetailPostResponse(post.getId(), post.getTitle(), post.getContent(),
                 author, post.getCreatedAt().toString(), post.getThumbnail(), 0, 0, 0, false, false, isAuthor);
@@ -148,7 +157,8 @@ public class PostController {
     }
 
     @GetMapping("/edit/{id}")
-    public ResponseEntity<?> getPostToEdit(@PathVariable UUID id, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<EditPostResponse> getPostToEdit(@PathVariable UUID id,
+            @AuthenticationPrincipal User currentUser) {
         Post post = postService.getPost(id);
         EditPostResponse editpost = new EditPostResponse(post.getId(), post.getTitle(), post.getContent(),
                 post.getThumbnail(), post.getFiles().split(", "));
@@ -156,14 +166,14 @@ public class PostController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<?> updatePost(@PathVariable UUID id, @Validated @RequestBody PostRequest postDto,
+    public ResponseEntity<ApiResponse> updatePost(@PathVariable UUID id, @Validated @RequestBody PostRequest postDto,
             @AuthenticationPrincipal User currentUser) {
         postService.updatePost(id, postDto);
         return ResponseEntity.ok(new ApiResponse("Blog updated successful"));
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deletePost(@PathVariable UUID id) {
+    public ResponseEntity<ApiResponse> deletePost(@PathVariable UUID id) {
         postService.deletePost(id);
         return ResponseEntity.ok(new ApiResponse("Post deleted"));
     }
