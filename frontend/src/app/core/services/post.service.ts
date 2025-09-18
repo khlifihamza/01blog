@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import {
   DetailPost,
   CreatePostPayload,
   UploadResponse,
   EditPost,
+  ProfilePost,
 } from '../../shared/models/post.model';
 import { ApiResponse } from '../../shared/models/user.model';
-import { blobToFile } from '../../shared/utils/file-utils';
 
 @Injectable({
   providedIn: 'root',
@@ -34,8 +34,8 @@ export class PostService {
     return this.http.get<any>(`${this.url}/edit/${id}`);
   }
 
-  getMyPosts(): Observable<any> {
-    return this.http.get<any>(`${this.url}/profile`);
+  getPosts(username: string): Observable<ProfilePost[]> {
+    return this.http.get<any>(`${this.url}/profile/${username}`);
   }
 
   uploadFiles(files: FormData): Observable<UploadResponse> {

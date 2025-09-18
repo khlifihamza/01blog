@@ -51,4 +51,11 @@ public class UserService {
 
         return userRepository.findByUsername(input.identifier()).orElseThrow();
     }
+
+    public User getUserByUsername(String username){
+        if (!userRepository.existsByUsername(username)) {
+            throw new IllegalArgumentException("Username don't exists.");
+        }
+        return userRepository.findByUsername(username).orElseThrow();
+    }
 }

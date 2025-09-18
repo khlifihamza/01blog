@@ -23,8 +23,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatIconModule,
     MatProgressSpinnerModule
   ],
-  templateUrl: './register.component.html',
-  styleUrls: ['./register.component.css'],
+  templateUrl: './register.html',
+  styleUrls: ['./register.css'],
 })
 export class RegisterComponent {
   registerForm: FormGroup;

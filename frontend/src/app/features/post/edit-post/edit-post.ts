@@ -42,8 +42,8 @@ import { addLinkTosrc } from '../../../shared/utils/formathtml';
     MatMenuModule,
     MatToolbarModule,
   ],
-  templateUrl: './edit-post.component.html',
-  styleUrl: './edit-post.component.css',
+  templateUrl: './edit-post.html',
+  styleUrl: './edit-post.css',
 })
 export class EditPostComponent implements OnInit {
   @ViewChild('editorDiv') editorDiv!: ElementRef<HTMLDivElement>;
