@@ -1,6 +1,6 @@
 package com.dev.backend.dto;
 
 public record LoginRequest(
-    String identifier,
-    String password
-) {}
+        String identifier,
+        String password) {
+}

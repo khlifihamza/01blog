@@ -38,19 +38,19 @@ export class PostDetailComponent implements OnInit {
   safeContent: SafeHtml | null = null;
   mockComments = [
     {
-      author: 'Alex Chen',
+      username: 'Alex Chen',
       avatar:
         'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
-      date: '2 days ago',
-      text: 'Great insights! I had a similar experience when I started my coding journey. The key is persistence.',
+      createAt: '2 days ago',
+      content: 'Great insights! I had a similar experience when I started my coding journey. The key is persistence.',
       likes: 12,
     },
     {
-      author: 'Maria Garcia',
+      username: 'Maria Garcia',
       avatar:
         'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
-      date: '1 day ago',
-      text: 'Thanks for sharing this! Really helpful for someone just starting out like me.',
+      createAt: '1 day ago',
+      content: 'Thanks for sharing this! Really helpful for someone just starting out like me.',
       likes: 8,
     },
   ];
