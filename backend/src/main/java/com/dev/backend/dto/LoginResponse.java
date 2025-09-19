@@ -1,6 +1,6 @@
 package com.dev.backend.dto;
 
 public record LoginResponse(
-    String token,
-    String role
-) {}
+        String token,
+        String role) {
+}

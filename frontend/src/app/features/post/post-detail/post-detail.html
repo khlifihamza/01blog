@@ -138,13 +138,13 @@
 
       <div class="comments-list">
         <div class="comment" *ngFor="let comment of mockComments">
-          <img [src]="comment.avatar" [alt]="comment.author" class="comment-avatar" />
+          <img [src]="comment.avatar" [alt]="comment.username" class="comment-avatar" />
           <div class="comment-content">
             <div class="comment-header">
-              <span class="comment-author">{{ comment.author }}</span>
-              <span class="comment-date">{{ comment.date }}</span>
+              <span class="comment-author">{{ comment.username }}</span>
+              <span class="comment-date">{{ comment.createAt }}</span>
             </div>
-            <p class="comment-text">{{ comment.text }}</p>
+            <p class="comment-text">{{ comment.content }}</p>
             <div class="comment-actions">
               <button mat-button class="comment-action">
                 <mat-icon>thumb_up</mat-icon>
