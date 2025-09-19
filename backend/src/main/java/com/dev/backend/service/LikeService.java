@@ -1,0 +1,44 @@
+package com.dev.backend.service;
+
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+
+import com.dev.backend.model.Like;
+import com.dev.backend.model.Post;
+import com.dev.backend.model.User;
+import com.dev.backend.repository.LikeRepository;
+import com.dev.backend.repository.PostRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+
+@Service
+public class LikeService {
+    @Autowired
+    private LikeRepository likeRepository;
+
+    @Autowired
+    private PostRepository postRepository;
+
+    public void like(User currentUser, UUID postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+        if (likeRepository.existsByUserAndPost(currentUser, post)) {
+            throw new DataIntegrityViolationException("you already liked this post");
+        }
+        Like like = new Like(currentUser, post);
+        likeRepository.save(like);
+    }
+
+    public void dislike(User currentUser, UUID postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+        if (!likeRepository.existsByUserAndPost(currentUser, post)) {
+            throw new DataIntegrityViolationException("you already disliked this post");
+        }
+        Like like = likeRepository.findByUserAndPost(currentUser, post);
+        likeRepository.delete(like);
+    }
+}
