@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -12,6 +12,7 @@ import { DetailPost } from '../../../shared/models/post.model';
 import { PostService } from '../../../core/services/post.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { FollowService } from '../../../core/services/follow.service';
 // import { ReportDialogComponent } from './report-dialog.component';
 
 @Component({
@@ -31,8 +32,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styleUrl: './post-detail.css',
 })
 export class PostDetailComponent implements OnInit {
-  post: DetailPost | null = null;
-  isFollowing = false;
+  post = signal<DetailPost | null>(null);
+  isFollowing = signal(false);
   isAuthor = true;
   safeContent: SafeHtml | null = null;
   mockComments = [
@@ -59,8 +60,8 @@ export class PostDetailComponent implements OnInit {
     private postService: PostService,
     private router: Router,
     private sanitizer: DomSanitizer,
-    private cd: ChangeDetectorRef,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private followService: FollowService
   ) {}
 
   ngOnInit() {
@@ -74,11 +75,11 @@ export class PostDetailComponent implements OnInit {
     this.postService.getPost(postId).subscribe({
       next: (post) => {
         this.isAuthor = post.isAuthor;
-        this.post = post;
+        this.isFollowing.set(post.author.isFollowed);
+        this.post.set(post);
         this.safeContent = this.sanitizer.bypassSecurityTrustHtml(
-          this.formatContent(this.post.content)
+          this.formatContent(this.post()!.content)
         );
-        this.cd.detectChanges();
       },
       error: (error) => console.log(error),
     });
@@ -102,19 +103,39 @@ export class PostDetailComponent implements OnInit {
 
   toggleLike() {
     if (this.post) {
-      this.post.isLiked = !this.post.isLiked;
-      this.post.likes += this.post.isLiked ? 1 : -1;
+      this.post()!.isLiked = !this.post()!.isLiked;
+      this.post()!.likes += this.post()!.isLiked ? 1 : -1;
     }
   }
 
   toggleBookmark() {
-    if (this.post) {
-      this.post.isBookmarked = !this.post.isBookmarked;
+    if (this.post()) {
+      this.post()!.isBookmarked = !this.post()!.isBookmarked;
     }
   }
 
-  toggleFollow() {
-    this.isFollowing = !this.isFollowing;
+  followUser() {
+    if (!this.isFollowing()) {
+      this.followService.follow(this.post()!.author.username).subscribe({
+        next: () => {
+          this.isFollowing.set(!this.isFollowing());
+          if (this.post()!.author) {
+            this.post()!.author.followers += this.isFollowing() ? 1 : -1;
+          }
+        },
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      });
+    } else {
+      this.followService.unfollow(this.post()!.author.username).subscribe({
+        next: () => {
+          this.isFollowing.set(!this.isFollowing());
+          if (this.post()!.author) {
+            this.post()!.author.followers += this.isFollowing() ? 1 : -1;
+          }
+        },
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      });
+    }
   }
 
   deletePost() {
@@ -159,10 +180,10 @@ export class PostDetailComponent implements OnInit {
   }
 
   editPost() {
-    this.router.navigate(['/edit-post', this.post?.id]);
+    this.router.navigate(['/edit-post', this.post()!.id]);
   }
 
   viewProfile() {
-    this.router.navigate(['/profile', this.post?.author.username]);
+    this.router.navigate(['/profile', this.post()!.author.username]);
   }
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +10,8 @@ import { ProfilePost } from '../../shared/models/post.model';
 import { UserProfile } from '../../shared/models/user.model';
 import { PostService } from '../../core/services/post.service';
 import { ProfileService } from '../../core/services/profile.service';
+import { FollowService } from '../../core/services/follow.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-profile',
@@ -26,17 +28,18 @@ import { ProfileService } from '../../core/services/profile.service';
   styleUrl: './profile.css',
 })
 export class ProfileComponent implements OnInit {
-  profile: UserProfile | null = null;
-  isFollowing = false;
-  userPosts: ProfilePost[] = [];
+  profile = signal<UserProfile | null>(null);
+  isFollowing = signal(false);
+  userPosts = signal<ProfilePost[]>([]);
   username = '';
 
   constructor(
     private router: Router,
     private postService: PostService,
+    private followService: FollowService,
     private route: ActivatedRoute,
-    private cd: ChangeDetectorRef,
-    private profileService: ProfileService
+    private profileService: ProfileService,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
@@ -51,8 +54,8 @@ export class ProfileComponent implements OnInit {
   loadProfile() {
     this.profileService.getProfileDetails(this.username).subscribe({
       next: (profile) => {
-        this.profile = profile;
-        this.cd.detectChanges();
+        this.profile.set(profile);
+        this.isFollowing.set(profile.isFollowed);
       },
       error: (error) => console.log(error),
     });
@@ -61,8 +64,7 @@ export class ProfileComponent implements OnInit {
   loadUserPosts() {
     this.postService.getPosts(this.username).subscribe({
       next: (posts) => {
-        this.userPosts = posts;
-        this.cd.detectChanges();
+        this.userPosts.set(posts);
       },
       error: (error) => console.log(error),
     });
@@ -77,9 +79,26 @@ export class ProfileComponent implements OnInit {
   }
 
   followUser() {
-    this.isFollowing = !this.isFollowing;
-    if (this.profile) {
-      this.profile.followers += this.isFollowing ? 1 : -1;
+    if (!this.isFollowing()) {
+      this.followService.follow(this.profile()!.username).subscribe({
+        next: () => {
+          this.isFollowing.set(!this.isFollowing());
+          if (this.profile()) {
+            this.profile()!.followers += this.isFollowing() ? 1 : -1;
+          }
+        },
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      });
+    } else {
+      this.followService.unfollow(this.profile()!.username).subscribe({
+        next: () => {
+          this.isFollowing.set(!this.isFollowing());
+          if (this.profile()) {
+            this.profile()!.followers += this.isFollowing() ? 1 : -1;
+          }
+        },
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      });
     }
   }
 

@@ -29,4 +29,5 @@ export interface UserProfile {
   following: number;
   posts: number;
   isOwner: boolean;
+  isFollowed: boolean;
 }

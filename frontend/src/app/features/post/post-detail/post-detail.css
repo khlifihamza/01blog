@@ -201,6 +201,7 @@
   height: 80px;
   border-radius: 50%;
   object-fit: cover;
+  cursor: pointer;
 }
 
 .author-card-info {
@@ -211,6 +212,7 @@
   font-size: 20px;
   font-weight: 600;
   margin: 0 0 4px 0;
+  cursor: pointer;
 }
 
 .author-card-level {

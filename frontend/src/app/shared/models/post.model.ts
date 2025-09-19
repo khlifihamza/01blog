@@ -23,7 +23,7 @@ export interface FeedPost {
     username: string;
     avatar: string;
   };
-  createdAt: Date;
+  createdAt: string;
   readTime: number;
   likes: number;
   comments: number;
@@ -40,6 +40,7 @@ export interface DetailPost {
     bio: string;
     followers: number;
     following: number;
+    isFollowed: boolean;
   };
   publishedDate: string;
   readTime: number;

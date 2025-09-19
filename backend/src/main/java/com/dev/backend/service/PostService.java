@@ -42,9 +42,9 @@ public class PostService {
         return postRepository.findByUserIdOrderByCreatedAtDesc(id);
     }
 
-    // public List<Post> getPosts(String username) {
-    // return postRepository.findByUsernameOrderByCreatedAtDesc(username);
-    // }
+    public List<Post> getFeedPosts(UUID id) {
+        return postRepository.findFeedPosts(id);
+    }
 
     public Post getPost(UUID id) {
         return postRepository.findById(id).orElseThrow();

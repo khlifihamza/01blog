@@ -7,6 +7,7 @@ import {
   UploadResponse,
   EditPost,
   ProfilePost,
+  FeedPost,
 } from '../../shared/models/post.model';
 import { ApiResponse } from '../../shared/models/user.model';
 
@@ -38,6 +39,10 @@ export class PostService {
     return this.http.get<any>(`${this.url}/profile/${username}`);
   }
 
+  getFeedPosts(): Observable<FeedPost[]> {
+    return this.http.get<any>(`${this.url}/feed`);
+  }
+
   uploadFiles(files: FormData): Observable<UploadResponse> {
     return this.http.post<any>(`${this.url}/upload`, files);
   }
@@ -47,6 +52,6 @@ export class PostService {
   }
 
   getOldThumbnail(filename: string): Observable<Blob> {
-    return this.http.get(`${this.url}/file/${filename}`, { responseType: 'blob' })
+    return this.http.get(`${this.url}/file/${filename}`, { responseType: 'blob' });
   }
 }
