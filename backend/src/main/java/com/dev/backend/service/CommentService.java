@@ -22,11 +22,12 @@ public class CommentService {
     @Autowired
     private PostRepository postRepository;
 
-    public void comment(User currentUser, UUID postId, String content) {
+    public Comment comment(User currentUser, UUID postId, String content) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         Comment comment = new Comment(currentUser, post, content);
         commentRepository.save(comment);
+        return comment;
     }
 
     public List<Comment> getPostComments(UUID postId) {
