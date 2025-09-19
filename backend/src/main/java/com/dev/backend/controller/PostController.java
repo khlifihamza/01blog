@@ -29,8 +29,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.dev.backend.dto.PostRequest;
 import com.dev.backend.dto.ProfilePostResponse;
 import com.dev.backend.dto.ApiResponse;
+import com.dev.backend.dto.Author;
 import com.dev.backend.dto.DetailPostResponse;
 import com.dev.backend.dto.EditPostResponse;
+import com.dev.backend.dto.FeedPostResponse;
 import com.dev.backend.dto.UploadResponse;
 import com.dev.backend.dto.UserDto;
 import com.dev.backend.model.Post;
@@ -53,6 +55,20 @@ public class PostController {
 
     @Value("${file.upload-dir}")
     private String uploadDir;
+
+    @GetMapping("/feed")
+    public ResponseEntity<List<FeedPostResponse>> getFeedPosts(@AuthenticationPrincipal User currentUser) {
+        List<Post> posts = postService.getFeedPosts(currentUser.getId());
+        List<FeedPostResponse> feedPostsResponses = new ArrayList<>();
+        for (Post post : posts) {
+            Author author = new Author(post.getUser().getUsername(),
+                    "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2");
+            FeedPostResponse feedPost = new FeedPostResponse(post.getId(), post.getTitle(), post.getContent(), author,
+                    post.getCreatedAt().toString(), 0, 0, 0, post.getThumbnail());
+            feedPostsResponses.add(feedPost);
+        }
+        return ResponseEntity.ok(feedPostsResponses);
+    }
 
     @GetMapping("/profile/{username}")
     public ResponseEntity<List<ProfilePostResponse>> getUserPosts(@PathVariable String username,

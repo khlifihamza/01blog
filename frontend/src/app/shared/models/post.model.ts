@@ -23,7 +23,7 @@ export interface FeedPost {
     username: string;
     avatar: string;
   };
-  createdAt: Date;
+  createdAt: string;
   readTime: number;
   likes: number;
   comments: number;

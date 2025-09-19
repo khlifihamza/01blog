@@ -21,21 +21,21 @@
   </mat-toolbar>
 
   <!-- Profile Content -->
-  <div class="profile-content" *ngIf="profile">
+  <div class="profile-content" *ngIf="profile()">
     <!-- Cover & Avatar Section -->
     <div class="profile-banner">
       <div class="profile-info">
         <div class="avatar-section">
-          <img [src]="profile.avatar" [alt]="profile.username" class="profile-avatar" />
+          <img [src]="profile()!.avatar" [alt]="profile()!.username" class="profile-avatar" />
           <button mat-fab color="primary" class="edit-avatar-btn" (click)="editAvatar()">
             <mat-icon>camera_alt</mat-icon>
           </button>
         </div>
 
         <div class="basic-info">
-          <h1 class="profile-name">{{ profile.username }}</h1>
+          <h1 class="profile-name">{{ profile()!.username }}</h1>
         </div>
-        @if(!profile.isOwner){
+        @if(!profile()!.isOwner){
         <div class="profile-actions">
           <button mat-raised-button color="primary" (click)="followUser()">
             {{ isFollowing() ? 'Following' : 'Follow' }}
@@ -48,15 +48,15 @@
     <!-- Stats Section -->
     <div class="stats-section">
       <div class="stat-item" (click)="showFollowers()">
-        <span class="stat-number">{{ profile.followers }}</span>
+        <span class="stat-number">{{ profile()!.followers }}</span>
         <span class="stat-label">Followers</span>
       </div>
       <div class="stat-item" (click)="showFollowing()">
-        <span class="stat-number">{{ profile.following }}</span>
+        <span class="stat-number">{{ profile()!.following }}</span>
         <span class="stat-label">Following</span>
       </div>
       <div class="stat-item">
-        <span class="stat-number">{{ profile.posts }}</span>
+        <span class="stat-number">{{ profile()!.posts }}</span>
         <span class="stat-label">Posts</span>
       </div>
     </div>
@@ -65,12 +65,12 @@
     <mat-card class="bio-card">
       <mat-card-content>
         <h3>About</h3>
-        <p class="bio-text">{{ profile.bio }}</p>
+        <p class="bio-text">{{ profile()!.bio }}</p>
 
         <div class="profile-details">
           <div class="detail-item">
             <mat-icon>calendar_today</mat-icon>
-            <span>Joined {{ formatDate(profile.joinDate) }}</span>
+            <span>Joined {{ formatDate(profile()!.joinDate) }}</span>
           </div>
         </div>
       </mat-card-content>
@@ -81,13 +81,13 @@
       <!-- Featured Post -->
       <div class="featured-section">
         <h2 class="section-title">Stories</h2>
-        @for (post of userPosts; track post.id) {
+        @for (post of userPosts(); track post.id) {
         <mat-card class="featured-card" (click)="openPost(post)">
           <div class="featured-content">
             <div class="featured-text">
               <div class="post-meta">
-                <img [src]="profile.avatar" [alt]="profile.username" class="author-avatar-small" />
-                <span class="author-name">{{ profile.username }}</span>
+                <img [src]="profile()!.avatar" [alt]="profile()!.username" class="author-avatar-small" />
+                <span class="author-name">{{ profile()!.username }}</span>
                 <span class="publish-date">{{ formatDate(post.createdAt) }}</span>
               </div>
 

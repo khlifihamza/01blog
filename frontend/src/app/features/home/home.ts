@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -12,6 +12,8 @@ import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule, MatLabel } from '@angular/material/form-field';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatInputModule } from '@angular/material/input';
+import { AuthService } from '../../core/services/auth.service';
+import { PostService } from '../../core/services/post.service';
 
 @Component({
   selector: 'app-feed',
@@ -29,127 +31,38 @@ import { MatInputModule } from '@angular/material/input';
     MatLabel,
     MatFormFieldModule,
     MatToolbarModule,
-    MatInputModule
+    MatInputModule,
   ],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
 export class HomeComponent implements OnInit {
   searchQuery = '';
-  selectedCategory = '';
   isLoading = false;
   notificationCount = 3;
-  isAdmin = true; // Mock admin status
-  allPosts: FeedPost[] = [];
-  filteredPosts: FeedPost[] = [];
+  isAdmin = true;
+  allPosts = signal<FeedPost[]>([]);
+  filteredPosts = signal<FeedPost[]>([]);
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    private postService: PostService
+  ) {}
 
   ngOnInit() {
-    this.loadMockData();
-    this.filterPosts();
+    this.isAdmin = this.authService.isAdmin();
+    this.loadFeedPosts();
   }
 
-  loadMockData() {
-    // Mock data for demonstration
-    this.allPosts = [
-      {
-        id: "1",
-        title: 'My Journey from Zero to Full-Stack Developer in 6 Months',
-        content: '',
-        author: {
-          username: 'Sarah Chen',
-          avatar:
-            'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
-        },
-        createdAt: new Date('2024-01-15'),
-        readTime: 8,
-        likes: 234,
-        comments: 45,
-        thumbnail:
-          'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg?auto=compress&cs=tinysrgb&w=800',
+  loadFeedPosts() {
+    this.postService.getFeedPosts().subscribe({
+      next: (posts) => {
+        this.allPosts.set(posts);
+        this.filterPosts();
       },
-      {
-        id: "2",
-        title: 'Building My First React App: Lessons Learned',
-        content: '',
-        author: {
-          username: 'Marcus Johnson',
-          avatar:
-            'https://images.pexels.com/photos/1040880/pexels-photo-1040880.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
-        },
-        createdAt: new Date('2024-01-12'),
-        readTime: 6,
-        likes: 189,
-        comments: 32,
-        thumbnail:
-          'https://images.pexels.com/photos/11035380/pexels-photo-11035380.jpeg?auto=compress&cs=tinysrgb&w=800',
-      },
-      {
-        id: "3",
-        title: '5 Study Techniques That Actually Work for Programming',
-        content: '',
-        author: {
-          username: 'Emma Rodriguez',
-          avatar:
-            'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
-        },
-        createdAt: new Date('2024-01-10'),
-        readTime: 5,
-        likes: 156,
-        comments: 28,
-        thumbnail:
-          'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=800',
-      },
-      {
-        id: "4",
-        title: 'Landing My Dream Internship at a Tech Startup',
-        content: '',
-        author: {
-          username: 'David Kim',
-          avatar:
-            'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
-        },
-        createdAt: new Date('2024-01-08'),
-        readTime: 7,
-        likes: 298,
-        comments: 67,
-        thumbnail:
-          'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800',
-      },
-      {
-        id: "5",
-        title: 'Why I Chose 01Student Over Traditional Computer Science',
-        content: '',
-        author: {
-          username: 'Aisha Patel',
-          avatar:
-            'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
-        },
-        createdAt: new Date('2024-01-05'),
-        readTime: 4,
-        likes: 167,
-        comments: 41,
-        thumbnail:
-          'https://images.pexels.com/photos/1181298/pexels-photo-1181298.jpeg?auto=compress&cs=tinysrgb&w=800',
-      },
-      {
-        id: "6",
-        title: 'My First Hackathon Experience: What I Learned',
-        content: '',
-        author: {
-          username: 'Alex Thompson',
-          avatar:
-            'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
-        },
-        createdAt: new Date('2024-01-03'),
-        readTime: 6,
-        likes: 203,
-        comments: 35,
-        thumbnail:
-          'https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&cs=tinysrgb&w=800',
-      },
-    ];
+      error: (error) => console.log(error),
+    });
   }
 
   onSearch() {
@@ -157,9 +70,7 @@ export class HomeComponent implements OnInit {
   }
 
   filterPosts() {
-    let filtered = [...this.allPosts];
-
-    // Filter by search query
+    let filtered = [...this.allPosts()];
     if (this.searchQuery.trim()) {
       const query = this.searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -169,11 +80,12 @@ export class HomeComponent implements OnInit {
       );
     }
 
-    this.filteredPosts = filtered;
+    this.filteredPosts.set(filtered);
   }
 
-  formatDate(date: Date): string {
+  formatDate(dateStr: string): string {
     const now = new Date();
+    const date = new Date(dateStr);
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 

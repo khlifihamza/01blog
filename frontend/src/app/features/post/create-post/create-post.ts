@@ -1,11 +1,4 @@
-import {
-  Component,
-  signal,
-  ViewChild,
-  ElementRef,
-  HostListener,
-  ChangeDetectorRef,
-} from '@angular/core';
+import { Component, signal, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -72,7 +65,6 @@ export class CreatePostComponent {
     private postService: PostService,
     private router: Router,
     private snackBar: MatSnackBar,
-    private cd: ChangeDetectorRef
   ) {
     this.blogForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(100)]],
@@ -130,7 +122,6 @@ export class CreatePostComponent {
 
   onAddClick(event: Event) {
     event.stopPropagation();
-    this.cd.detectChanges();
   }
 
   onThumbnailSelect(event: Event) {

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -28,9 +28,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styleUrl: './profile.css',
 })
 export class ProfileComponent implements OnInit {
-  profile: UserProfile | null = null;
+  profile = signal<UserProfile | null>(null);
   isFollowing = signal(false);
-  userPosts: ProfilePost[] = [];
+  userPosts = signal<ProfilePost[]>([]);
   username = '';
 
   constructor(
@@ -38,7 +38,6 @@ export class ProfileComponent implements OnInit {
     private postService: PostService,
     private followService: FollowService,
     private route: ActivatedRoute,
-    private cd: ChangeDetectorRef,
     private profileService: ProfileService,
     private snackBar: MatSnackBar
   ) {}
@@ -55,9 +54,8 @@ export class ProfileComponent implements OnInit {
   loadProfile() {
     this.profileService.getProfileDetails(this.username).subscribe({
       next: (profile) => {
-        this.profile = profile;
+        this.profile.set(profile);
         this.isFollowing.set(profile.isFollowed);
-        this.cd.detectChanges();
       },
       error: (error) => console.log(error),
     });
@@ -66,8 +64,7 @@ export class ProfileComponent implements OnInit {
   loadUserPosts() {
     this.postService.getPosts(this.username).subscribe({
       next: (posts) => {
-        this.userPosts = posts;
-        this.cd.detectChanges();
+        this.userPosts.set(posts);
       },
       error: (error) => console.log(error),
     });
@@ -83,21 +80,21 @@ export class ProfileComponent implements OnInit {
 
   followUser() {
     if (!this.isFollowing()) {
-      this.followService.follow(this.profile!.username).subscribe({
+      this.followService.follow(this.profile()!.username).subscribe({
         next: () => {
           this.isFollowing.set(!this.isFollowing());
-          if (this.profile) {
-            this.profile.followers += this.isFollowing() ? 1 : -1;
+          if (this.profile()) {
+            this.profile()!.followers += this.isFollowing() ? 1 : -1;
           }
         },
         error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
       });
     } else {
-      this.followService.unfollow(this.profile!.username).subscribe({
+      this.followService.unfollow(this.profile()!.username).subscribe({
         next: () => {
           this.isFollowing.set(!this.isFollowing());
-          if (this.profile) {
-            this.profile.followers += this.isFollowing() ? 1 : -1;
+          if (this.profile()) {
+            this.profile()!.followers += this.isFollowing() ? 1 : -1;
           }
         },
         error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),

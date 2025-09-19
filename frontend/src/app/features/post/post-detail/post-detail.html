@@ -7,11 +7,11 @@
       </button>
 
       <div class="header-actions">
-        <button mat-icon-button (click)="toggleBookmark()">
-          <mat-icon [class.bookmarked]="post?.isBookmarked">
-            {{ post?.isBookmarked ? 'bookmark' : 'bookmark_border' }}
+        <!-- <button mat-icon-button (click)="toggleBookmark()">
+          <mat-icon [class.bookmarked]="post()!.isBookmarked">
+            {{ post()!.isBookmarked ? 'bookmark' : 'bookmark_border' }}
           </mat-icon>
-        </button>
+        </button> -->
 
         <button mat-icon-button [matMenuTriggerFor]="postMenu">
           <mat-icon>more_vert</mat-icon>
@@ -40,26 +40,26 @@
   </mat-toolbar>
 
   <!-- Post Content -->
-  <div class="post-content" *ngIf="post">
+  <div class="post-content" *ngIf="post()">
     <article class="post-article">
       <!-- Post Header -->
       <header class="article-header">
-        <h1 class="article-title">{{ post.title }}</h1>
+        <h1 class="article-title">{{ post()!.title }}</h1>
 
         <div class="article-meta">
           <div class="author-info">
             <img
-              [src]="post.author.avatar"
-              [alt]="post.author.username"
+              [src]="post()!.author.avatar"
+              [alt]="post()!.author.username"
               class="author-avatar"
               (click)="viewProfile()"
             />
             <div class="author-details">
-              <div class="author-name" (click)="viewProfile()">{{ post.author.username }}</div>
+              <div class="author-name" (click)="viewProfile()">{{ post()!.author.username }}</div>
               <div class="publish-info">
-                <span>{{ formatDate(post.publishedDate) }}</span>
+                <span>{{ formatDate(post()!.publishedDate) }}</span>
                 <span class="separator">•</span>
-                <span>{{ post.readTime }} min read</span>
+                <span>{{ post()!.readTime }} min read</span>
               </div>
             </div>
           </div>
@@ -72,7 +72,7 @@
 
       <!-- Featured Image -->
       <div class="featured-image">
-        <img [src]="'http://localhost:8080/api/post/file/' + post.thumbnail" [alt]="post.title" />
+        <img [src]="'http://localhost:8080/api/post/file/' + post()!.thumbnail" [alt]="post()!.title" />
       </div>
 
       <!-- Article Content -->
@@ -86,16 +86,16 @@
           <button
             mat-button
             class="engagement-btn"
-            [class.liked]="post.isLiked"
+            [class.liked]="post()!.isLiked"
             (click)="toggleLike()"
           >
-            <mat-icon>{{ post.isLiked ? 'favorite' : 'favorite_border' }}</mat-icon>
-            <span>{{ post.likes }}</span>
+            <mat-icon>{{ post()!.isLiked ? 'favorite' : 'favorite_border' }}</mat-icon>
+            <span>{{ post()!.likes }}</span>
           </button>
 
           <button mat-button class="engagement-btn" (click)="scrollToComments()">
             <mat-icon>comment</mat-icon>
-            <span>{{ post.comments }}</span>
+            <span>{{ post()!.comments }}</span>
           </button>
         </div>
       </div>
@@ -105,19 +105,19 @@
     <mat-card class="author-card">
       <div class="author-card-content">
         <img
-          [src]="post.author.avatar"
-          [alt]="post.author.username"
+          [src]="post()!.author.avatar"
+          [alt]="post()!.author.username"
           class="author-card-avatar"
           (click)="viewProfile()"
         />
         <div class="author-card-info">
-          <h3 class="author-card-name" (click)="viewProfile()">{{ post.author.username }}</h3>
-          <p class="author-card-bio">{{ post.author.bio }}</p>
+          <h3 class="author-card-name" (click)="viewProfile()">{{ post()!.author.username }}</h3>
+          <p class="author-card-bio">{{ post()!.author.bio }}</p>
 
           <div class="author-stats">
-            <span>{{ post.author.followers }} Followers</span>
+            <span>{{ post()!.author.followers }} Followers</span>
             <span class="separator">•</span>
-            <span>{{ post.author.following }} Following</span>
+            <span>{{ post()!.author.following }} Following</span>
           </div>
         </div>
 
@@ -129,7 +129,7 @@
 
     <!-- Comments Section -->
     <div class="comments-section" id="comments">
-      <h3 class="comments-title">Comments ({{ post.comments }})</h3>
+      <h3 class="comments-title">Comments ({{ post()!.comments }})</h3>
 
       <div class="comment-form">
         <textarea placeholder="Share your thoughts..." rows="3"></textarea>

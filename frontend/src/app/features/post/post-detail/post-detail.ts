@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -32,7 +32,7 @@ import { FollowService } from '../../../core/services/follow.service';
   styleUrl: './post-detail.css',
 })
 export class PostDetailComponent implements OnInit {
-  post: DetailPost | null = null;
+  post = signal<DetailPost | null>(null);
   isFollowing = signal(false);
   isAuthor = true;
   safeContent: SafeHtml | null = null;
@@ -60,9 +60,8 @@ export class PostDetailComponent implements OnInit {
     private postService: PostService,
     private router: Router,
     private sanitizer: DomSanitizer,
-    private cd: ChangeDetectorRef,
     private snackBar: MatSnackBar,
-    private followService: FollowService,
+    private followService: FollowService
   ) {}
 
   ngOnInit() {
@@ -77,11 +76,10 @@ export class PostDetailComponent implements OnInit {
       next: (post) => {
         this.isAuthor = post.isAuthor;
         this.isFollowing.set(post.author.isFollowed);
-        this.post = post;
+        this.post.set(post);
         this.safeContent = this.sanitizer.bypassSecurityTrustHtml(
-          this.formatContent(this.post.content)
+          this.formatContent(this.post()!.content)
         );
-        this.cd.detectChanges();
       },
       error: (error) => console.log(error),
     });
@@ -105,34 +103,34 @@ export class PostDetailComponent implements OnInit {
 
   toggleLike() {
     if (this.post) {
-      this.post.isLiked = !this.post.isLiked;
-      this.post.likes += this.post.isLiked ? 1 : -1;
+      this.post()!.isLiked = !this.post()!.isLiked;
+      this.post()!.likes += this.post()!.isLiked ? 1 : -1;
     }
   }
 
   toggleBookmark() {
-    if (this.post) {
-      this.post.isBookmarked = !this.post.isBookmarked;
+    if (this.post()) {
+      this.post()!.isBookmarked = !this.post()!.isBookmarked;
     }
   }
 
   followUser() {
     if (!this.isFollowing()) {
-      this.followService.follow(this.post!.author.username).subscribe({
+      this.followService.follow(this.post()!.author.username).subscribe({
         next: () => {
           this.isFollowing.set(!this.isFollowing());
-          if (this.post?.author) {
-            this.post!.author.followers += this.isFollowing() ? 1 : -1;
+          if (this.post()!.author) {
+            this.post()!.author.followers += this.isFollowing() ? 1 : -1;
           }
         },
         error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
       });
     } else {
-      this.followService.unfollow(this.post!.author.username).subscribe({
+      this.followService.unfollow(this.post()!.author.username).subscribe({
         next: () => {
           this.isFollowing.set(!this.isFollowing());
-          if (this.post?.author) {
-            this.post!.author.followers += this.isFollowing() ? 1 : -1;
+          if (this.post()!.author) {
+            this.post()!.author.followers += this.isFollowing() ? 1 : -1;
           }
         },
         error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
@@ -182,10 +180,10 @@ export class PostDetailComponent implements OnInit {
   }
 
   editPost() {
-    this.router.navigate(['/edit-post', this.post?.id]);
+    this.router.navigate(['/edit-post', this.post()!.id]);
   }
 
   viewProfile() {
-    this.router.navigate(['/profile', this.post?.author.username]);
+    this.router.navigate(['/profile', this.post()!.author.username]);
   }
 }
