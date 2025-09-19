@@ -41,4 +41,10 @@ public class LikeService {
         Like like = likeRepository.findByUserAndPost(currentUser, post);
         likeRepository.delete(like);
     }
+
+    public boolean isUserLikedPost(User currentUser, UUID postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+        return likeRepository.existsByUserAndPost(currentUser, post);
+    }
 }

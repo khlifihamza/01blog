@@ -21,7 +21,8 @@
   </mat-toolbar>
 
   <!-- Profile Content -->
-  <div class="profile-content" *ngIf="profile()">
+  @if(profile()){
+  <div class="profile-content">
     <!-- Cover & Avatar Section -->
     <div class="profile-banner">
       <div class="profile-info">
@@ -86,7 +87,11 @@
           <div class="featured-content">
             <div class="featured-text">
               <div class="post-meta">
-                <img [src]="profile()!.avatar" [alt]="profile()!.username" class="author-avatar-small" />
+                <img
+                  [src]="profile()!.avatar"
+                  [alt]="profile()!.username"
+                  class="author-avatar-small"
+                />
                 <span class="author-name">{{ profile()!.username }}</span>
                 <span class="publish-date">{{ formatDate(post.createdAt) }}</span>
               </div>
@@ -109,7 +114,10 @@
             </div>
 
             <div class="featured-image">
-              <img [src]="'http://localhost:8080/api/post/file/' + post.thumbnail" [alt]="post.title" />
+              <img
+                [src]="'http://localhost:8080/api/post/file/' + post.thumbnail"
+                [alt]="post.title"
+              />
             </div>
           </div>
         </mat-card>
@@ -117,4 +125,5 @@
       </div>
     </div>
   </div>
+  }
 </div>

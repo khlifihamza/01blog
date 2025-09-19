@@ -8,11 +8,14 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { DetailPost } from '../../../shared/models/post.model';
+import { Comment, CreateCommentPayload, DetailPost } from '../../../shared/models/post.model';
 import { PostService } from '../../../core/services/post.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FollowService } from '../../../core/services/follow.service';
+import { LikeService } from '../../../core/services/like.service';
+import { CommentService } from '../../../core/services/comment.service';
+import { FormsModule } from '@angular/forms';
 // import { ReportDialogComponent } from './report-dialog.component';
 
 @Component({
@@ -20,6 +23,7 @@ import { FollowService } from '../../../core/services/follow.service';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -34,26 +38,11 @@ import { FollowService } from '../../../core/services/follow.service';
 export class PostDetailComponent implements OnInit {
   post = signal<DetailPost | null>(null);
   isFollowing = signal(false);
+  isLiked = signal(false);
   isAuthor = true;
   safeContent: SafeHtml | null = null;
-  mockComments = [
-    {
-      username: 'Alex Chen',
-      avatar:
-        'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
-      createAt: '2 days ago',
-      content: 'Great insights! I had a similar experience when I started my coding journey. The key is persistence.',
-      likes: 12,
-    },
-    {
-      username: 'Maria Garcia',
-      avatar:
-        'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
-      createAt: '1 day ago',
-      content: 'Thanks for sharing this! Really helpful for someone just starting out like me.',
-      likes: 8,
-    },
-  ];
+  Comments = signal<Comment[] | null>(null);
+  commentText: string = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -61,13 +50,16 @@ export class PostDetailComponent implements OnInit {
     private router: Router,
     private sanitizer: DomSanitizer,
     private snackBar: MatSnackBar,
-    private followService: FollowService
+    private followService: FollowService,
+    private likeService: LikeService,
+    private commentService: CommentService
   ) {}
 
   ngOnInit() {
     let postId = this.route.snapshot.paramMap.get('id');
     if (postId != null) {
       this.loadPost(postId);
+      this.loadComments(postId);
     }
   }
 
@@ -76,12 +68,34 @@ export class PostDetailComponent implements OnInit {
       next: (post) => {
         this.isAuthor = post.isAuthor;
         this.isFollowing.set(post.author.isFollowed);
+        this.isLiked.set(post.isLiked);
         this.post.set(post);
         this.safeContent = this.sanitizer.bypassSecurityTrustHtml(
           this.formatContent(this.post()!.content)
         );
       },
       error: (error) => console.log(error),
+    });
+  }
+
+  loadComments(postId: string) {
+    this.commentService.getComments(postId).subscribe({
+      next: (comments) => {
+        this.Comments.set(comments);
+      },
+      error: (error) => console.log(error),
+    });
+  }
+
+  addComment() {
+    const createCommentPayload: CreateCommentPayload = {
+      content: this.commentText,
+      postId: this.post()!.id,
+    };
+    this.commentService.addComment(createCommentPayload).subscribe({
+      next: (response) =>
+        this.snackBar.open(response.message.toString(), 'Close', { duration: 5000 }),
+      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
@@ -102,9 +116,22 @@ export class PostDetailComponent implements OnInit {
   }
 
   toggleLike() {
-    if (this.post) {
-      this.post()!.isLiked = !this.post()!.isLiked;
-      this.post()!.likes += this.post()!.isLiked ? 1 : -1;
+    if (this.isLiked()) {
+      this.likeService.dislike(this.post()!.id).subscribe({
+        next: () => {
+          this.isLiked.set(!this.isLiked());
+          this.post()!.likes += this.isLiked() ? 1 : -1;
+        },
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      });
+    } else {
+      this.likeService.like(this.post()!.id).subscribe({
+        next: () => {
+          this.isLiked.set(!this.isLiked());
+          this.post()!.likes += this.isLiked() ? 1 : -1;
+        },
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      });
     }
   }
 

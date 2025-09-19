@@ -69,3 +69,17 @@ export interface ProfilePost {
   comments: number;
   thumbnail: string;
 }
+
+export interface Comment {
+  id: string;
+  username: string;
+  avatar: string;
+  createAt: string;
+  content: string;
+  likes: number;
+}
+
+export interface CreateCommentPayload{
+  postId: string;
+  content: string;
+}
