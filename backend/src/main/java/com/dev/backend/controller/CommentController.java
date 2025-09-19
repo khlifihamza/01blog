@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.dev.backend.dto.ApiResponse;
 import com.dev.backend.dto.CommentRequest;
 import com.dev.backend.dto.CommentResponse;
 import com.dev.backend.model.Comment;
@@ -29,10 +28,13 @@ public class CommentController {
     private CommentService commentService;
 
     @PostMapping("/add")
-    public ResponseEntity<ApiResponse> like(@Validated @RequestBody CommentRequest commentDto,
+    public ResponseEntity<CommentResponse> like(@Validated @RequestBody CommentRequest commentDto,
             @AuthenticationPrincipal User currentUser) {
-        commentService.comment(currentUser, commentDto.postId(), commentDto.content());
-        return ResponseEntity.ok(new ApiResponse("comment added successefully"));
+        Comment comment = commentService.comment(currentUser, commentDto.postId(), commentDto.content());
+        CommentResponse commentResponse = new CommentResponse(comment.getId(), comment.getUser().getUsername(),
+                "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2",
+                comment.getCreatedAt().toString(), comment.getContent());
+        return ResponseEntity.ok(commentResponse);
     }
 
     @GetMapping("/{postId}")
@@ -43,7 +45,7 @@ public class CommentController {
         for (Comment comment : comments) {
             CommentResponse commentResponse = new CommentResponse(comment.getId(), comment.getUser().getUsername(),
                     "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2",
-                    comment.getCreatedAt().toString(), comment.getContent(), 0);
+                    comment.getCreatedAt().toString(), comment.getContent());
             commentsResponse.add(commentResponse);
         }
         return ResponseEntity.ok(commentsResponse);

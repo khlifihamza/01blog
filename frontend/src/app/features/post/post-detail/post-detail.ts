@@ -93,8 +93,13 @@ export class PostDetailComponent implements OnInit {
       postId: this.post()!.id,
     };
     this.commentService.addComment(createCommentPayload).subscribe({
-      next: (response) =>
-        this.snackBar.open(response.message.toString(), 'Close', { duration: 5000 }),
+      next: (comment) => {
+        this.Comments.update((comments) => {
+          return [comment, ...comments!];
+        });
+        this.commentText = '';
+        this.post()!.comments += 1;
+      },
       error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }

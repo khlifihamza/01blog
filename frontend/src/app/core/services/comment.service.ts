@@ -12,7 +12,7 @@ export class CommentService {
 
   constructor(private http: HttpClient) {}
 
-  addComment(createCommentPayload: CreateCommentPayload): Observable<ApiResponse> {
+  addComment(createCommentPayload: CreateCommentPayload): Observable<Comment> {
     return this.http.post<any>(`${this.url}/add`, createCommentPayload);
   }
 
