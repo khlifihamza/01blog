@@ -306,18 +306,6 @@
   line-height: 1.5;
 }
 
-.comment-actions {
-  display: flex;
-  gap: 16px;
-}
-
-.comment-action {
-  font-size: 14px;
-  color: var(--text-secondary);
-  padding: 4px 8px;
-  min-width: auto;
-}
-
 @media (max-width: 768px) {
   .post-article {
     padding: 24px;

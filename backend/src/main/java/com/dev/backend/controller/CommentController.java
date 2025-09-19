@@ -41,7 +41,7 @@ public class CommentController {
         List<Comment> comments = commentService.getPostComments(postId);
         List<CommentResponse> commentsResponse = new ArrayList<>();
         for (Comment comment : comments) {
-            CommentResponse commentResponse = new CommentResponse(comment.getUser().getUsername(),
+            CommentResponse commentResponse = new CommentResponse(comment.getId(), comment.getUser().getUsername(),
                     "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2",
                     comment.getCreatedAt().toString(), comment.getContent(), 0);
             commentsResponse.add(commentResponse);

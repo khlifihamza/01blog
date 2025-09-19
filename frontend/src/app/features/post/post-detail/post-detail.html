@@ -18,14 +18,16 @@
         </button>
 
         <mat-menu #postMenu="matMenu">
-          <button mat-menu-item (click)="editPost()" *ngIf="isAuthor">
+          @if(isAuthor){
+          <button mat-menu-item (click)="editPost()">
             <mat-icon>edit</mat-icon>
             <span>Edit Post</span>
           </button>
-          <button mat-menu-item (click)="deletePost()" *ngIf="isAuthor">
+          <button mat-menu-item (click)="deletePost()">
             <mat-icon>delete</mat-icon>
             <span>Delete Post</span>
           </button>
+          }
           <!-- <button mat-menu-item (click)="reportPost()">
             <mat-icon>flag</mat-icon>
             <span>Report</span>
@@ -40,7 +42,8 @@
   </mat-toolbar>
 
   <!-- Post Content -->
-  <div class="post-content" *ngIf="post()">
+  @if(post()){
+  <div class="post-content">
     <article class="post-article">
       <!-- Post Header -->
       <header class="article-header">
@@ -72,7 +75,10 @@
 
       <!-- Featured Image -->
       <div class="featured-image">
-        <img [src]="'http://localhost:8080/api/post/file/' + post()!.thumbnail" [alt]="post()!.title" />
+        <img
+          [src]="'http://localhost:8080/api/post/file/' + post()!.thumbnail"
+          [alt]="post()!.title"
+        />
       </div>
 
       <!-- Article Content -->
@@ -86,10 +92,10 @@
           <button
             mat-button
             class="engagement-btn"
-            [class.liked]="post()!.isLiked"
+            [class.liked]="isLiked()"
             (click)="toggleLike()"
           >
-            <mat-icon>{{ post()!.isLiked ? 'favorite' : 'favorite_border' }}</mat-icon>
+            <mat-icon>{{ isLiked() ? 'favorite' : 'favorite_border' }}</mat-icon>
             <span>{{ post()!.likes }}</span>
           </button>
 
@@ -132,29 +138,25 @@
       <h3 class="comments-title">Comments ({{ post()!.comments }})</h3>
 
       <div class="comment-form">
-        <textarea placeholder="Share your thoughts..." rows="3"></textarea>
-        <button mat-raised-button color="primary">Post Comment</button>
+        <textarea [(ngModel)]="commentText" placeholder="Share your thoughts..." rows="3"></textarea>
+        <button mat-raised-button color="primary" (click) ="addComment()" >Post Comment</button>
       </div>
 
       <div class="comments-list">
-        <div class="comment" *ngFor="let comment of mockComments">
+        @for(comment of Comments(); track comment.id){
+        <div class="comment">
           <img [src]="comment.avatar" [alt]="comment.username" class="comment-avatar" />
           <div class="comment-content">
             <div class="comment-header">
               <span class="comment-author">{{ comment.username }}</span>
-              <span class="comment-date">{{ comment.createAt }}</span>
+              <span class="comment-date">{{ formatDate(comment.createAt) }}</span>
             </div>
             <p class="comment-text">{{ comment.content }}</p>
-            <div class="comment-actions">
-              <button mat-button class="comment-action">
-                <mat-icon>thumb_up</mat-icon>
-                {{ comment.likes }}
-              </button>
-              <button mat-button class="comment-action">Reply</button>
-            </div>
           </div>
         </div>
+        }
       </div>
     </div>
   </div>
+  }
 </div>

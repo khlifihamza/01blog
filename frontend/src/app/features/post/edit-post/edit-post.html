@@ -30,12 +30,11 @@
       <mat-form-field appearance="outline" class="title-field">
         <mat-label>Story Title</mat-label>
         <input matInput formControlName="title" placeholder="Tell your story in a few words..." />
-        <mat-error *ngIf="editForm.get('title')?.hasError('required')">
-          Title is required
-        </mat-error>
-        <mat-error *ngIf="editForm.get('title')?.hasError('maxlength')">
-          Title must be less than 100 characters
-        </mat-error>
+        @if(editForm.get('title')?.hasError('required')){
+        <mat-error> Title is required </mat-error>
+        } @if(editForm.get('title')?.hasError('maxlength')){
+        <mat-error> Title must be less than 100 characters </mat-error>
+        }
       </mat-form-field>
 
       <!-- Thumbnail Upload -->
@@ -52,18 +51,20 @@
             style="display: none"
           />
 
-          <div *ngIf="!thumbnailPreview" class="upload-placeholder">
+          @if(!thumbnailPreview){
+          <div class="upload-placeholder">
             <mat-icon>cloud_upload</mat-icon>
             <p>Click to upload image</p>
             <small>Supports: JPG, PNG, GIF</small>
           </div>
-
-          <div *ngIf="thumbnailPreview" class="media-preview">
+          } @else{
+          <div class="media-preview">
             <img [src]="thumbnailPreview" alt="Preview" />
             <button mat-icon-button class="remove-media" (click)="removeThumbnail($event)">
               <mat-icon>delete</mat-icon>
             </button>
           </div>
+          }
         </div>
       </div>
 
@@ -79,7 +80,8 @@
             (keyup)="updateCursorPosition()"
             (mouseup)="updateCursorPosition()"
             (focus)="onFocus()"
-            appDndUpload (filesDropped)="onFilesDropped($event)"
+            appDndUpload
+            (filesDropped)="onFilesDropped($event)"
             [class.empty]="isContentEmpty"
             [innerHTML]="safeContent"
           ></div>
@@ -127,9 +129,11 @@
           />
         </div>
 
-        <div class="content-validation" *ngIf="showValidationError">
+        @if(showValidationError){
+        <div class="content-validation">
           <span class="error-text">Content must be at least 100 characters</span>
         </div>
+        }
       </div>
     </form>
   </div>

@@ -38,6 +38,7 @@ import com.dev.backend.dto.UserDto;
 import com.dev.backend.model.Post;
 import com.dev.backend.model.User;
 import com.dev.backend.service.FollowService;
+import com.dev.backend.service.LikeService;
 import com.dev.backend.service.PostService;
 import com.dev.backend.service.UserService;
 
@@ -52,6 +53,9 @@ public class PostController {
 
     @Autowired
     private FollowService followService;
+
+    @Autowired
+    private LikeService likeService;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -145,7 +149,9 @@ public class PostController {
                 followService.isCurrentUserFollowUser(currentUser.getId(), user.getId()));
         boolean isAuthor = currentUser.getId().equals(post.getUser().getId());
         DetailPostResponse postResponse = new DetailPostResponse(post.getId(), post.getTitle(), post.getContent(),
-                author, post.getCreatedAt().toString(), post.getThumbnail(), 0, 0, 0, false, false, isAuthor);
+                author, post.getCreatedAt().toString(), post.getThumbnail(), 0, post.getLikes().size(),
+                post.getComments().size(),
+                likeService.isUserLikedPost(currentUser, post.getId()), false, isAuthor);
         return ResponseEntity.ok(postResponse);
     }
 

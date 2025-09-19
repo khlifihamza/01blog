@@ -35,9 +35,13 @@ public class Post extends BaseEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Like> likes = new ArrayList<>();
 
-    public Post() {}
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Comment> comments = new ArrayList<>();
 
-    public Post(String title,String content, User user) {
+    public Post() {
+    }
+
+    public Post(String title, String content, User user) {
         this.title = title;
         this.content = content;
         this.user = user;
@@ -81,5 +85,21 @@ public class Post extends BaseEntity {
 
     public void setThumbnail(String thumbnail) {
         this.thumbnail = thumbnail;
+    }
+
+    public List<Like> getLikes() {
+        return likes;
+    }
+
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void setLikes(List<Like> likes) {
+        this.likes = likes;
+    }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
     }
 }
