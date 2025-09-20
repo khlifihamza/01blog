@@ -24,7 +24,7 @@ export class PostService {
   }
 
   updatePost(payload: CreatePostPayload, id: string): Observable<any> {
-    return this.http.put<any>(`${this.url}/update/${id}`, payload);
+    return this.http.patch<any>(`${this.url}/update/${id}`, payload);
   }
 
   getPost(id: string): Observable<DetailPost> {

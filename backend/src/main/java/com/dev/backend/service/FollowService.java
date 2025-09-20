@@ -21,7 +21,14 @@ public class FollowService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public void followUser(UUID followerId, UUID followingId) {
+        if (followerId.equals(followingId)) {
+            throw new RuntimeException("You cannot follow yourself.");
+        }
+
         User follower = userRepository.findById(followerId)
                 .orElseThrow(() -> new EntityNotFoundException("Follower not found"));
         User following = userRepository.findById(followingId)
@@ -30,20 +37,32 @@ public class FollowService {
         if (followRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {
             throw new DataIntegrityViolationException("you already follow this user");
         }
+
         if (!followRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {
             Follow follow = new Follow(follower, following);
+
+            notificationService.createNotificationForFollow(follower, following,
+                    follower.getUsername() + " started following you",
+                    "You have a new follower! Check out their profile.");
+
             followRepository.save(follow);
         }
     }
 
     public void unfollowUser(UUID followerId, UUID followingId) {
+        if (followerId.equals(followingId)) {
+            throw new RuntimeException("You cannot unfollow yourself.");
+        }
+
         userRepository.findById(followerId)
                 .orElseThrow(() -> new EntityNotFoundException("Follower not found"));
         userRepository.findById(followingId)
                 .orElseThrow(() -> new EntityNotFoundException("Following user not found"));
+
         if (!followRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {
             throw new EntityNotFoundException("Follow status not exist");
         }
+
         if (followRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {
             Follow followRow = followRepository.findByFollowerIdAndFollowingId(followerId, followingId);
             followRepository.delete(followRow);
