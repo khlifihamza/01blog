@@ -22,11 +22,19 @@ public class LikeService {
     @Autowired
     private PostRepository postRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public void like(User currentUser, UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         if (likeRepository.existsByUserAndPost(currentUser, post)) {
             throw new DataIntegrityViolationException("you already liked this post");
+        }
+        if (!currentUser.getId().equals(post.getUser().getId())) {
+            notificationService.createNotification(post, post.getUser(),
+                    currentUser.getUsername() + " liked your post",
+                    "Your post \"" + post.getTitle() + "\" received a new like");
         }
         Like like = new Like(currentUser, post);
         likeRepository.save(like);

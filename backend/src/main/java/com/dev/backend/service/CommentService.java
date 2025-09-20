@@ -22,10 +22,18 @@ public class CommentService {
     @Autowired
     private PostRepository postRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public Comment comment(User currentUser, UUID postId, String content) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         Comment comment = new Comment(currentUser, post, content);
+        if (!currentUser.getId().equals(post.getUser().getId())) {
+            notificationService.createNotification(post, comment.getUser(),
+                    currentUser.getUsername() + " commented on your post",
+                    comment.getContent());
+        }
         commentRepository.save(comment);
         return comment;
     }

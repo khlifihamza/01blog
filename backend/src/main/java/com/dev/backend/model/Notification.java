@@ -10,6 +10,9 @@ import jakarta.persistence.Table;
 @Table(name = "notifications")
 public class Notification extends BaseEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
+    private String title;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @ManyToOne
@@ -21,6 +24,24 @@ public class Notification extends BaseEntity {
 
     @Column(nullable = false)
     private boolean seen;
+
+    public Notification() {
+    }
+
+    public Notification(User recipient, String content, String link, boolean seen) {
+        this.content = content;
+        this.recipient = recipient;
+        this.link = link;
+        this.seen = seen;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
     public String getContent() {
         return content;

@@ -17,9 +17,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -91,7 +91,7 @@ public class PostController {
     @PostMapping("/create")
     public ResponseEntity<ApiResponse> createPost(@Validated @RequestBody PostRequest postDto,
             @AuthenticationPrincipal User currentUser) {
-        postService.savePost(postDto, currentUser);
+        postService.savePost(postDto, currentUser.getId());
         return ResponseEntity.ok(new ApiResponse("created successefully"));
     }
 
@@ -187,16 +187,16 @@ public class PostController {
         return ResponseEntity.ok(editpost);
     }
 
-    @PutMapping("/update/{id}")
+    @PatchMapping("/update/{id}")
     public ResponseEntity<ApiResponse> updatePost(@PathVariable UUID id, @Validated @RequestBody PostRequest postDto,
             @AuthenticationPrincipal User currentUser) {
-        postService.updatePost(id, postDto);
+        postService.updatePost(id, postDto, currentUser.getId());
         return ResponseEntity.ok(new ApiResponse("Blog updated successful"));
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ApiResponse> deletePost(@PathVariable UUID id) {
-        postService.deletePost(id);
-        return ResponseEntity.ok(new ApiResponse("Post deleted"));
+    public ResponseEntity<ApiResponse> deletePost(@PathVariable UUID id, @AuthenticationPrincipal User currentUser) {
+        postService.deletePost(id, currentUser.getId());
+        return ResponseEntity.ok(new ApiResponse("Blog deleted successful"));
     }
 }
