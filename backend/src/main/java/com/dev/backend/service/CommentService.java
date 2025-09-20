@@ -30,9 +30,9 @@ public class CommentService {
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         Comment comment = new Comment(currentUser, post, content);
         if (!currentUser.getId().equals(post.getUser().getId())) {
-            notificationService.createNotification(post, comment.getUser(),
+            notificationService.createNotification(post, post.getUser(),
                     currentUser.getUsername() + " commented on your post",
-                    comment.getContent());
+                    comment.getContent(), "comment");
         }
         commentRepository.save(comment);
         return comment;

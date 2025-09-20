@@ -4,9 +4,9 @@ import java.util.UUID;
 
 public record NotificationResponse(
         UUID id,
+        String type,
         String title,
         String message,
-        String avatar,
         String createdAt,
         boolean isRead,
         String link) {

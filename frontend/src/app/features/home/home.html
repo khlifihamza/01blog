@@ -27,9 +27,9 @@
         <button
           mat-icon-button
           (click)="openNotifications()"
-          [matBadge]="notificationCount"
+          [matBadge]="notificationCount()"
           matBadgeColor="warn"
-          [matBadgeHidden]="notificationCount === 0"
+          [matBadgeHidden]="notificationCount() === 0"
         >
           <mat-icon>notifications</mat-icon>
         </button>
@@ -67,11 +67,11 @@
           </button>
           <button mat-menu-item (click)="openNotifications()">
             <mat-icon
-              [matBadge]="notificationCount"
+              [matBadge]="notificationCount()"
               matBadgeColor="warn"
-              [matBadgeHidden]="notificationCount === 0"
+              [matBadgeHidden]="notificationCount() === 0"
               aria-hidden="false"
-              aria-label="{{ notificationCount }} new notifications"
+              aria-label="{{ notificationCount() }} new notifications"
             >
               notifications
             </mat-icon>

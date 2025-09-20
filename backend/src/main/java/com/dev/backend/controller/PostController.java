@@ -68,7 +68,8 @@ public class PostController {
             Author author = new Author(post.getUser().getUsername(),
                     "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2");
             FeedPostResponse feedPost = new FeedPostResponse(post.getId(), post.getTitle(), post.getContent(), author,
-                    post.getCreatedAt().toString(), 0, 0, 0, post.getThumbnail());
+                    post.getCreatedAt().toString(), 0, post.getLikes().size(), post.getComments().size(),
+                    post.getThumbnail());
             feedPostsResponses.add(feedPost);
         }
         return ResponseEntity.ok(feedPostsResponses);

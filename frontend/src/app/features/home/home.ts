@@ -14,6 +14,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatInputModule } from '@angular/material/input';
 import { AuthService } from '../../core/services/auth.service';
 import { PostService } from '../../core/services/post.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-feed',
@@ -39,7 +40,7 @@ import { PostService } from '../../core/services/post.service';
 export class HomeComponent implements OnInit {
   searchQuery = '';
   isLoading = false;
-  notificationCount = 3;
+  notificationCount = signal(0);
   isAdmin = true;
   allPosts = signal<FeedPost[]>([]);
   filteredPosts = signal<FeedPost[]>([]);
@@ -47,12 +48,23 @@ export class HomeComponent implements OnInit {
   constructor(
     private router: Router,
     private authService: AuthService,
-    private postService: PostService
+    private postService: PostService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit() {
     this.isAdmin = this.authService.isAdmin();
     this.loadFeedPosts();
+    this.loadNotificationCount();
+  }
+
+  loadNotificationCount() {
+    this.notificationService.getUnreadNotificationCount().subscribe({
+      next: (count) => {
+        this.notificationCount.set(count);
+      },
+      error: (error) => console.log(error),
+    });
   }
 
   loadFeedPosts() {

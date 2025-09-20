@@ -15,17 +15,18 @@ import com.dev.backend.repository.NotificationRepository;
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
-public class    NotificationService {
+public class NotificationService {
     @Autowired
     private NotificationRepository notificationRepository;
 
-    public void createNotification(Post post, User recipient, String title, String message) {
+    public void createNotification(Post post, User recipient, String title, String message, String type) {
         Notification notification = new Notification();
         notification.setRecipient(recipient);
         notification.setSeen(false);
         notification.setContent(message);
         notification.setTitle(title);
         notification.setLink("/post/" + post.getId());
+        notification.setType(type);
         notificationRepository.save(notification);
     }
 
@@ -36,6 +37,7 @@ public class    NotificationService {
         notification.setContent(message);
         notification.setTitle(title);
         notification.setLink("/profile/" + user.getUsername());
+        notification.setType("follow");
         notificationRepository.save(notification);
     }
 
@@ -67,5 +69,16 @@ public class    NotificationService {
             throw new AccessDeniedException("You cannot delete another user's notification.");
         }
         notificationRepository.deleteById(id);
+    }
+
+    public void deleteAllNotification(UUID currentUserId) {
+        List<Notification> notifications = notificationRepository.findByRecipientIdOrderByCreatedAtDesc(currentUserId);
+        for (Notification notification : notifications) {
+            deleteNotification(notification.getId(), currentUserId);
+        }
+    }
+
+    public long countUnread(UUID currentUserID) {
+        return notificationRepository.countByRecipientIdAndSeenFalse(currentUserID);
     }
 }
