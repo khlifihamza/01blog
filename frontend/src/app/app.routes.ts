@@ -10,6 +10,7 @@ import { CreatePostComponent } from './features/post/create-post/create-post';
 import { PostDetailComponent } from './features/post/post-detail/post-detail';
 import { EditPostComponent } from './features/post/edit-post/edit-post';
 import { ProfileComponent } from './features/profile/profile';
+import { NotificationsComponent } from './features/notification/notification';
 
 export const routes: Routes = [
   {
@@ -40,4 +41,5 @@ export const routes: Routes = [
   { path: 'post/:id', component: PostDetailComponent, canActivate: [AuthGuard] },
   { path: 'edit-post/:id', component: EditPostComponent, canActivate: [AuthGuard] },
   { path: 'profile/:username', component: ProfileComponent, canActivate: [AuthGuard] },
+  { path: 'notifications', component: NotificationsComponent, canActivate: [AuthGuard] },
 ];

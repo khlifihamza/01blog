@@ -34,7 +34,7 @@ public class LikeService {
         if (!currentUser.getId().equals(post.getUser().getId())) {
             notificationService.createNotification(post, post.getUser(),
                     currentUser.getUsername() + " liked your post",
-                    "Your post \"" + post.getTitle() + "\" received a new like");
+                    "Your post \"" + post.getTitle() + "\" received a new like", "like");
         }
         Like like = new Like(currentUser, post);
         likeRepository.save(like);

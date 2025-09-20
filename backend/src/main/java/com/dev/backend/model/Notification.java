@@ -9,6 +9,9 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "notifications")
 public class Notification extends BaseEntity {
+    @Column(nullable = false)
+    private String type;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String title;
 
@@ -33,6 +36,14 @@ public class Notification extends BaseEntity {
         this.recipient = recipient;
         this.link = link;
         this.seen = seen;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getTitle() {

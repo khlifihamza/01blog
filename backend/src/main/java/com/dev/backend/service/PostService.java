@@ -38,7 +38,7 @@ public class PostService {
         List<Follow> followers = user.getFollowers();
         for (Follow follow : followers) {
             notificationService.createNotification(post, follow.getFollower(), "New post from " + user.getUsername(),
-                    user.getUsername() + " published: \"" + post.getTitle() + "\"");
+                    user.getUsername() + " published: \"" + post.getTitle() + "\"", "post");
         }
         return post;
     }

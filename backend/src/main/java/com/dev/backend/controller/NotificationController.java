@@ -44,17 +44,30 @@ public class NotificationController {
         return ResponseEntity.ok(new ApiResponse("Notification deleted successefully"));
     }
 
+    @DeleteMapping("/deleteAll")
+    public ResponseEntity<ApiResponse> deleteAll(@AuthenticationPrincipal User currentUser) {
+        notificationService.deleteAllNotification(currentUser.getId());
+        return ResponseEntity.ok(new ApiResponse("Notification deleted successefully"));
+    }
+
     @GetMapping("/get")
     public ResponseEntity<List<NotificationResponse>> getNotifications(@AuthenticationPrincipal User currentUser) {
         List<Notification> notifications = notificationService.getNotifications(currentUser.getId());
         List<NotificationResponse> notificationsResponse = new ArrayList<>();
         for (Notification notification : notifications) {
             NotificationResponse notificationResponse = new NotificationResponse(notification.getId(),
+                    notification.getType(),
                     notification.getTitle(), notification.getContent(),
-                    "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2",
-                    notification.getCreatedAt().toString(), notification.getSeen(), notification.getLink());
+                    notification.getCreatedAt().toString(),
+                    notification.getSeen(), notification.getLink());
             notificationsResponse.add(notificationResponse);
         }
         return ResponseEntity.ok(notificationsResponse);
+    }
+
+    @GetMapping("/count")
+    public ResponseEntity<Long> count(@AuthenticationPrincipal User currentUser) {
+        long count = notificationService.countUnread(currentUser.getId());
+        return ResponseEntity.ok(count);
     }
 }
