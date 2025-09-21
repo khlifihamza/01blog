@@ -1,0 +1,76 @@
+<div class="report-dialog">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>Report Post</h2>
+    <button mat-icon-button mat-dialog-close>
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content>
+    @if(data.postId){
+    <p class="dialog-description">
+      Help us understand what's wrong with this post: <strong>"{{ data.postTitle }}"</strong>
+    </p>
+    } @if(data.username){
+    <p class="dialog-description">
+      Help us understand what's wrong with this user: <strong>"{{ data.username }}"</strong>
+    </p>
+    }
+
+    <form [formGroup]="reportForm" class="report-form">
+      <mat-form-field appearance="outline" class="reason-field">
+        <mat-label>Reason for reporting</mat-label>
+        <mat-select formControlName="reason">
+          <mat-option value="spam">Spam or misleading content</mat-option>
+          <mat-option value="harassment">Harassment or bullying</mat-option>
+          <mat-option value="inappropriate">Inappropriate content</mat-option>
+          <mat-option value="copyright">Copyright violation</mat-option>
+          <mat-option value="misinformation">False information</mat-option>
+          <mat-option value="other">Other</mat-option>
+        </mat-select>
+        @if(reportForm.get('reason')?.hasError('required')){
+        <mat-error> Please select a reason </mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="details-field">
+        <mat-label>Additional details (optional)</mat-label>
+        <textarea
+          matInput
+          formControlName="details"
+          rows="4"
+          placeholder="Please provide more context about why you're reporting this post..."
+        >
+        </textarea>
+        <mat-hint>Help us understand the issue better</mat-hint>
+      </mat-form-field>
+    </form>
+
+    <div class="report-info">
+      <mat-icon>info</mat-icon>
+      <div class="info-text">
+        <p><strong>Your report is anonymous</strong></p>
+        <p>
+          We'll review this post and take appropriate action if it violates our community
+          guidelines.
+        </p>
+      </div>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button mat-dialog-close>Cancel</button>
+    <button
+      mat-raised-button
+      color="warn"
+      (click)="submitReport()"
+      [disabled]="reportForm.invalid || isSubmitting()"
+    >
+      @if(isSubmitting()){
+      <span>Submitting...</span>
+      } @else{
+      <span>Submit Report</span>
+      }
+    </button>
+  </mat-dialog-actions>
+</div>

@@ -12,6 +12,8 @@ import { PostService } from '../../core/services/post.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { FollowService } from '../../core/services/follow.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ReportDialogComponent } from '../report/report-dialog';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-profile',
@@ -39,7 +41,8 @@ export class ProfileComponent implements OnInit {
     private followService: FollowService,
     private route: ActivatedRoute,
     private profileService: ProfileService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -100,6 +103,13 @@ export class ProfileComponent implements OnInit {
         error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
       });
     }
+  }
+
+  reportPost() {
+    const dialogRef = this.dialog.open(ReportDialogComponent, {
+      width: '505px',
+      data: { postId: null, postTitle: null, username: this.profile()?.username },
+    });
   }
 
   editProfile() {

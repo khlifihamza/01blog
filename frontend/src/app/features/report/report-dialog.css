@@ -1,0 +1,76 @@
+.report-dialog {
+  width: 100%;
+  max-width: 500px;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.dialog-description {
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.report-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.reason-field,
+.details-field {
+  width: 100%;
+}
+
+.report-info {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color);
+}
+
+.report-info mat-icon {
+  color: var(--primary-color);
+  margin-top: 2px;
+}
+
+.info-text p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.info-text p:first-child {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.info-text p:last-child {
+  color: var(--text-secondary);
+}
+
+mat-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 24px;
+  border-top: 1px solid #e0e0e0;
+}
+
+mat-dialog-actions button {
+  min-width: 100px;
+}
