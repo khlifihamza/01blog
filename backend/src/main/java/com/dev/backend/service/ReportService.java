@@ -1,5 +1,7 @@
 package com.dev.backend.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -44,5 +46,9 @@ public class ReportService {
             report.setReported_user(reportedUser);
         }
         reportRepository.save(report);
+    }
+
+    public List<Report> getReports(){
+        return reportRepository.findAll();
     }
 }

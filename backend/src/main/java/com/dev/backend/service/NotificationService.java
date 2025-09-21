@@ -8,6 +8,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.model.Notification;
+import com.dev.backend.model.NotificationType;
 import com.dev.backend.model.Post;
 import com.dev.backend.model.User;
 import com.dev.backend.repository.NotificationRepository;
@@ -19,7 +20,7 @@ public class NotificationService {
     @Autowired
     private NotificationRepository notificationRepository;
 
-    public void createNotification(Post post, User recipient, String title, String message, String type) {
+    public void createNotification(Post post, User recipient, String title, String message, NotificationType type) {
         Notification notification = new Notification();
         notification.setRecipient(recipient);
         notification.setSeen(false);
@@ -37,7 +38,7 @@ public class NotificationService {
         notification.setContent(message);
         notification.setTitle(title);
         notification.setLink("/profile/" + user.getUsername());
-        notification.setType("follow");
+        notification.setType(NotificationType.FOLLOW);
         notificationRepository.save(notification);
     }
 

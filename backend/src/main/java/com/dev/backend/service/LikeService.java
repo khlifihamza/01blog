@@ -7,6 +7,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.model.Like;
+import com.dev.backend.model.NotificationType;
 import com.dev.backend.model.Post;
 import com.dev.backend.model.User;
 import com.dev.backend.repository.LikeRepository;
@@ -34,7 +35,7 @@ public class LikeService {
         if (!currentUser.getId().equals(post.getUser().getId())) {
             notificationService.createNotification(post, post.getUser(),
                     currentUser.getUsername() + " liked your post",
-                    "Your post \"" + post.getTitle() + "\" received a new like", "like");
+                    "Your post \"" + post.getTitle() + "\" received a new like", NotificationType.LIKE);
         }
         Like like = new Like(currentUser, post);
         likeRepository.save(like);

@@ -8,6 +8,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import com.dev.backend.dto.PostRequest;
 import com.dev.backend.model.Follow;
+import com.dev.backend.model.NotificationType;
 import com.dev.backend.model.Post;
 import com.dev.backend.model.User;
 import com.dev.backend.repository.PostRepository;
@@ -38,7 +39,7 @@ public class PostService {
         List<Follow> followers = user.getFollowers();
         for (Follow follow : followers) {
             notificationService.createNotification(post, follow.getFollower(), "New post from " + user.getUsername(),
-                    user.getUsername() + " published: \"" + post.getTitle() + "\"", "post");
+                    user.getUsername() + " published: \"" + post.getTitle() + "\"", NotificationType.POST);
         }
         return post;
     }
