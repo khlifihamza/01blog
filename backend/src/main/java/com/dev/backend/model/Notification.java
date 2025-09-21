@@ -2,6 +2,8 @@ package com.dev.backend.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -9,8 +11,8 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "notifications")
 public class Notification extends BaseEntity {
-    @Column(nullable = false)
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private NotificationType type;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String title;
@@ -38,11 +40,11 @@ public class Notification extends BaseEntity {
         this.seen = seen;
     }
 
-    public String getType() {
+    public NotificationType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(NotificationType type) {
         this.type = type;
     }
 

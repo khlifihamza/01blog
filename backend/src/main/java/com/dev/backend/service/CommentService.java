@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.model.Comment;
+import com.dev.backend.model.NotificationType;
 import com.dev.backend.model.Post;
 import com.dev.backend.model.User;
 import com.dev.backend.repository.CommentRepository;
@@ -32,7 +33,7 @@ public class CommentService {
         if (!currentUser.getId().equals(post.getUser().getId())) {
             notificationService.createNotification(post, post.getUser(),
                     currentUser.getUsername() + " commented on your post",
-                    comment.getContent(), "comment");
+                    comment.getContent(), NotificationType.COMMENT);
         }
         commentRepository.save(comment);
         return comment;

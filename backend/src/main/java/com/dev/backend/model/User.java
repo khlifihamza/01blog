@@ -125,7 +125,7 @@ public class User extends BaseEntity implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        String roleString = (role == null) ? "USER" : role.toString();
+        String roleString = (role == null) ? "USER" : role.name();
         return List.of(new SimpleGrantedAuthority("ROLE_" + roleString));
     }
 
