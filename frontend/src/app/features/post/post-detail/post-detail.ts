@@ -16,6 +16,7 @@ import { FollowService } from '../../../core/services/follow.service';
 import { LikeService } from '../../../core/services/like.service';
 import { CommentService } from '../../../core/services/comment.service';
 import { FormsModule } from '@angular/forms';
+import { ReportDialogComponent } from '../../report/report-dialog';
 // import { ReportDialogComponent } from './report-dialog.component';
 
 @Component({
@@ -52,7 +53,8 @@ export class PostDetailComponent implements OnInit {
     private snackBar: MatSnackBar,
     private followService: FollowService,
     private likeService: LikeService,
-    private commentService: CommentService
+    private commentService: CommentService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -190,18 +192,12 @@ export class PostDetailComponent implements OnInit {
     // Show snackbar or toast
   }
 
-  // reportPost() {
-  //   const dialogRef = this.dialog.open(ReportDialogComponent, {
-  //     width: '500px',
-  //     data: { postId: this.post?.id, postTitle: this.post?.title },
-  //   });
-
-  //   dialogRef.afterClosed().subscribe((result) => {
-  //     if (result) {
-  //       console.log('Post reported:', result);
-  //     }
-  //   });
-  // }
+  reportPost() {
+    const dialogRef = this.dialog.open(ReportDialogComponent, {
+      width: '505px',
+      data: { postId: this.post()?.id, postTitle: this.post()?.title, username: null },
+    });
+  }
 
   scrollToComments() {
     document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' });

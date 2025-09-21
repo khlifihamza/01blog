@@ -12,10 +12,17 @@
       </button>
 
       <mat-menu #profileMenu="matMenu">
+        @if(profile()?.isOwner){
         <button mat-menu-item (click)="editProfile()">
           <mat-icon>edit</mat-icon>
           <span>Edit Profile</span>
         </button>
+        } @else{
+        <button mat-menu-item (click)="reportPost()">
+          <mat-icon>flag</mat-icon>
+          <span>Report</span>
+        </button>
+        }
       </mat-menu>
     </div>
   </mat-toolbar>
