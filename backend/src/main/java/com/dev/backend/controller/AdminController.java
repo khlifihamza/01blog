@@ -2,6 +2,7 @@ package com.dev.backend.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,11 +13,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dev.backend.dto.AdminPostResponse;
 import com.dev.backend.dto.ApiResponse;
 import com.dev.backend.dto.ReportResponse;
 import com.dev.backend.dto.UserResponse;
+import com.dev.backend.model.Post;
 import com.dev.backend.model.Report;
 import com.dev.backend.model.User;
+import com.dev.backend.service.PostService;
 import com.dev.backend.service.ReportService;
 import com.dev.backend.service.UserService;
 
@@ -28,6 +32,9 @@ public class AdminController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private PostService postService;
 
     @GetMapping("/get-reports")
     public ResponseEntity<List<ReportResponse>> getReports() {
@@ -62,18 +69,43 @@ public class AdminController {
     @PatchMapping("/ban-user/{username}")
     public ResponseEntity<ApiResponse> banUser(@PathVariable String username) {
         userService.banUser(username);
-        return ResponseEntity.ok(new ApiResponse("User banned successefully"));
+        return ResponseEntity.ok(new ApiResponse("User banned successfully"));
     }
 
     @PatchMapping("/unban-user/{username}")
     public ResponseEntity<ApiResponse> unbanUser(@PathVariable String username) {
         userService.unbanUser(username);
-        return ResponseEntity.ok(new ApiResponse("User unbanned successefully"));
+        return ResponseEntity.ok(new ApiResponse("User unbanned successfully"));
     }
 
     @DeleteMapping("/delete-user/{username}")
     public ResponseEntity<ApiResponse> deleteUser(@PathVariable String username) {
         userService.deleteUser(username);
-        return ResponseEntity.ok(new ApiResponse("User deleted successefully"));
+        return ResponseEntity.ok(new ApiResponse("User deleted successfully"));
+    }
+
+    @PatchMapping("/hide-post/{id}")
+    public ResponseEntity<ApiResponse> hidePost(@PathVariable UUID id) {
+        postService.hidePost(id);
+        return ResponseEntity.ok(new ApiResponse("The post was hidden successfully"));
+    }
+
+    @PatchMapping("/unhide-post/{id}")
+    public ResponseEntity<ApiResponse> unhidePost(@PathVariable UUID id) {
+        postService.unhidePost(id);
+        return ResponseEntity.ok(new ApiResponse("The post was unhidden successfully"));
+    }
+
+    @GetMapping("/get-posts")
+    public ResponseEntity<List<AdminPostResponse>> getAllPosts() {
+        List<Post> posts = postService.getAllPosts();
+        List<AdminPostResponse> postsResponse = new ArrayList<>();
+        for (Post post : posts) {
+            AdminPostResponse postResponse = new AdminPostResponse(post.getId(), post.getTitle(),
+                    post.getUser().getUsername(), post.getCreatedAt().toString(), post.getLikes().size(),
+                    post.getComments().size(), post.getStatus().name());
+            postsResponse.add(postResponse);
+        }
+        return ResponseEntity.ok(postsResponse);
     }
 }

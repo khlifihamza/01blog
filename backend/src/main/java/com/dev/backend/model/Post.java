@@ -6,6 +6,8 @@ import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -28,14 +30,17 @@ public class Post extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String files;
 
+    @Enumerated(EnumType.STRING)
+    private PostStatus status;
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Like> likes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Comment> comments = new ArrayList<>();
 
     public Post() {
@@ -45,6 +50,14 @@ public class Post extends BaseEntity {
         this.title = title;
         this.content = content;
         this.user = user;
+    }
+
+    public void setStatus(PostStatus status) {
+        this.status = status;
+    }
+
+    public PostStatus getStatus() {
+        return status;
     }
 
     public String getTitle() {

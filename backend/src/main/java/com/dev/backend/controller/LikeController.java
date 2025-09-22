@@ -23,12 +23,12 @@ public class LikeController {
     @GetMapping("/like/{postId}")
     public ResponseEntity<ApiResponse> like(@PathVariable UUID postId, @AuthenticationPrincipal User currentUser) {
         likeService.like(currentUser, postId);
-        return ResponseEntity.ok(new ApiResponse("Liked successefully"));
+        return ResponseEntity.ok(new ApiResponse("Liked successfully"));
     }
 
     @GetMapping("/dislike/{postId}")
     public ResponseEntity<ApiResponse> dislike(@PathVariable UUID postId, @AuthenticationPrincipal User currentUser) {
         likeService.dislike(currentUser, postId);
-        return ResponseEntity.ok(new ApiResponse("Disliked successefully"));
+        return ResponseEntity.ok(new ApiResponse("Disliked successfully"));
     }
 }

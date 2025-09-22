@@ -36,6 +36,7 @@ import com.dev.backend.dto.FeedPostResponse;
 import com.dev.backend.dto.UploadResponse;
 import com.dev.backend.dto.UserDto;
 import com.dev.backend.model.Post;
+import com.dev.backend.model.PostStatus;
 import com.dev.backend.model.User;
 import com.dev.backend.service.FollowService;
 import com.dev.backend.service.LikeService;
@@ -82,6 +83,9 @@ public class PostController {
         List<Post> posts = postService.getPosts(user.getId());
         List<ProfilePostResponse> postsResponse = new ArrayList<>();
         for (Post post : posts) {
+            if (post.getStatus() == PostStatus.HIDDEN && !user.getId().equals(currentUser.getId())) {
+                continue;
+            }
             ProfilePostResponse postResponse = new ProfilePostResponse(post.getId(), post.getTitle(),
                     post.getCreatedAt().toString(), 0, 0, 0, post.getThumbnail());
             postsResponse.add(postResponse);
@@ -93,7 +97,7 @@ public class PostController {
     public ResponseEntity<ApiResponse> createPost(@Validated @RequestBody PostRequest postDto,
             @AuthenticationPrincipal User currentUser) {
         postService.savePost(postDto, currentUser.getId());
-        return ResponseEntity.ok(new ApiResponse("Post created successefully"));
+        return ResponseEntity.ok(new ApiResponse("Post created successfully"));
     }
 
     @PostMapping("/upload")

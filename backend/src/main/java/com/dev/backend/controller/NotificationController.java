@@ -41,13 +41,13 @@ public class NotificationController {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<ApiResponse> delete(@PathVariable UUID id, @AuthenticationPrincipal User currentUser) {
         notificationService.deleteNotification(id, currentUser.getId());
-        return ResponseEntity.ok(new ApiResponse("Notification deleted successefully"));
+        return ResponseEntity.ok(new ApiResponse("Notification deleted successfully"));
     }
 
     @DeleteMapping("/deleteAll")
     public ResponseEntity<ApiResponse> deleteAll(@AuthenticationPrincipal User currentUser) {
         notificationService.deleteAllNotification(currentUser.getId());
-        return ResponseEntity.ok(new ApiResponse("Notification deleted successefully"));
+        return ResponseEntity.ok(new ApiResponse("Notification deleted successfully"));
     }
 
     @GetMapping("/get")

@@ -10,6 +10,7 @@ import com.dev.backend.dto.PostRequest;
 import com.dev.backend.model.Follow;
 import com.dev.backend.model.NotificationType;
 import com.dev.backend.model.Post;
+import com.dev.backend.model.PostStatus;
 import com.dev.backend.model.User;
 import com.dev.backend.repository.PostRepository;
 import com.dev.backend.repository.UserRepository;
@@ -35,6 +36,7 @@ public class PostService {
         post.setFiles(String.join(", ", postDto.files()));
         post.setUser(user);
         post.setThumbnail(postDto.thumbnail());
+        post.setStatus(PostStatus.PUBLISHED);
         postRepository.save(post);
         List<Follow> followers = user.getFollowers();
         for (Follow follow : followers) {
@@ -66,6 +68,20 @@ public class PostService {
         postRepository.deleteById(id);
     }
 
+    public void hidePost(UUID id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+        post.setStatus(PostStatus.HIDDEN);
+        postRepository.save(post);
+    }
+
+    public void unhidePost(UUID id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+        post.setStatus(PostStatus.PUBLISHED);
+        postRepository.save(post);
+    }
+
     public List<Post> getPosts(UUID id) {
         return postRepository.findByUserIdOrderByCreatedAtDesc(id);
     }
@@ -76,5 +92,9 @@ public class PostService {
 
     public Post getPost(UUID id) {
         return postRepository.findById(id).orElseThrow();
+    }
+
+    public List<Post> getAllPosts() {
+        return postRepository.findAll();
     }
 }
