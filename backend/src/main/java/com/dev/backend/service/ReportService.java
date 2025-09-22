@@ -1,6 +1,7 @@
 package com.dev.backend.service;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -49,7 +50,13 @@ public class ReportService {
         reportRepository.save(report);
     }
 
-    public List<Report> getReports(){
+    public void resolveReport(UUID reportId) {
+        Report report = reportRepository.findById(reportId).orElseThrow();
+        report.setStatus(ReportStatus.RESOLVED);
+        reportRepository.save(report);
+    }
+
+    public List<Report> getReports() {
         return reportRepository.findAll();
     }
 }

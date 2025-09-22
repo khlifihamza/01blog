@@ -23,7 +23,7 @@ export interface UserProfile {
   id: string;
   username: string;
   avatar: string | null;
-  bio: string;
+  bio: string | null;
   joinDate: string;
   followers: number;
   following: number;

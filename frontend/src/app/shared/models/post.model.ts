@@ -37,7 +37,7 @@ export interface DetailPost {
   author: {
     username: string;
     avatar: string | null;
-    bio: string;
+    bio: string | null;
     followers: number;
     following: number;
     isFollowed: boolean;

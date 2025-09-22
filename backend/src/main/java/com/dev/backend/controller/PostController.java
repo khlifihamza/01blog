@@ -148,11 +148,11 @@ public class PostController {
             @AuthenticationPrincipal User currentUser) {
         Post post = postService.getPost(id);
         User user = post.getUser();
-        UserDto author = new UserDto(post.getUser().getUsername(),
-                post.getUser().getAvatar(),
-                "no bio yet", user.getFollowers().size(), user.getFollowing().size(),
+        UserDto author = new UserDto(user.getUsername(),
+                user.getAvatar(),
+                user.getBio(), user.getFollowers().size(), user.getFollowing().size(),
                 followService.isCurrentUserFollowUser(currentUser.getId(), user.getId()));
-        boolean isAuthor = currentUser.getId().equals(post.getUser().getId());
+        boolean isAuthor = currentUser.getId().equals(user.getId());
         DetailPostResponse postResponse = new DetailPostResponse(post.getId(), post.getTitle(), post.getContent(),
                 author, post.getCreatedAt().toString(), post.getThumbnail(), 0, post.getLikes().size(),
                 post.getComments().size(),

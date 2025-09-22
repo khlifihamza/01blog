@@ -27,7 +27,7 @@ public class UserController {
         User user = userService.getUserByUsername(username);
         ProfileUserResponse userResponse = new ProfileUserResponse(user.getId(), user.getUsername(),
                 user.getAvatar(),
-                "no bio yet", user.getCreatedAt().toString(), user.getFollowers().size(),
+                user.getBio(), user.getCreatedAt().toString(), user.getFollowers().size(),
                 user.getFollowing().size(), user.getPosts().size(),
                 user.getId().equals(currentUser.getId()),
                 followService.isCurrentUserFollowUser(currentUser.getId(), user.getId()));
