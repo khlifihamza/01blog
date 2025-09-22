@@ -278,6 +278,7 @@
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
+  cursor: pointer;
 }
 
 .comment-content {
@@ -294,6 +295,7 @@
 .comment-author {
   font-weight: 600;
   color: var(--text-primary);
+  cursor: pointer;
 }
 
 .comment-date {

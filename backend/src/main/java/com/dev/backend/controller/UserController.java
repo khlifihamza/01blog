@@ -26,10 +26,11 @@ public class UserController {
             @AuthenticationPrincipal User currentUser) {
         User user = userService.getUserByUsername(username);
         ProfileUserResponse userResponse = new ProfileUserResponse(user.getId(), user.getUsername(),
-                "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2",
+                user.getAvatar(),
                 "no bio yet", user.getCreatedAt().toString(), user.getFollowers().size(),
                 user.getFollowing().size(), user.getPosts().size(),
-                user.getId().equals(currentUser.getId()), followService.isCurrentUserFollowUser(currentUser.getId(), user.getId()));
+                user.getId().equals(currentUser.getId()),
+                followService.isCurrentUserFollowUser(currentUser.getId(), user.getId()));
         return ResponseEntity.ok(userResponse);
     }
 }

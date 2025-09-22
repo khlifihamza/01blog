@@ -32,8 +32,14 @@ public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    @Column
+    private String avatar;
+
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    @Enumerated(EnumType.STRING)
+    private UserStatus status;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Post> posts = new ArrayList<>();
@@ -46,6 +52,26 @@ public class User extends BaseEntity implements UserDetails {
 
     @OneToMany(mappedBy = "recipient", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Notification> notifications = new ArrayList<>();
+
+    public User() {
+
+    }
+
+    public User(String username, String email, String password, Role role, UserStatus status) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.status = status;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
 
     public List<Notification> getNotifications() {
         return notifications;
@@ -79,15 +105,12 @@ public class User extends BaseEntity implements UserDetails {
         return posts;
     }
 
-    public User() {
-
+    public UserStatus getStatus() {
+        return status;
     }
 
-    public User(String username, String email, String password, Role role) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.role = role;
+    public void setStatus(UserStatus status) {
+        this.status = status;
     }
 
     @Override

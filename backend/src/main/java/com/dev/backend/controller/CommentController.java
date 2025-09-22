@@ -32,7 +32,7 @@ public class CommentController {
             @AuthenticationPrincipal User currentUser) {
         Comment comment = commentService.comment(currentUser, commentDto.postId(), commentDto.content());
         CommentResponse commentResponse = new CommentResponse(comment.getId(), comment.getUser().getUsername(),
-                "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2",
+                comment.getUser().getAvatar(),
                 comment.getCreatedAt().toString(), comment.getContent());
         return ResponseEntity.ok(commentResponse);
     }
@@ -44,7 +44,7 @@ public class CommentController {
         List<CommentResponse> commentsResponse = new ArrayList<>();
         for (Comment comment : comments) {
             CommentResponse commentResponse = new CommentResponse(comment.getId(), comment.getUser().getUsername(),
-                    "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2",
+                    comment.getUser().getAvatar(),
                     comment.getCreatedAt().toString(), comment.getContent());
             commentsResponse.add(commentResponse);
         }

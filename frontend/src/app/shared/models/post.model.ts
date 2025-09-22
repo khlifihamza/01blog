@@ -21,7 +21,7 @@ export interface FeedPost {
   content: string;
   author: {
     username: string;
-    avatar: string;
+    avatar: string | null;
   };
   createdAt: string;
   readTime: number;
@@ -36,7 +36,7 @@ export interface DetailPost {
   content: string;
   author: {
     username: string;
-    avatar: string;
+    avatar: string | null;
     bio: string;
     followers: number;
     following: number;
@@ -73,7 +73,7 @@ export interface ProfilePost {
 export interface Comment {
   id: string;
   username: string;
-  avatar: string;
+  avatar: string | null;
   createAt: string;
   content: string;
   likes: number;

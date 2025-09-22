@@ -2,9 +2,12 @@ package com.dev.backend.service;
 
 import com.dev.backend.repository.UserRepository;
 import com.dev.backend.model.User;
+import com.dev.backend.model.UserStatus;
 import com.dev.backend.dto.LoginRequest;
 import com.dev.backend.dto.RegisterRequest;
 import com.dev.backend.model.Role;
+
+import java.util.List;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,7 +37,8 @@ public class UserService {
         if (!input.password().equals(input.confirmPassword())) {
             throw new IllegalArgumentException("confirm password incorrect");
         }
-        User user = new User(input.username(), input.email(), passwordEncoder.encode(input.password()), Role.USER);
+        User user = new User(input.username(), input.email(), passwordEncoder.encode(input.password()), Role.USER,
+                UserStatus.ACTIVE);
         return userRepository.save(user);
     }
 
@@ -52,12 +56,40 @@ public class UserService {
         return userRepository.findByUsername(input.identifier()).orElseThrow();
     }
 
-    public User getUserByUsername(String username){
+    public User getUserByUsername(String username) {
         if (!userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username don't exists.");
         }
         return userRepository.findByUsername(username).orElseThrow();
     }
 
-    
+    public List<User> getAllUSers() {
+        return userRepository.findAll();
+    }
+
+    public void banUser(String username) {
+        if (!userRepository.existsByUsername(username)) {
+            throw new IllegalArgumentException("Username don't exists.");
+        }
+        User user = userRepository.findByUsername(username).orElseThrow();
+        user.setStatus(UserStatus.BANNED);
+        userRepository.save(user);
+    }
+
+    public void unbanUser(String username) {
+        if (!userRepository.existsByUsername(username)) {
+            throw new IllegalArgumentException("Username don't exists.");
+        }
+        User user = userRepository.findByUsername(username).orElseThrow();
+        user.setStatus(UserStatus.ACTIVE);
+        userRepository.save(user);
+    }
+
+    public void deleteUser(String username) {
+        if (!userRepository.existsByUsername(username)) {
+            throw new IllegalArgumentException("Username don't exists.");
+        }
+        User user = userRepository.findByUsername(username).orElseThrow();
+        userRepository.delete(user);
+    }
 }
