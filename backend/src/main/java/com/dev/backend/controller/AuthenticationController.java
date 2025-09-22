@@ -1,6 +1,7 @@
 package com.dev.backend.controller;
 
 import com.dev.backend.model.User;
+import com.dev.backend.model.UserStatus;
 import com.dev.backend.dto.LoginRequest;
 import com.dev.backend.dto.LoginResponse;
 import com.dev.backend.dto.RegisterRequest;
@@ -45,6 +46,9 @@ public class AuthenticationController {
     public ResponseEntity<?> login(@RequestBody LoginRequest loginUserDto, HttpServletResponse response) {
         try {
             User authenticatedUser = authenticationService.login(loginUserDto);
+            if (authenticatedUser.getStatus().equals(UserStatus.BANNED)){
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are banned!");
+            }
             String jwtToken = jwtService.generateToken(authenticatedUser);
             return ResponseEntity.ok(new LoginResponse(jwtToken, authenticatedUser.getRole().toString()));
         } catch (IllegalArgumentException e) {

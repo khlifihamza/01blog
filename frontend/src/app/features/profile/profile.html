@@ -34,7 +34,7 @@
     <div class="profile-banner">
       <div class="profile-info">
         <div class="avatar-section">
-          <img [src]="profile()!.avatar" [alt]="profile()!.username" class="profile-avatar" />
+          <img [src]="profile()!.avatar ? profile()!.avatar : 'default-avatar.png'" [alt]="profile()!.username" class="profile-avatar" />
           <button mat-fab color="primary" class="edit-avatar-btn" (click)="editAvatar()">
             <mat-icon>camera_alt</mat-icon>
           </button>
@@ -95,7 +95,7 @@
             <div class="featured-text">
               <div class="post-meta">
                 <img
-                  [src]="profile()!.avatar"
+                  [src]="profile()!.avatar ? profile()!.avatar : 'default-avatar.png'"
                   [alt]="profile()!.username"
                   class="author-avatar-small"
                 />

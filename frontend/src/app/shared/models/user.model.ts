@@ -22,7 +22,7 @@ export interface LoginRequest {
 export interface UserProfile {
   id: string;
   username: string;
-  avatar: string;
+  avatar: string | null;
   bio: string;
   joinDate: string;
   followers: number;

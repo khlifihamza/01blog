@@ -66,7 +66,7 @@ public class PostController {
         List<FeedPostResponse> feedPostsResponses = new ArrayList<>();
         for (Post post : posts) {
             Author author = new Author(post.getUser().getUsername(),
-                    "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2");
+                    post.getUser().getAvatar());
             FeedPostResponse feedPost = new FeedPostResponse(post.getId(), post.getTitle(), post.getContent(), author,
                     post.getCreatedAt().toString(), 0, post.getLikes().size(), post.getComments().size(),
                     post.getThumbnail());
@@ -93,7 +93,7 @@ public class PostController {
     public ResponseEntity<ApiResponse> createPost(@Validated @RequestBody PostRequest postDto,
             @AuthenticationPrincipal User currentUser) {
         postService.savePost(postDto, currentUser.getId());
-        return ResponseEntity.ok(new ApiResponse("created successefully"));
+        return ResponseEntity.ok(new ApiResponse("Post created successefully"));
     }
 
     @PostMapping("/upload")
@@ -145,7 +145,7 @@ public class PostController {
         Post post = postService.getPost(id);
         User user = post.getUser();
         UserDto author = new UserDto(post.getUser().getUsername(),
-                "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2",
+                post.getUser().getAvatar(),
                 "no bio yet", user.getFollowers().size(), user.getFollowing().size(),
                 followService.isCurrentUserFollowUser(currentUser.getId(), user.getId()));
         boolean isAuthor = currentUser.getId().equals(post.getUser().getId());

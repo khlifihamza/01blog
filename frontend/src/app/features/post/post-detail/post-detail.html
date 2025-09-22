@@ -52,7 +52,7 @@
         <div class="article-meta">
           <div class="author-info">
             <img
-              [src]="post()!.author.avatar"
+              [src]="post()!.author.avatar ? post()!.author.avatar : 'default-avatar.png'"
               [alt]="post()!.author.username"
               class="author-avatar"
               (click)="viewProfile()"
@@ -111,7 +111,7 @@
     <mat-card class="author-card">
       <div class="author-card-content">
         <img
-          [src]="post()!.author.avatar"
+          [src]="post()!.author.avatar ? post()!.author.avatar : 'default-avatar.png'"
           [alt]="post()!.author.username"
           class="author-card-avatar"
           (click)="viewProfile()"
@@ -138,17 +138,26 @@
       <h3 class="comments-title">Comments ({{ post()!.comments }})</h3>
 
       <div class="comment-form">
-        <textarea [(ngModel)]="commentText" placeholder="Share your thoughts..." rows="3"></textarea>
-        <button mat-raised-button color="primary" (click) ="addComment()" >Post Comment</button>
+        <textarea
+          [(ngModel)]="commentText"
+          placeholder="Share your thoughts..."
+          rows="3"
+        ></textarea>
+        <button mat-raised-button color="primary" (click)="addComment()">Post Comment</button>
       </div>
 
       <div class="comments-list">
         @for(comment of Comments(); track comment.id){
         <div class="comment">
-          <img [src]="comment.avatar" [alt]="comment.username" class="comment-avatar" />
+          <img
+            [src]="comment.avatar ? comment.avatar : 'default-avatar.png'"
+            [alt]="comment.username"
+            class="comment-avatar"
+            (click)="viewProfile()"
+          />
           <div class="comment-content">
             <div class="comment-header">
-              <span class="comment-author">{{ comment.username }}</span>
+              <span class="comment-author" (click)="viewProfile()">{{ comment.username }}</span>
               <span class="comment-date">{{ formatDate(comment.createAt) }}</span>
             </div>
             <p class="comment-text">{{ comment.content }}</p>

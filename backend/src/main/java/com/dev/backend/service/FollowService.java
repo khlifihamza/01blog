@@ -26,7 +26,7 @@ public class FollowService {
 
     public void followUser(UUID followerId, UUID followingId) {
         if (followerId.equals(followingId)) {
-            throw new RuntimeException("You cannot follow yourself.");
+            throw new DataIntegrityViolationException("You cannot follow yourself.");
         }
 
         User follower = userRepository.findById(followerId)
@@ -51,7 +51,7 @@ public class FollowService {
 
     public void unfollowUser(UUID followerId, UUID followingId) {
         if (followerId.equals(followingId)) {
-            throw new RuntimeException("You cannot unfollow yourself.");
+            throw new DataIntegrityViolationException("You cannot unfollow yourself.");
         }
 
         userRepository.findById(followerId)

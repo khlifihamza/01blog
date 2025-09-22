@@ -3,6 +3,7 @@ package com.dev.backend.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.dto.ReportRequest;
@@ -34,14 +35,14 @@ public class ReportService {
         if (reportDto.reportedPost() != null) {
             Post reportedPost = postRepository.getReferenceById(reportDto.reportedPost());
             if (reportedPost.getUser().getId().equals(reporterUser.getId())) {
-                throw new RuntimeException("You cannot report your post.");
+                throw new DataIntegrityViolationException("You cannot report your post.");
             }
             report.setReported_post(reportedPost);
         }
         if (reportDto.reportedUsername() != null) {
             User reportedUser = userRepository.findByUsername(reportDto.reportedUsername()).orElseThrow();
             if (reportedUser.getId().equals(reporterUser.getId())) {
-                throw new RuntimeException("You cannot report your post.");
+                throw new DataIntegrityViolationException("You cannot report yourself.");
             }
             report.setReported_user(reportedUser);
         }

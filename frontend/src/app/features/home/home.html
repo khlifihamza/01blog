@@ -36,7 +36,7 @@
 
         <button mat-icon-button [matMenuTriggerFor]="userMenu">
           <img
-            src="https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=40&h=40&dpr=2"
+            src="default-avatar.png"
             alt="Profile"
             class="profile-avatar"
           />
@@ -45,7 +45,7 @@
         <mat-menu #userMenu="matMenu">
           <div class="user-menu-header">
             <img
-              src="https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=60&h=60&dpr=2"
+              src="default-avatar.png"
               alt="Profile"
               class="menu-avatar"
             />
@@ -111,7 +111,7 @@
           <div class="featured-text">
             <div class="post-meta">
               <img
-                [src]="post.author.avatar"
+                [src]="post.author.avatar ? post.author.avatar : 'default-avatar.png'"
                 [alt]="post.author.username"
                 class="author-avatar-small"
               />
