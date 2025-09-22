@@ -25,13 +25,13 @@ public class FollowController {
     public ResponseEntity<ApiResponse> followUser(@PathVariable String username, @AuthenticationPrincipal User currentUser) {
         User userToFollow = userService.getUserByUsername(username);
         followService.followUser(currentUser.getId(), userToFollow.getId());
-        return ResponseEntity.ok(new ApiResponse("Follewed successefully"));
+        return ResponseEntity.ok(new ApiResponse("Follewed successfully"));
     }
 
     @GetMapping("/unfollow/{username}")
     public ResponseEntity<ApiResponse> unfollowUser(@PathVariable String username, @AuthenticationPrincipal User currentUser) {
         User userToFollow = userService.getUserByUsername(username);
         followService.unfollowUser(currentUser.getId(), userToFollow.getId());
-        return ResponseEntity.ok(new ApiResponse("Unfollewed successefully"));
+        return ResponseEntity.ok(new ApiResponse("Unfollewed successfully"));
     }
 }

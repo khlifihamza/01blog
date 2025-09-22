@@ -14,6 +14,19 @@ import com.dev.backend.model.Post;
 public interface PostRepository extends JpaRepository<Post, UUID> {
     List<Post> findByUserIdOrderByCreatedAtDesc(UUID userId);
 
-    @Query("SELECT p FROM Post p JOIN p.user u WHERE u.id = :userId OR u.id IN (SELECT f.following.id FROM Follow f WHERE f.follower.id = :userId) ORDER BY p.createdAt DESC")
+    @Query("""
+                SELECT p
+                FROM Post p
+                JOIN p.user u
+                WHERE (u.id = :userId
+                       OR u.id IN (
+                           SELECT f.following.id
+                           FROM Follow f
+                           WHERE f.follower.id = :userId
+                       )
+                )
+                AND p.status = 'PUBLISHED'
+                ORDER BY p.createdAt DESC
+            """)
     List<Post> findFeedPosts(@Param("userId") UUID userId);
 }

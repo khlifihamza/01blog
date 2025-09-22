@@ -24,6 +24,6 @@ public class ReportController {
     public ResponseEntity<ApiResponse> createReport(@Validated @RequestBody ReportRequest reportDto,
             @AuthenticationPrincipal User currentUser) {
         reportService.saveReport(reportDto, currentUser);
-        return ResponseEntity.ok(new ApiResponse("Report created successefully"));
+        return ResponseEntity.ok(new ApiResponse("Report created successfully"));
     }
 }
