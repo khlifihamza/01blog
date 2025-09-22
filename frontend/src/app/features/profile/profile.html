@@ -73,7 +73,7 @@
     <mat-card class="bio-card">
       <mat-card-content>
         <h3>About</h3>
-        <p class="bio-text">{{ profile()!.bio }}</p>
+        <p class="bio-text">{{ profile()!.bio ? profile()!.bio : 'No bio yet' }}</p>
 
         <div class="profile-details">
           <div class="detail-item">

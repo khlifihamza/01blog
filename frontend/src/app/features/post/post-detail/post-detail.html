@@ -118,7 +118,7 @@
         />
         <div class="author-card-info">
           <h3 class="author-card-name" (click)="viewProfile()">{{ post()!.author.username }}</h3>
-          <p class="author-card-bio">{{ post()!.author.bio }}</p>
+          <p class="author-card-bio">{{ post()!.author.bio ?  post()!.author.bio : 'No bio yet'}}</p>
 
           <div class="author-stats">
             <span>{{ post()!.author.followers }} Followers</span>

@@ -11,6 +11,7 @@ import com.dev.backend.model.Follow;
 import com.dev.backend.model.NotificationType;
 import com.dev.backend.model.Post;
 import com.dev.backend.model.PostStatus;
+import com.dev.backend.model.Role;
 import com.dev.backend.model.User;
 import com.dev.backend.repository.PostRepository;
 import com.dev.backend.repository.UserRepository;
@@ -62,7 +63,9 @@ public class PostService {
     public void deletePost(UUID id, UUID currentUserId) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        if (!post.getUser().getId().equals(currentUserId)) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (!post.getUser().getId().equals(currentUserId) && !user.getRole().equals(Role.ADMIN)) {
             throw new AccessDeniedException("You cannot delete another user's post.");
         }
         postRepository.deleteById(id);
@@ -82,16 +85,16 @@ public class PostService {
         postRepository.save(post);
     }
 
-    public List<Post> getPosts(UUID id) {
-        return postRepository.findByUserIdOrderByCreatedAtDesc(id);
+    public List<Post> getPosts(UUID userId) {
+        return postRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
-    public List<Post> getFeedPosts(UUID id) {
-        return postRepository.findFeedPosts(id);
+    public List<Post> getFeedPosts(UUID userId) {
+        return postRepository.findFeedPosts(userId);
     }
 
-    public Post getPost(UUID id) {
-        return postRepository.findById(id).orElseThrow();
+    public Post getPost(UUID postId) {
+        return postRepository.findById(postId).orElseThrow();
     }
 
     public List<Post> getAllPosts() {

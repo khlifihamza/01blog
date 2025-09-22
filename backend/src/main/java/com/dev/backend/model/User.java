@@ -35,6 +35,9 @@ public class User extends BaseEntity implements UserDetails {
     @Column
     private String avatar;
 
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -63,6 +66,14 @@ public class User extends BaseEntity implements UserDetails {
         this.password = password;
         this.role = role;
         this.status = status;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
     }
 
     public String getAvatar() {

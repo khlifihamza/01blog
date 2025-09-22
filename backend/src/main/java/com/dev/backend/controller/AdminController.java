@@ -108,4 +108,10 @@ public class AdminController {
         }
         return ResponseEntity.ok(postsResponse);
     }
+
+    @PatchMapping("/dismiss-report/{id}")
+    public ResponseEntity<ApiResponse> dismissReport(@PathVariable UUID reportId) {
+        reportService.resolveReport(reportId);
+        return ResponseEntity.ok(new ApiResponse("The report was handled successfully"));
+    }
 }
