@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dev.backend.dto.FeedUser;
 import com.dev.backend.dto.ProfileUserResponse;
 import com.dev.backend.model.User;
 import com.dev.backend.service.FollowService;
@@ -32,5 +33,11 @@ public class UserController {
                 user.getId().equals(currentUser.getId()),
                 followService.isCurrentUserFollowUser(currentUser.getId(), user.getId()));
         return ResponseEntity.ok(userResponse);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<FeedUser> getFeedUser(@AuthenticationPrincipal User currentUser) {
+        return ResponseEntity
+                .ok(new FeedUser(currentUser.getUsername(), currentUser.getRole().name(), currentUser.getAvatar()));
     }
 }

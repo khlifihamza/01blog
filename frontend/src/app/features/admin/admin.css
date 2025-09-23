@@ -1,0 +1,319 @@
+.admin-dashboard {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.admin-header {
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dashboard-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stat-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.stat-icon.users {
+  background: #4caf50;
+}
+.stat-icon.posts {
+  background: #2196f3;
+}
+.stat-icon.reports {
+  background: #ff9800;
+}
+.stat-icon.engagement {
+  background: #9c27b0;
+}
+
+.stat-icon mat-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+.stat-info h3 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.stat-info p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 4px 0 0 0;
+}
+
+.admin-tabs {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tab-content {
+  padding: 24px;
+}
+
+.tab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.tab-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.data-table-card {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.reports-table,
+.users-table,
+.posts-table {
+  width: 100%;
+}
+
+.post-info,
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.user-info {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar,
+.contributor-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-email {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.post-title {
+  font-weight: 500;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.engagement-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Chip Styles */
+.reason-spam {
+  background: #ffebee;
+  color: #c62828;
+}
+.reason-harassment {
+  background: #fce4ec;
+  color: #ad1457;
+}
+.reason-inappropriate {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+.reason-other {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-pending {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+.status-reviewed {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+.status-resolved {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+.status-active {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+.status-suspended {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+.status-banned {
+  background: #ffebee;
+  color: #c62828;
+}
+.status-published {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+.status-draft {
+  background: #f5f5f5;
+  color: #616161;
+}
+.status-hidden {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+.level-chip,
+.category-chip {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+/* Insights */
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.insight-card {
+  border-radius: 12px;
+}
+
+.category-stats,
+.growth-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.category-stat,
+.growth-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.category-stat:last-child,
+.growth-item:last-child {
+  border-bottom: none;
+}
+
+.growth-value {
+  font-weight: 600;
+  color: var(--success-color);
+}
+
+.contributor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contributor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.contributor-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contributor-name {
+  font-weight: 500;
+}
+
+.contributor-posts {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    padding: 16px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tab-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -15,6 +15,8 @@ import { MatInputModule } from '@angular/material/input';
 import { AuthService } from '../../core/services/auth.service';
 import { PostService } from '../../core/services/post.service';
 import { NotificationService } from '../../core/services/notification.service';
+import { ProfileService } from '../../core/services/profile.service';
+import { FeedUser } from '../../shared/models/user.model';
 
 @Component({
   selector: 'app-feed',
@@ -38,10 +40,10 @@ import { NotificationService } from '../../core/services/notification.service';
   styleUrl: './home.css',
 })
 export class HomeComponent implements OnInit {
+  user = signal<FeedUser | null>(null);
   searchQuery = '';
   isLoading = false;
   notificationCount = signal(0);
-  isAdmin = true;
   allPosts = signal<FeedPost[]>([]);
   filteredPosts = signal<FeedPost[]>([]);
 
@@ -49,13 +51,23 @@ export class HomeComponent implements OnInit {
     private router: Router,
     private authService: AuthService,
     private postService: PostService,
+    private profileService: ProfileService,
     private notificationService: NotificationService
   ) {}
 
   ngOnInit() {
-    this.isAdmin = this.authService.isAdmin();
+    this.loadUser();
     this.loadFeedPosts();
     this.loadNotificationCount();
+  }
+
+  loadUser() {
+    this.profileService.getUserInfo().subscribe({
+      next: (user) => {
+        this.user.set(user);
+      },
+      error: (error) => console.log(error),
+    });
   }
 
   loadNotificationCount() {
@@ -75,6 +87,10 @@ export class HomeComponent implements OnInit {
       },
       error: (error) => console.log(error),
     });
+  }
+
+  isAdmin() {
+    return this.user()?.role == 'ADMIN';
   }
 
   onSearch() {
@@ -116,11 +132,12 @@ export class HomeComponent implements OnInit {
   }
 
   logout() {
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
 
   viewProfile() {
-    this.router.navigate(['/profile']);
+    this.router.navigate(['/profile', this.user()!.username]);
   }
 
   editProfile() {

@@ -31,3 +31,20 @@ export interface UserProfile {
   isOwner: boolean;
   isFollowed: boolean;
 }
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  avatar: string | null;
+  role: string;
+  joinDate: string;
+  postsCount: number;
+  status: 'active' | 'banned';
+}
+
+export interface FeedUser {
+  username: string;
+  role: string;
+  avatar: string;
+}

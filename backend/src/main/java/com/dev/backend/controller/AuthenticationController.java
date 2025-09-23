@@ -46,7 +46,7 @@ public class AuthenticationController {
     public ResponseEntity<?> login(@RequestBody LoginRequest loginUserDto, HttpServletResponse response) {
         try {
             User authenticatedUser = authenticationService.login(loginUserDto);
-            if (authenticatedUser.getStatus().equals(UserStatus.BANNED)){
+            if (authenticatedUser.getStatus().equals(UserStatus.BANNED)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are banned!");
             }
             String jwtToken = jwtService.generateToken(authenticatedUser);

@@ -4,3 +4,15 @@ export interface ReportRequest {
   reportedUsername: string | null;
   reportedPost: string | null;
 }
+
+export interface Report {
+  id: string;
+  postId: string | null;
+  postTitle: string | null;
+  ReportedUser: string | null;
+  reportedBy: string;
+  reason: string;
+  details: string;
+  status: 'pending' | 'resolved';
+  createdAt: string;
+}

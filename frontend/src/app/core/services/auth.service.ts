@@ -8,7 +8,6 @@ import { ApiResponse, RegistrationRequest, LoginRequest, LoginResponse } from '.
 })
 export class AuthService {
   private url = 'http://localhost:8080/api/auth';
-  private role: String = "USER";
 
   constructor(private http: HttpClient) {}
 
@@ -30,13 +29,5 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     return !!this.getToken();
-  }
-
-  setRole(role: String): void{
-    this.role = role;
-  }
-
-  isAdmin(): boolean {
-    return this.role == "ADMIN";
   }
 }
