@@ -5,6 +5,8 @@ export interface CreatePostPayload {
   files?: String[];
 }
 export interface MediaItem {
+  id: string;
+  position: number;
   file: File;
   preview: string;
   type: string;
@@ -89,8 +91,7 @@ export interface Comment {
   likes: number;
 }
 
-export interface CreateCommentPayload{
+export interface CreateCommentPayload {
   postId: string;
   content: string;
 }
-

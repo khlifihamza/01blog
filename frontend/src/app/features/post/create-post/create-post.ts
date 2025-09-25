@@ -45,7 +45,7 @@ export class CreatePostComponent {
   @ViewChild('videoInput') videoInput!: ElementRef<HTMLInputElement>;
 
   blogForm: FormGroup;
-  isLoading = false;
+  isLoading = signal(false);
   mediaFiles = signal<MediaItem[]>([]);
   thumbnailFile: File | null = null;
   thumbnailPreview = signal<string | null>(null);
@@ -81,7 +81,36 @@ export class CreatePostComponent {
 
     this.showValidationError = this.currentContent.length > 0 && this.currentContent.length < 100;
 
+    this.updateMediaPositions();
     this.updateCursorPosition();
+  }
+
+  
+  private updateMediaPositions() {
+    const mediaElements = this.editorDiv.nativeElement.querySelectorAll('.media-element');
+    const updatedMediaFiles: MediaItem[] = [];
+
+    mediaElements.forEach((element, index) => {
+      const mediaId = element.getAttribute('data-media-id');
+      if (mediaId) {
+        const mediaItem = this.mediaFiles().find(item => item.id === mediaId);
+        if (mediaItem) {
+          updatedMediaFiles.push({
+            ...mediaItem,
+            position: index
+          });
+        }
+      }
+    });
+
+    updatedMediaFiles.sort((a, b) => a.position - b.position);
+    this.mediaFiles.set(updatedMediaFiles);
+  }
+
+  private getOrderedMediaFiles(): File[] {
+    return this.mediaFiles()
+      .sort((a, b) => a.position - b.position)
+      .map(item => item.file);
   }
 
   updateCursorPosition() {
@@ -165,9 +194,20 @@ export class CreatePostComponent {
       const reader = new FileReader();
       reader.onload = (e) => {
         const imageUrl = e.target?.result as string;
-        this.insertMedia('image', imageUrl, file.name);
+        const mediaId = this.generateMediaId();
+        
+        this.insertMedia('image', imageUrl, file.name, mediaId);
+        
         const type = 'image';
-        this.mediaFiles.update((arr) => [...arr, { file, preview: String(reader.result), type }]);
+        this.mediaFiles.update((arr) => [...arr, { 
+          id: mediaId,
+          file, 
+          preview: String(reader.result), 
+          type,
+          position: 0 
+        }]);
+        
+        this.updateMediaPositions();
       };
       reader.readAsDataURL(file);
     }
@@ -183,9 +223,19 @@ export class CreatePostComponent {
       const reader = new FileReader();
       reader.onload = (e) => {
         const videoUrl = e.target?.result as string;
-        this.insertMedia('video', videoUrl, file.name);
+        const mediaId = this.generateMediaId();
+        
+        this.insertMedia('video', videoUrl, file.name, mediaId);
+        
         const type = 'video';
-        this.mediaFiles.update((arr) => [...arr, { file, preview: String(reader.result), type }]);
+        this.mediaFiles.update((arr) => [...arr, { 
+          id: mediaId,
+          file, 
+          preview: String(reader.result), 
+          type,
+          position: 0
+        }]);
+        this.updateMediaPositions();
       };
       reader.readAsDataURL(file);
     }
@@ -193,14 +243,18 @@ export class CreatePostComponent {
     input.value = '';
   }
 
-  insertMedia(type: 'image' | 'video', src: string, filename: string) {
+  private generateMediaId(): string {
+    return 'media_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  }
+
+  insertMedia(type: 'image' | 'video', src: string, filename: string, mediaId: string) {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
 
     const range = selection.getRangeAt(0);
 
     if (this.editorDiv.nativeElement == range.commonAncestorContainer) {
-      this.snackBar.open("can't insert media in the start of the stoty", 'Close', {
+      this.snackBar.open("can't insert media in the start of the story", 'Close', {
         duration: 5000,
       });
       return;
@@ -212,9 +266,11 @@ export class CreatePostComponent {
       });
       return;
     }
+
     const mediaDiv = document.createElement('div');
     mediaDiv.className = 'media-element';
     mediaDiv.contentEditable = 'false';
+    mediaDiv.setAttribute('data-media-id', mediaId);
 
     let mediaElement: HTMLImageElement | HTMLVideoElement;
     if (type === 'image') {
@@ -230,6 +286,7 @@ export class CreatePostComponent {
       mediaElement.style.maxWidth = '100%';
       mediaElement.style.height = 'auto';
     }
+    
     const deleteBtn = document.createElement('button');
     deleteBtn.className =
       'delete-btn mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-unthemed';
@@ -247,7 +304,7 @@ export class CreatePostComponent {
       e.stopPropagation();
       mediaDiv.remove();
       this.onContentChange({ target: this.editorDiv.nativeElement } as any);
-      this.deleteMedia(this.mediaCounter);
+      this.deleteMedia(mediaId);
       this.mediaCounter--;
     };
 
@@ -274,7 +331,7 @@ export class CreatePostComponent {
 
   publishPost() {
     if (this.isContentValid()) {
-      this.isLoading = true;
+      this.isLoading.set(true);
       const createPost = (res: UploadResponse) => {
         let htmlString = this.editorDiv.nativeElement.innerHTML;
 
@@ -288,7 +345,7 @@ export class CreatePostComponent {
 
         this.postService.createPost(createPostPayload).subscribe({
           next: () => {
-            this.isLoading = false;
+            this.isLoading.set(false);
             this.snackBar.open('Blog created successful', 'Close', { duration: 5000 });
             this.goBack();
           },
@@ -298,9 +355,12 @@ export class CreatePostComponent {
 
       const formData = new FormData();
       if (this.thumbnailFile) formData.append('thumbnail', this.thumbnailFile);
-      if (this.mediaFiles().length > 0) {
-        this.mediaFiles().forEach((f) => formData.append('files', f.file));
+    
+      const orderedFiles = this.getOrderedMediaFiles();
+      if (orderedFiles.length > 0) {
+        orderedFiles.forEach((file) => formData.append('files', file));
       }
+      
       this.postService.uploadFiles(formData).subscribe({
         next: (response) => createPost(response),
         error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
@@ -315,14 +375,23 @@ export class CreatePostComponent {
       reader.onload = () => {
         const type: 'image' | 'video' = file.type.startsWith('video') ? 'video' : 'image';
         const imageUrl = String(reader.result);
-        this.insertMedia(type, imageUrl, file.name);
-        this.mediaFiles.update((arr) => [...arr, { file, preview: imageUrl, type }]);
+        const mediaId = this.generateMediaId();
+        this.insertMedia(type, imageUrl, file.name, mediaId);
+        
+        this.mediaFiles.update((arr) => [...arr, { 
+          id: mediaId,
+          file, 
+          preview: imageUrl, 
+          type,
+          position: 0
+        }]);
+        this.updateMediaPositions();
       };
       reader.readAsDataURL(file);
     }
   }
 
-  deleteMedia(index: number): void {
-    this.mediaFiles.update((arr) => arr.filter((_, i) => i !== index));
+  deleteMedia(mediaId: string): void {
+    this.mediaFiles.update((arr) => arr.filter((v) => v.id !== mediaId));
   }
 }

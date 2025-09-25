@@ -14,7 +14,7 @@
           mat-raised-button
           color="primary"
           (click)="publishPost()"
-          [disabled]="!isContentValid() || isLoading"
+          [disabled]="!isContentValid() || isLoading()"
         >
           <mat-icon>publish</mat-icon>
           Publish

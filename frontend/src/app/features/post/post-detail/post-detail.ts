@@ -120,7 +120,7 @@ export class PostDetailComponent implements OnInit {
   }
 
   formatContent(content: string): string {
-    return content.replace(/(<[img|video][^>]*>)\s*<button[\s\S]*?<\/button>/g, '$1');
+    return content.replace(/(<(img|video)\b[^>]*>(?:<\/video>)?)\s*<button[\s\S]*?<\/button>/g, '$1');
   }
 
   toggleLike() {

@@ -173,6 +173,7 @@
   line-height: 1.2;
   color: var(--text-primary);
   margin: 0;
+  word-break: break-word;
 }
 
 .featured-excerpt {

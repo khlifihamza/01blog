@@ -24,6 +24,12 @@ import { PostService } from '../../../core/services/post.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { addLinkTosrc } from '../../../shared/utils/formathtml';
 
+// Enhanced MediaItem interface with position tracking
+interface MediaItemWithPosition extends MediaItem {
+  id: string;
+  position: number;
+}
+
 @Component({
   selector: 'app-edit-post',
   standalone: true,
@@ -63,7 +69,7 @@ export class EditPostComponent implements OnInit {
   private currentContent = '';
   isContentEmpty = true;
   showValidationError = false;
-  mediaFiles = signal<MediaItem[]>([]);
+  mediaFiles = signal<MediaItemWithPosition[]>([]);
   buttonPosition = { top: 28, left: -45 };
   showAddButton = false;
   private mediaCounter = 0;
@@ -106,15 +112,63 @@ export class EditPostComponent implements OnInit {
         this.safeContent = this.sanitizer.bypassSecurityTrustHtml(post.content);
         setTimeout(() => {
           this.setupExistingMediaDeleteButtons();
+          this.addMediaIdsToExistingElements();
         }, 0);
       },
       error: (error) => console.log(error),
     });
   }
 
+  private addMediaIdsToExistingElements() {
+    const mediaElements = this.editorDiv.nativeElement.querySelectorAll('.media-element');
+    mediaElements.forEach((element) => {
+      if (!element.getAttribute('data-media-id')) {
+        const mediaId = this.generateMediaId();
+        element.setAttribute('data-media-id', mediaId);
+      }
+    });
+  }
+
   onFocus() {
     this.showAddButton = true;
     this.updateCursorPosition();
+  }
+
+  private updateMediaPositions() {
+    const mediaElements = this.editorDiv?.nativeElement?.querySelectorAll('.media-element');
+    
+    if (!mediaElements || mediaElements.length === 0) {
+      return;
+    }
+
+    this.mediaFiles.update(currentFiles => {
+      const updatedFiles = [...currentFiles];
+      
+      mediaElements.forEach((element, index) => {
+        const mediaId = element.getAttribute('data-media-id');
+        if (mediaId) {
+          const fileIndex = updatedFiles.findIndex(item => item.id === mediaId);
+          if (fileIndex !== -1) {
+            updatedFiles[fileIndex] = {
+              ...updatedFiles[fileIndex],
+              position: index
+            };
+          }
+        }
+      });
+      
+      return updatedFiles.sort((a, b) => a.position - b.position);
+    });
+  }
+
+  private getOrderedMediaFiles(): File[] {
+    return this.mediaFiles()
+      .sort((a, b) => a.position - b.position)
+      .map(item => item.file);
+  }
+
+  private generateMediaId(): string {
+    return 'media_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
   updatePost() {
@@ -160,8 +214,10 @@ export class EditPostComponent implements OnInit {
     if (this.thumbnailFile) {
       formData.append('thumbnail', this.thumbnailFile);
     }
-    if (this.mediaFiles().length > 0) {
-      this.mediaFiles().forEach((f) => formData.append('files', f.file));
+    
+    const orderedFiles = this.getOrderedMediaFiles();
+    if (orderedFiles.length > 0) {
+      orderedFiles.forEach((file) => formData.append('files', file));
     }
 
     if (formData.has('thumbnail') || formData.has('files')) {
@@ -170,7 +226,7 @@ export class EditPostComponent implements OnInit {
           if (this.thumbnailFile) {
             this.oldThumbnail = response.thumbnail;
           }
-          if (this.mediaFiles().length > 0) {
+          if (orderedFiles.length > 0) {
             this.oldFileNames = response.fileNames;
           }
           updatePost();
@@ -212,6 +268,7 @@ export class EditPostComponent implements OnInit {
 
     this.showValidationError = this.currentContent.length > 0 && this.currentContent.length < 100;
 
+    setTimeout(() => this.updateMediaPositions(), 0);
     this.updateCursorPosition();
   }
 
@@ -245,8 +302,19 @@ export class EditPostComponent implements OnInit {
       reader.onload = () => {
         const type: 'image' | 'video' = file.type.startsWith('video') ? 'video' : 'image';
         const imageUrl = String(reader.result);
-        this.insertMedia(type, imageUrl, file.name);
-        this.mediaFiles.update((arr) => [...arr, { file, preview: imageUrl, type }]);
+        const mediaId = this.generateMediaId();
+        
+        this.insertMedia(type, imageUrl, file.name, mediaId);
+        
+        this.mediaFiles.update((arr) => [...arr, { 
+          id: mediaId,
+          file, 
+          preview: imageUrl, 
+          type,
+          position: 0 
+        }]);
+        
+        setTimeout(() => this.updateMediaPositions(), 0);
       };
       reader.readAsDataURL(file);
     }
@@ -273,9 +341,21 @@ export class EditPostComponent implements OnInit {
       const reader = new FileReader();
       reader.onload = (e) => {
         const imageUrl = e.target?.result as string;
-        this.insertMedia('image', imageUrl, file.name);
+        const mediaId = this.generateMediaId();
+        
+        
+        this.insertMedia('image', imageUrl, file.name, mediaId);
+        
         const type = 'image';
-        this.mediaFiles.update((arr) => [...arr, { file, preview: String(reader.result), type }]);
+        this.mediaFiles.update((arr) => [...arr, { 
+          id: mediaId,
+          file, 
+          preview: String(reader.result), 
+          type,
+          position: 0 
+        }]);
+        
+        setTimeout(() => this.updateMediaPositions(), 0);
       };
       reader.readAsDataURL(file);
     }
@@ -291,9 +371,21 @@ export class EditPostComponent implements OnInit {
       const reader = new FileReader();
       reader.onload = (e) => {
         const videoUrl = e.target?.result as string;
-        this.insertMedia('video', videoUrl, file.name);
+        const mediaId = this.generateMediaId();
+        
+        
+        this.insertMedia('video', videoUrl, file.name, mediaId);
+        
         const type = 'video';
-        this.mediaFiles.update((arr) => [...arr, { file, preview: String(reader.result), type }]);
+        this.mediaFiles.update((arr) => [...arr, { 
+          id: mediaId,
+          file, 
+          preview: String(reader.result), 
+          type,
+          position: 0 
+        }]);
+        
+        setTimeout(() => this.updateMediaPositions(), 0);
       };
       reader.readAsDataURL(file);
     }
@@ -301,14 +393,14 @@ export class EditPostComponent implements OnInit {
     input.value = '';
   }
 
-  insertMedia(type: 'image' | 'video', src: string, filename: string) {
+  insertMedia(type: 'image' | 'video', src: string, filename: string, mediaId: string) {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
 
     const range = selection.getRangeAt(0);
 
     if (this.editorDiv.nativeElement == range.commonAncestorContainer) {
-      this.snackBar.open("can't insert media in the start of the stoty", 'Close', {
+      this.snackBar.open("can't insert media in the start of the story", 'Close', {
         duration: 5000,
       });
       return;
@@ -324,6 +416,8 @@ export class EditPostComponent implements OnInit {
     const mediaDiv = document.createElement('div');
     mediaDiv.className = 'media-element';
     mediaDiv.contentEditable = 'false';
+    mediaDiv.setAttribute('data-media-id', mediaId);
+
     let mediaElement: HTMLImageElement | HTMLVideoElement;
     if (type === 'image') {
       mediaElement = document.createElement('img');
@@ -338,6 +432,7 @@ export class EditPostComponent implements OnInit {
       mediaElement.style.maxWidth = '100%';
       mediaElement.style.height = 'auto';
     }
+    
     const deleteBtn = document.createElement('button');
     deleteBtn.className =
       'delete-btn mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-unthemed';
@@ -355,7 +450,7 @@ export class EditPostComponent implements OnInit {
       e.stopPropagation();
       mediaDiv.remove();
       this.onContentChange({ target: this.editorDiv.nativeElement } as any);
-      this.deleteMedia(this.mediaCounter);
+      this.deleteMedia(mediaId);
       this.mediaCounter--;
     };
 
@@ -376,8 +471,8 @@ export class EditPostComponent implements OnInit {
     this.mediaCounter++;
   }
 
-  deleteMedia(index: number): void {
-    this.mediaFiles.update((arr) => arr.filter((_, i) => i !== index));
+  deleteMedia(mediaId: string): void {
+    this.mediaFiles.update((arr) => arr.filter((v) => v.id !== mediaId));
   }
 
   removeThumbnail(event: Event) {
