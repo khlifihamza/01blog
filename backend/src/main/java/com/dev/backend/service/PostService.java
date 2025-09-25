@@ -63,9 +63,9 @@ public class PostService {
     public void deletePost(UUID id, UUID currentUserId) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        User user = userRepository.findById(id)
+        User user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        if (!post.getUser().getId().equals(currentUserId) && !user.getRole().equals(Role.ADMIN)) {
+        if (!post.getUser().getId().equals(user.getId()) && !user.getRole().equals(Role.ADMIN)) {
             throw new AccessDeniedException("You cannot delete another user's post.");
         }
         postRepository.deleteById(id);
@@ -99,5 +99,9 @@ public class PostService {
 
     public List<Post> getAllPosts() {
         return postRepository.findAll();
+    }
+
+    public long getAllPostsCount() {
+        return postRepository.count();
     }
 }

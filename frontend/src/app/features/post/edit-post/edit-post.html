@@ -14,7 +14,7 @@
           mat-raised-button
           color="primary"
           (click)="updatePost()"
-          [disabled]="!isContentValid() || isLoading"
+          [disabled]="!isContentValid() || isLoading()"
         >
           <mat-icon>publish</mat-icon>
           Update
@@ -40,7 +40,7 @@
       <!-- Thumbnail Upload -->
       <div class="media-section">
         <h3>Add Thumbnail</h3>
-        <div class="upload-area" (click)="fileInput.click()" [class.has-media]="thumbnailPreview">
+        <div class="upload-area" (click)="fileInput.click()" [class.has-media]="thumbnailPreview()">
           <input
             #fileInput
             formControlName="thumbnail"
@@ -59,7 +59,7 @@
           </div>
           } @else{
           <div class="media-preview">
-            <img [src]="thumbnailPreview" alt="Preview" />
+            <img [src]="thumbnailPreview()" alt="Preview" />
             <button mat-icon-button class="remove-media" (click)="removeThumbnail($event)">
               <mat-icon>delete</mat-icon>
             </button>

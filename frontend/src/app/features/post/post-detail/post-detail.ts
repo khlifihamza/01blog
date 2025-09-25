@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule,Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,7 +16,7 @@ import { FollowService } from '../../../core/services/follow.service';
 import { LikeService } from '../../../core/services/like.service';
 import { CommentService } from '../../../core/services/comment.service';
 import { FormsModule } from '@angular/forms';
-import { ReportDialogComponent } from '../../report/report-dialog';
+import { ReportDialogComponent } from '../../report/report-dialog/report-dialog';
 // import { ReportDialogComponent } from './report-dialog.component';
 
 @Component({
@@ -54,7 +54,8 @@ export class PostDetailComponent implements OnInit {
     private followService: FollowService,
     private likeService: LikeService,
     private commentService: CommentService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private location: Location
   ) {}
 
   ngOnInit() {
@@ -204,7 +205,7 @@ export class PostDetailComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/']);
+     this.location.back();
   }
 
   editPost() {

@@ -57,7 +57,7 @@
           </div>
           } @else{
           <div class="media-preview">
-            <img [src]="thumbnailPreview" alt="Preview" />
+            <img [src]="thumbnailPreview()" alt="Preview" />
             <button mat-icon-button class="remove-media" (click)="removeThumbnail($event)">
               <mat-icon>delete</mat-icon>
             </button>

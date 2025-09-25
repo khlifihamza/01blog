@@ -1,0 +1,140 @@
+<div class="report-details-dialog">
+  <div class="dialog-header">
+    <div class="header-info">
+      <h2 mat-dialog-title>Report Details</h2>
+    </div>
+    <button mat-icon-button mat-dialog-close>
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="dialog-content">
+    <!-- Report Overview -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>flag</mat-icon>
+          Report Overview
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Submitted:</label>
+            <span>{{ formatDate(data.createdAt) }}</span>
+          </div>
+          <div class="info-item">
+            <label>Type:</label>
+            <mat-chip [class]="data.postId ? 'type-post' : 'type-user'">{{
+              data.postId ? 'post' : ('user' | titlecase)
+            }}</mat-chip>
+          </div>
+          <div class="info-item">
+            <label>Status:</label>
+            <mat-chip [class]="'status-' + data.status.toLowerCase()">{{
+              data.status | titlecase
+            }}</mat-chip>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Reported Content -->
+    @if(data.postId){
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>article</mat-icon>
+          Reported Post
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="content-preview">
+          <h4 class="content-title">{{ data.postTitle }}</h4>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    }
+
+    <!-- Reported User -->
+    @if(data.ReportedUser){
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>person</mat-icon>
+          Reported User
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="user-preview">
+          <div class="user-info">
+            <div class="user-details">
+              <h4>{{ data.reportedBy }}</h4>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    }
+
+    <!-- Report Details -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>info</mat-icon>
+          Report Details
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="report-info">
+          <div class="info-item">
+            <label>Reported By:</label>
+            <span>{{ data.reportedBy }}</span>
+          </div>
+          <div class="info-item">
+            <label>Reason:</label>
+            <mat-chip [class]="'reason-' + data.reason">{{ formatReason(data.reason) }}</mat-chip>
+          </div>
+          @if(data.details){
+          <div class="details-section">
+            <label>Additional Details:</label>
+            <div class="details-content">{{ data.details }}</div>
+          </div>
+          }
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </mat-dialog-content>
+
+  <mat-dialog-actions class="dialog-actions">
+    <div class="action-buttons">
+      <!-- Navigation Buttons -->
+      @if(data.postId){
+      <button mat-raised-button color="primary" (click)="navigateToContent()">
+        <mat-icon>article</mat-icon>
+        View Post
+      </button>
+      } @if(data.ReportedUser){
+      <button mat-raised-button color="primary" (click)="navigateToProfile()">
+        <mat-icon>person</mat-icon>
+        View Profile
+      </button>
+      }
+
+      <!-- Action Buttons -->
+      @if(data.status === 'PENDING'){
+      <button mat-raised-button color="warn" (click)="resolveReport()">
+        <mat-icon>check_circle</mat-icon>
+        Resolve
+      </button>
+
+      <button mat-button (click)="dismissReport()">
+        <mat-icon>close</mat-icon>
+        Dismiss
+      </button>
+      }
+
+      <button mat-button mat-dialog-close>Close</button>
+    </div>
+  </mat-dialog-actions>
+</div>

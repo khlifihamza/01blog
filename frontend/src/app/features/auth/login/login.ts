@@ -66,7 +66,6 @@ export class LoginComponent {
         this.loading = false;
         this.snackBar.open('Login successful', 'Close', { duration: 5000 });
         localStorage.setItem("token", response.token.toString());
-        this.authService.setRole(response.role);
         this.router.navigate(['/']);
       },
       error: (error) => {

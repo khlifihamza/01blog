@@ -56,7 +56,17 @@ public class ReportService {
         reportRepository.save(report);
     }
 
+    public void dismissReport(UUID reportId) {
+        Report report = reportRepository.findById(reportId).orElseThrow();
+        report.setStatus(ReportStatus.DISMISSED);
+        reportRepository.save(report);
+    }
+
     public List<Report> getReports() {
         return reportRepository.findAll();
+    }
+
+    public long getPendingReportsCount() {
+        return reportRepository.countByStatus(ReportStatus.PENDING);
     }
 }

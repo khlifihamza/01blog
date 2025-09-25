@@ -35,22 +35,14 @@
         </button>
 
         <button mat-icon-button [matMenuTriggerFor]="userMenu">
-          <img
-            src="default-avatar.png"
-            alt="Profile"
-            class="profile-avatar"
-          />
+          <img src="default-avatar.png" alt="Profile" class="profile-avatar" />
         </button>
 
         <mat-menu #userMenu="matMenu">
           <div class="user-menu-header">
-            <img
-              src="default-avatar.png"
-              alt="Profile"
-              class="menu-avatar"
-            />
+            <img src="default-avatar.png" alt="Profile" class="menu-avatar" />
             <div class="user-info">
-              <span class="user-name">Sarah Chen</span>
+              <span class="user-name">{{ user()?.username }}</span>
             </div>
           </div>
           <button mat-menu-item (click)="viewProfile()">
@@ -77,7 +69,7 @@
             </mat-icon>
             <span>Notifications</span>
           </button>
-          @if(isAdmin){
+          @if(isAdmin()){
           <button mat-menu-item (click)="openAdminDashboard()">
             <mat-icon>admin_panel_settings</mat-icon>
             <span>Admin Dashboard</span>
@@ -137,7 +129,10 @@
           </div>
 
           <div class="featured-image">
-            <img [src]="'http://localhost:8080/api/post/file/' + post.thumbnail" [alt]="post.title" />
+            <img
+              [src]="'http://localhost:8080/api/post/file/' + post.thumbnail"
+              [alt]="post.title"
+            />
           </div>
         </div>
       </mat-card>

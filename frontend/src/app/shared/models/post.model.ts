@@ -70,6 +70,16 @@ export interface ProfilePost {
   thumbnail: string;
 }
 
+export interface Post {
+  id: string;
+  title: string;
+  author: string;
+  publishedDate: string;
+  likes: number;
+  comments: number;
+  status: 'PUBLISHED' | 'HIDDEN';
+}
+
 export interface Comment {
   id: string;
   username: string;
@@ -83,3 +93,4 @@ export interface CreateCommentPayload{
   postId: string;
   content: string;
 }
+

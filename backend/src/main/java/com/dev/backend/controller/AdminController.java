@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -15,11 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dev.backend.dto.AdminPostResponse;
 import com.dev.backend.dto.ApiResponse;
+import com.dev.backend.dto.InsightsResponse;
 import com.dev.backend.dto.ReportResponse;
 import com.dev.backend.dto.UserResponse;
 import com.dev.backend.model.Post;
 import com.dev.backend.model.Report;
 import com.dev.backend.model.User;
+import com.dev.backend.service.CommentService;
+import com.dev.backend.service.LikeService;
 import com.dev.backend.service.PostService;
 import com.dev.backend.service.ReportService;
 import com.dev.backend.service.UserService;
@@ -35,6 +39,20 @@ public class AdminController {
 
     @Autowired
     private PostService postService;
+
+    @Autowired
+    private CommentService commentService;
+
+    @Autowired
+    private LikeService likeService;
+
+    @GetMapping("/get-insights")
+    public ResponseEntity<InsightsResponse> getInsights() {
+        InsightsResponse insightsResponse = new InsightsResponse(userService.getAllUsersCount(),
+                postService.getAllPostsCount(), reportService.getPendingReportsCount(),
+                likeService.getAllLikesCount() + commentService.getCommentsCount());
+        return ResponseEntity.ok(insightsResponse);
+    }
 
     @GetMapping("/get-reports")
     public ResponseEntity<List<ReportResponse>> getReports() {
@@ -84,16 +102,23 @@ public class AdminController {
         return ResponseEntity.ok(new ApiResponse("User deleted successfully"));
     }
 
-    @PatchMapping("/hide-post/{id}")
-    public ResponseEntity<ApiResponse> hidePost(@PathVariable UUID id) {
-        postService.hidePost(id);
+    @PatchMapping("/hide-post/{postId}")
+    public ResponseEntity<ApiResponse> hidePost(@PathVariable UUID postId) {
+        postService.hidePost(postId);
         return ResponseEntity.ok(new ApiResponse("The post was hidden successfully"));
     }
 
-    @PatchMapping("/unhide-post/{id}")
-    public ResponseEntity<ApiResponse> unhidePost(@PathVariable UUID id) {
-        postService.unhidePost(id);
+    @PatchMapping("/unhide-post/{postId}")
+    public ResponseEntity<ApiResponse> unhidePost(@PathVariable UUID postId) {
+        postService.unhidePost(postId);
         return ResponseEntity.ok(new ApiResponse("The post was unhidden successfully"));
+    }
+
+    @DeleteMapping("/delete-post/{postId}")
+    public ResponseEntity<ApiResponse> deletePOst(@PathVariable UUID postId,
+            @AuthenticationPrincipal User currentUser) {
+        postService.deletePost(postId, currentUser.getId());
+        return ResponseEntity.ok(new ApiResponse("User deleted successfully"));
     }
 
     @GetMapping("/get-posts")
@@ -109,9 +134,15 @@ public class AdminController {
         return ResponseEntity.ok(postsResponse);
     }
 
-    @PatchMapping("/dismiss-report/{id}")
-    public ResponseEntity<ApiResponse> dismissReport(@PathVariable UUID reportId) {
+    @PatchMapping("/resolve-report/{reportId}")
+    public ResponseEntity<ApiResponse> resolveReport(@PathVariable UUID reportId) {
         reportService.resolveReport(reportId);
-        return ResponseEntity.ok(new ApiResponse("The report was handled successfully"));
+        return ResponseEntity.ok(new ApiResponse("The report was resolved successfully"));
+    }
+
+    @PatchMapping("/dismiss-report/{reportId}")
+    public ResponseEntity<ApiResponse> dismissReport(@PathVariable UUID reportId) {
+        reportService.dismissReport(reportId);
+        return ResponseEntity.ok(new ApiResponse("The report was dismissed successfully"));
     }
 }

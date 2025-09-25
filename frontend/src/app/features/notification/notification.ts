@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -34,7 +34,11 @@ export class NotificationsComponent implements OnInit {
   unreadNotifications: Notification[] = [];
   unreadCount = signal(0);
 
-  constructor(private router: Router, private notificationService: NotificationService) {}
+  constructor(
+    private router: Router,
+    private notificationService: NotificationService,
+    private location: Location
+  ) {}
 
   ngOnInit() {
     this.loadNotifications();
@@ -148,6 +152,6 @@ export class NotificationsComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/']);
+    this.location.back();
   }
 }

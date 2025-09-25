@@ -92,4 +92,8 @@ public class UserService {
         User user = userRepository.findByUsername(username).orElseThrow();
         userRepository.delete(user);
     }
+
+    public long getAllUsersCount() {
+        return userRepository.count();
+    }
 }
