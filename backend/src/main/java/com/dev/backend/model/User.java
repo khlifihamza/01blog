@@ -39,9 +39,11 @@ public class User extends BaseEntity implements UserDetails {
     private String bio;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Role role;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserStatus status;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
@@ -56,6 +58,9 @@ public class User extends BaseEntity implements UserDetails {
     @OneToMany(mappedBy = "recipient", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Notification> notifications = new ArrayList<>();
 
+    @OneToMany(mappedBy = "reported_user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    private List<Report> reports = new ArrayList<>();
+
     public User() {
 
     }
@@ -66,6 +71,14 @@ public class User extends BaseEntity implements UserDetails {
         this.password = password;
         this.role = role;
         this.status = status;
+    }
+
+    public List<Report> getReports() {
+        return reports;
+    }
+
+    public void setReports(List<Report> reports) {
+        this.reports = reports;
     }
 
     public String getBio() {

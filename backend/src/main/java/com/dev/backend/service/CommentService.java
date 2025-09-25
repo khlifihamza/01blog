@@ -42,4 +42,8 @@ public class CommentService {
     public List<Comment> getPostComments(UUID postId) {
         return commentRepository.findByPostIdOrderByCreatedAtDesc(postId);
     }
+
+    public long getCommentsCount() {
+        return commentRepository.count();
+    }
 }

@@ -7,8 +7,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
-import { ReportRequest } from '../../shared/models/report.model';
-import { ReportService } from '../../core/services/report.service';
+import { ReportRequest } from '../../../shared/models/report.model';
+import { ReportService } from '../../../core/services/report.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({

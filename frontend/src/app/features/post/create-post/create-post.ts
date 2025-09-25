@@ -1,5 +1,5 @@
 import { Component, signal, ViewChild, ElementRef, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,7 +13,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { PostService } from '../../../core/services/post.service';
 import { CreatePostPayload, MediaItem, UploadResponse } from '../../../shared/models/post.model';
 import { DndUploadDirective } from '../../../core/directives/dnd-upload.directive';
-import { Router } from '@angular/router';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { addLinkTosrc } from '../../../shared/utils/formathtml';
@@ -49,7 +48,7 @@ export class CreatePostComponent {
   isLoading = false;
   mediaFiles = signal<MediaItem[]>([]);
   thumbnailFile: File | null = null;
-  thumbnailPreview: string | null = null;
+  thumbnailPreview = signal<string | null>(null);
 
   showAddButton = false;
   buttonPosition = { top: 28, left: -45 };
@@ -63,8 +62,8 @@ export class CreatePostComponent {
   constructor(
     private fb: FormBuilder,
     private postService: PostService,
-    private router: Router,
     private snackBar: MatSnackBar,
+    private location: Location
   ) {
     this.blogForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(100)]],
@@ -133,7 +132,7 @@ export class CreatePostComponent {
 
       const reader = new FileReader();
       reader.onload = (e) => {
-        this.thumbnailPreview = e.target?.result as string;
+        this.thumbnailPreview.set(e.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -143,11 +142,11 @@ export class CreatePostComponent {
   removeThumbnail(event: Event) {
     event.stopPropagation();
     this.thumbnailFile = null;
-    this.thumbnailPreview = null;
+    this.thumbnailPreview.set(null);
   }
 
   goBack() {
-    this.router.navigate(['/']);
+    this.location.back();
   }
 
   triggerImageUpload() {

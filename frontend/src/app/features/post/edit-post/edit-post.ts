@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnInit, signal, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import {
   FormBuilder,
   FormGroup,
@@ -9,7 +9,7 @@ import {
 } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { CreatePostPayload, MediaItem } from '../../../shared/models/post.model';
 import { MatMenuModule } from '@angular/material/menu';
 import { DndUploadDirective } from '../../../core/directives/dnd-upload.directive';
@@ -52,9 +52,9 @@ export class EditPostComponent implements OnInit {
   @ViewChild('videoInput') videoInput!: ElementRef<HTMLInputElement>;
 
   editForm: FormGroup;
-  isLoading = false;
+  isLoading = signal(false);
   thumbnailFile: File | null = null;
-  thumbnailPreview: string | null = null;
+  thumbnailPreview = signal<string | null>(null);
   existingThumbnail: boolean = true;
   oldThumbnail: string | null = null;
   oldFileNames: string[] = [];
@@ -71,11 +71,11 @@ export class EditPostComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private router: Router,
     private route: ActivatedRoute,
     private postService: PostService,
     private sanitizer: DomSanitizer,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private location: Location
   ) {
     this.editForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(100)]],
@@ -98,7 +98,7 @@ export class EditPostComponent implements OnInit {
         this.currentContent = post.content;
         this.oldThumbnail = post.thumbnail;
         this.oldFileNames = post.fileNames;
-        this.thumbnailPreview = 'http://localhost:8080/api/post/file/' + post.thumbnail;
+        this.thumbnailPreview.set('http://localhost:8080/api/post/file/' + post.thumbnail);
         this.editForm.patchValue({
           title: post.title,
           content: this.sanitizer.bypassSecurityTrustHtml(post.content),
@@ -119,7 +119,7 @@ export class EditPostComponent implements OnInit {
 
   updatePost() {
     if (this.editForm.valid) {
-      this.isLoading = true;
+      this.isLoading.set(true);
       const updatePost = () => {
         let htmlString = this.editorDiv.nativeElement.innerHTML;
 
@@ -132,7 +132,7 @@ export class EditPostComponent implements OnInit {
         };
         this.postService.updatePost(updatePostPayload, this.postId).subscribe({
           next: (response) => {
-            this.isLoading = false;
+            this.isLoading.set(false);
             this.snackBar.open(response.message, 'Close', { duration: 5000 });
             this.goBack();
           },
@@ -183,7 +183,7 @@ export class EditPostComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/post', this.postId]);
+    this.location.back();
   }
 
   onThumbnailSelect(event: Event) {
@@ -195,7 +195,7 @@ export class EditPostComponent implements OnInit {
 
       const reader = new FileReader();
       reader.onload = (e) => {
-        this.thumbnailPreview = e.target?.result as string;
+        this.thumbnailPreview.set(e.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -307,14 +307,14 @@ export class EditPostComponent implements OnInit {
 
     const range = selection.getRangeAt(0);
 
-    if (this.editorDiv.nativeElement == range.commonAncestorContainer ) {
+    if (this.editorDiv.nativeElement == range.commonAncestorContainer) {
       this.snackBar.open("can't insert media in the start of the stoty", 'Close', {
         duration: 5000,
       });
       return;
     }
 
-    if (range.commonAncestorContainer.nodeName == "#text") {
+    if (range.commonAncestorContainer.nodeName == '#text') {
       this.snackBar.open("can't insert media next to text", 'Close', {
         duration: 5000,
       });
@@ -383,7 +383,7 @@ export class EditPostComponent implements OnInit {
   removeThumbnail(event: Event) {
     event.stopPropagation();
     this.thumbnailFile = null;
-    this.thumbnailPreview = null;
+    this.thumbnailPreview.set(null);
     this.existingThumbnail = false;
   }
 
@@ -409,6 +409,7 @@ export class EditPostComponent implements OnInit {
         e.preventDefault();
         e.stopPropagation();
         const mediaDiv = button.closest('.media-element') as HTMLElement;
+        console.log(mediaDiv);
         if (mediaDiv) {
           mediaDiv.remove();
           this.onContentChange({ target: this.editorDiv.nativeElement } as any);

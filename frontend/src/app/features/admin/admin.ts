@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
+import { CommonModule, Location } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,12 +16,18 @@ import { Router } from '@angular/router';
 import { Report } from '../../shared/models/report.model';
 import { User } from '../../shared/models/user.model';
 import { Post } from '../../shared/models/post.model';
+import { AdminService } from '../../core/services/admin.service';
+import { Insights } from '../../shared/models/admin.model';
+import { ReportDetailsDialogComponent } from '../report/report-details-dialog/report-details-dialog';
+import { MatDialog } from '@angular/material/dialog';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -33,19 +39,18 @@ import { Post } from '../../shared/models/post.model';
     MatBadgeModule,
     MatSelectModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
   ],
   templateUrl: './admin.html',
-  styleUrl: './admin.css'
+  styleUrl: './admin.css',
 })
 export class AdminComponent implements OnInit {
   // Stats
-  totalUsers = 1247;
-  totalPosts = 3456;
-  pendingReports = 12;
-  totalEngagement = 15678;
-  monthlyGrowth = 156;
-  weeklyGrowth = 34;
+  insights = signal<Insights | null>(null);
+  totalUsers = signal(0);
+  totalPosts = signal(0);
+  pendingReports = signal(0);
+  totalEngagement = signal(0);
 
   // Table columns
   reportColumns = ['post/user', 'reason', 'reportedBy', 'status', 'date', 'actions'];
@@ -53,191 +58,255 @@ export class AdminComponent implements OnInit {
   postColumns = ['title', 'author', 'engagement', 'date', 'status', 'actions'];
 
   // Data
-  reports: Report[] = [];
-  users: User[] = [];
-  posts: Post[] = [];
-  
+  reports = signal<Report[]>([]);
+  users = signal<User[]>([]);
+  posts = signal<Post[]>([]);
+
   // Filtered data
-  filteredReports: Report[] = [];
-  filteredUsers: User[] = [];
-  filteredPosts: Post[] = [];
+  filteredReports = signal<Report[]>([]);
+  filteredUsers = signal<User[]>([]);
+  filteredPosts = signal<Post[]>([]);
 
   // Filters
   selectedReportStatus = '';
   selectedPostCategory = '';
   userSearchQuery = '';
+  postSearchQuery = '';
 
-  // Insights
-  popularCategories = [
-    { name: 'Coding Journey', count: 145 },
-    { name: 'Projects', count: 98 },
-    { name: 'Learning Tips', count: 76 },
-    { name: 'Career Advice', count: 54 }
-  ];
-
-  topContributors = [
-    { name: 'Sarah Chen', avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2', posts: 23 },
-    { name: 'Marcus Johnson', avatar: 'https://images.pexels.com/photos/1040880/pexels-photo-1040880.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2', posts: 18 },
-    { name: 'Emma Rodriguez', avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2', posts: 15 }
-  ];
-
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private adminService: AdminService,
+    private location: Location,
+    private dialog: MatDialog
+  ) {}
 
   ngOnInit() {
-    this.loadMockData();
-    this.filterReports();
-    this.filterUsers();
-    this.filterPosts();
+    this.loadData();
   }
 
-  loadMockData() {
-    // Mock reports
-    this.reports = [
-      {
-        id: "1",
-        postId: "123",
-        postTitle: 'My Journey from Zero to Full-Stack Developer',
-        ReportedUser: null,
-        reportedBy: 'Anonymous User',
-        reason: 'spam',
-        details: 'This post contains promotional content',
-        status: 'pending',
-        createdAt: "'2024-01-15'"
-      },
-      {
-        id: "2",
-        postId: "124",
-        postTitle: 'Building My First React App',
-        ReportedUser: null,
-        reportedBy: 'Anonymous User',
-        reason: 'inappropriate',
-        details: 'Contains inappropriate language',
-        status: 'resolved',
-        createdAt: "'2024-01-14'"
-      }
-    ];
-
-    // Mock users
-    this.users = [
-      {
-        id: "1",
-        username: 'Sarah Chen',
-        email: 'sarah@example.com',
-        avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
-        role: 'USER',
-        joinDate: "2023-06-15",
-        postsCount: 23,
-        status: 'active'
-      },
-      {
-        id: "2",
-        username: 'Marcus Johnson',
-        email: 'marcus@example.com',
-        avatar: 'https://images.pexels.com/photos/1040880/pexels-photo-1040880.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=2',
-        role: 'USER',
-        joinDate: '2023-08-20',
-        postsCount: 18,
-        status: 'active'
-      }
-    ];
-
-    // Mock posts
-    this.posts = [
-      {
-        id: "1",
-        title: 'My Journey from Zero to Full-Stack Developer in 6 Months',
-        author: 'Sarah Chen',
-        publishedDate: '2024-01-15',
-        likes: 234,
-        comments: 45,
-        status: 'published'
-      },
-      {
-        id: "2",
-        title: 'Building My First React App: Lessons Learned',
-        author: 'Marcus Johnson',
-        publishedDate: '2024-01-12',
-        likes: 189,
-        comments: 32,
-        status: 'published'
-      }
-    ];
+  loadData() {
+    this.loadInsights();
+    this.loadReports();
+    this.loadUsers();
+    this.loadPosts();
   }
 
-  formatDate(date: Date): string {
+  loadInsights() {
+    this.adminService.getInsights().subscribe({
+      next: (insights) => {
+        this.totalUsers.set(insights.totalUsers);
+        this.totalPosts.set(insights.totalPosts);
+        this.pendingReports.set(insights.pendingReports);
+        this.totalEngagement.set(insights.totalEngagement);
+      },
+      error: (error) => console.log(error),
+    });
+  }
+
+  loadReports() {
+    this.adminService.getReports().subscribe({
+      next: (reports) => {
+        this.reports.set(reports);
+        this.filterReports();
+      },
+      error: (error) => console.log(error),
+    });
+  }
+
+  loadUsers() {
+    this.adminService.getUsers().subscribe({
+      next: (users) => {
+        this.users.set(users);
+        this.filterUsers();
+      },
+      error: (error) => console.log(error),
+    });
+  }
+
+  loadPosts() {
+    this.adminService.getPosts().subscribe({
+      next: (posts) => {
+        this.posts.set(posts);
+        this.filterPosts();
+      },
+      error: (error) => console.log(error),
+    });
+  }
+
+  formatDate(dateStr: string): string {
+    const date = new Date(dateStr);
     return date.toLocaleDateString();
   }
 
-  // Filter methods
   filterReports() {
-    this.filteredReports = this.selectedReportStatus 
-      ? this.reports.filter(r => r.status === this.selectedReportStatus)
-      : this.reports;
+    const reports = this.selectedReportStatus
+      ? this.reports().filter((r) => r.status.toLowerCase() === this.selectedReportStatus)
+      : this.reports();
+    this.filteredReports.set(reports);
   }
 
   filterUsers() {
-    this.filteredUsers = this.userSearchQuery
-      ? this.users.filter(u => 
-          u.username.toLowerCase().includes(this.userSearchQuery.toLowerCase()) ||
-          u.email.toLowerCase().includes(this.userSearchQuery.toLowerCase())
+    const users = this.userSearchQuery
+      ? this.users().filter(
+          (u) =>
+            u.username.toLowerCase().includes(this.userSearchQuery.toLowerCase()) ||
+            u.email.toLowerCase().includes(this.userSearchQuery.toLowerCase())
         )
-      : this.users;
+      : this.users();
+    this.filteredUsers.set(users);
   }
 
   filterPosts() {
-    // this.filteredPosts = this.selectedPostCategory
-    //   ? this.posts.filter(p => p.category === this.selectedPostCategory)
-    //   : this.posts;
+    const posts = this.postSearchQuery
+      ? this.posts().filter((p) =>
+          p.title.toLowerCase().includes(this.postSearchQuery.toLowerCase())
+        )
+      : this.posts();
+    this.filteredPosts.set(posts);
   }
 
-  // Action methods
   viewReport(report: Report) {
-    console.log('View report:', report);
+    const detailedReport = {
+      ...report,
+      type: report.postId ? 'POST' : 'USER',
+    };
+
+    const dialogRef = this.dialog.open(ReportDetailsDialogComponent, {
+      width: '700px',
+      maxWidth: '95vw',
+      data: detailedReport,
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        console.log('Report action taken:', result.report);
+        if (result.action === 'resolved') {
+          this.resolveReport(result.report);
+        }
+        if (result.action === 'dismissed') {
+          this.dismissReport(result.report);
+        }
+      }
+    });
   }
 
   resolveReport(report: Report) {
-    report.status = 'resolved';
-    this.pendingReports--;
+    this.adminService.resolveReport(report.id).subscribe({
+      next: () => {
+        report.status = 'RESOLVED';
+        this.pendingReports.update((value) => Math.max(0, value - 1));
+        this.updateReport(report);
+      },
+      error: (error) => console.log(error),
+    });
   }
 
-  viewUser(user: User) {
-    this.router.navigate(['/profile', user.id]);
+  dismissReport(report: Report) {
+    this.adminService.dismissReport(report.id).subscribe({
+      next: () => {
+        report.status = 'DISMISSED';
+        this.pendingReports.update((value) => Math.max(0, value - 1));
+        this.updateReport(report);
+      },
+      error: (error) => console.log(error),
+    });
   }
 
-  suspendUser(user: User) {
-    // user.status = 'suspended';
+  updateReport(report: Report) {
+    this.reports.update((reports) => {
+      const index = reports.findIndex((r) => r.id === report.id);
+      if (index > -1) {
+        const updated = [...reports];
+        updated[index] = report;
+        return updated;
+      }
+      return reports;
+    });
+
+    this.filterReports();
+  }
+
+  viewUser(username: string) {
+    this.router.navigate(['/profile', username]);
+  }
+
+  banUser(username: string) {
+    this.adminService.banUser(username).subscribe({
+      next: () => {
+        const user = this.users().find((u) => u.username === username);
+        if (user) {
+          user.status = 'BANNED';
+        }
+      },
+      error: (error) => console.log(error),
+    });
+  }
+
+  unbanUser(username: string) {
+    this.adminService.unbanUser(username).subscribe({
+      next: () => {
+        const user = this.users().find((u) => u.username === username);
+        if (user) {
+          user.status = 'ACTIVE';
+        }
+      },
+      error: (error) => console.log(error),
+    });
   }
 
   deleteUser(user: User) {
     if (confirm('Are you sure you want to delete this user?')) {
-      this.users = this.users.filter(u => u.id !== user.id);
-      this.filterUsers();
+      this.adminService.deleteUser(user.username).subscribe({
+        next: () => {
+          this.users.set(this.users().filter((u) => u.id !== user.id));
+          this.filterUsers();
+        },
+        error: (error) => console.log(error),
+      });
     }
   }
 
-  viewPost(post: Post) {
-    this.router.navigate(['/post', post.id]);
+  viewPost(postId: string) {
+    this.router.navigate(['/post', postId]);
   }
 
-  editPost(post: Post) {
-    this.router.navigate(['/edit-post', post.id]);
+  hidePost(postId: string) {
+    this.adminService.hidePost(postId).subscribe({
+      next: () => {
+        const post = this.posts().find((p) => p.id === postId);
+        if (post) {
+          post.status = 'HIDDEN';
+        }
+      },
+      error: (error) => console.log(error),
+    });
   }
 
-  hidePost(postId: number) {
-    // const post = this.posts.find(p => p.id === postId);
-    // if (post) {
-    //   post.status = 'hidden';
-    // }
+  unhidePost(postId: string) {
+    this.adminService.unhidePost(postId).subscribe({
+      next: () => {
+        const post = this.posts().find((p) => p.id === postId);
+        if (post) {
+          post.status = 'PUBLISHED';
+        }
+      },
+      error: (error) => console.log(error),
+    });
   }
 
   deletePost(post: Post) {
     if (confirm('Are you sure you want to delete this post?')) {
-      this.posts = this.posts.filter(p => p.id !== post.id);
-      this.filterPosts();
+      this.adminService.deletePost(post.id).subscribe({
+        next: () => {
+          this.posts.set(this.posts().filter((p) => p.id !== post.id));
+          this.filterPosts();
+        },
+        error: (error) => console.log(error),
+      });
     }
   }
 
   goBack() {
-    this.router.navigate(['/']);
+    this.location.back();
   }
 }

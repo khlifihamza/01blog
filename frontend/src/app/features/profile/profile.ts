@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,7 +12,7 @@ import { PostService } from '../../core/services/post.service';
 import { ProfileService } from '../../core/services/profile.service';
 import { FollowService } from '../../core/services/follow.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ReportDialogComponent } from '../report/report-dialog';
+import { ReportDialogComponent } from '../report/report-dialog/report-dialog';
 import { MatDialog } from '@angular/material/dialog';
 
 @Component({
@@ -42,7 +42,8 @@ export class ProfileComponent implements OnInit {
     private route: ActivatedRoute,
     private profileService: ProfileService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private location: Location
   ) {}
 
   ngOnInit() {
@@ -133,6 +134,6 @@ export class ProfileComponent implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/']);
+    this.location.back();
   }
 }

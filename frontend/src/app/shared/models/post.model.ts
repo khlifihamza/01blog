@@ -77,7 +77,7 @@ export interface Post {
   publishedDate: string;
   likes: number;
   comments: number;
-  status: 'published' | 'hidden';
+  status: 'PUBLISHED' | 'HIDDEN';
 }
 
 export interface Comment {

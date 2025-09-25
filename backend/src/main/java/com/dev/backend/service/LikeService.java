@@ -56,4 +56,8 @@ public class LikeService {
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         return likeRepository.existsByUserAndPost(currentUser, post);
     }
+
+    public long getAllLikesCount() {
+        return likeRepository.count();
+    }
 }

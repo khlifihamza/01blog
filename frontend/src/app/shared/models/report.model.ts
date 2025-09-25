@@ -13,6 +13,6 @@ export interface Report {
   reportedBy: string;
   reason: string;
   details: string;
-  status: 'pending' | 'resolved';
+  status: 'PENDING' | 'RESOLVED' | 'DISMISSED';
   createdAt: string;
 }

@@ -40,7 +40,7 @@ export interface User {
   role: string;
   joinDate: string;
   postsCount: number;
-  status: 'active' | 'banned';
+  status: 'ACTIVE' | 'BANNED';
 }
 
 export interface FeedUser {
