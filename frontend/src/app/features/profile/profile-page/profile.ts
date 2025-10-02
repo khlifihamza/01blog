@@ -1,19 +1,21 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ProfilePost } from '../../shared/models/post.model';
-import { UserProfile } from '../../shared/models/user.model';
-import { PostService } from '../../core/services/post.service';
-import { ProfileService } from '../../core/services/profile.service';
-import { FollowService } from '../../core/services/follow.service';
+import { ProfilePost } from '../../../shared/models/post.model';
+import { UserProfile } from '../../../shared/models/user.model';
+import { PostService } from '../../../core/services/post.service';
+import { ProfileService } from '../../../core/services/profile.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ReportDialogComponent } from '../report/report-dialog/report-dialog';
+import { ReportDialogComponent } from '../../report/report-dialog/report-dialog';
 import { MatDialog } from '@angular/material/dialog';
+import { FollowComponent } from '../../../shared/follow/follow';
+import { NavbarComponent } from '../../../shared/navbar/navbar';
+import { calculReadTime } from '../../../shared/utils/readtime';
 
 @Component({
   selector: 'app-profile',
@@ -25,6 +27,8 @@ import { MatDialog } from '@angular/material/dialog';
     MatMenuModule,
     MatToolbarModule,
     MatButtonModule,
+    FollowComponent,
+    NavbarComponent,
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
@@ -38,12 +42,10 @@ export class ProfileComponent implements OnInit {
   constructor(
     private router: Router,
     private postService: PostService,
-    private followService: FollowService,
     private route: ActivatedRoute,
     private profileService: ProfileService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
-    private location: Location
   ) {}
 
   ngOnInit() {
@@ -59,9 +61,9 @@ export class ProfileComponent implements OnInit {
     this.profileService.getProfileDetails(this.username).subscribe({
       next: (profile) => {
         this.profile.set(profile);
-        this.isFollowing.set(profile.isFollowed);
+        this.isFollowing.set(profile.isFollowing);
       },
-      error: (error) => console.log(error),
+      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
@@ -70,7 +72,7 @@ export class ProfileComponent implements OnInit {
       next: (posts) => {
         this.userPosts.set(posts);
       },
-      error: (error) => console.log(error),
+      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
@@ -82,28 +84,13 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  followUser() {
-    if (!this.isFollowing()) {
-      this.followService.follow(this.profile()!.username).subscribe({
-        next: () => {
-          this.isFollowing.set(!this.isFollowing());
-          if (this.profile()) {
-            this.profile()!.followers += this.isFollowing() ? 1 : -1;
-          }
-        },
-        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
-      });
-    } else {
-      this.followService.unfollow(this.profile()!.username).subscribe({
-        next: () => {
-          this.isFollowing.set(!this.isFollowing());
-          if (this.profile()) {
-            this.profile()!.followers += this.isFollowing() ? 1 : -1;
-          }
-        },
-        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
-      });
-    }
+  getReadTime(htmlString: string): number {
+    return calculReadTime(htmlString);
+  }
+
+  onFollowChange(isFollowing: boolean) {
+    this.isFollowing.set(isFollowing);
+    this.profile()!.followers += this.isFollowing() ? 1 : -1;
   }
 
   reportPost() {
@@ -114,11 +101,7 @@ export class ProfileComponent implements OnInit {
   }
 
   editProfile() {
-    console.log('Edit profile');
-  }
-
-  editAvatar() {
-    console.log('Edit avatar');
+    this.router.navigate(["/edit-profile"]);
   }
 
   showFollowers() {
@@ -131,9 +114,5 @@ export class ProfileComponent implements OnInit {
 
   openPost(post: ProfilePost) {
     this.router.navigate(['/post', post.id]);
-  }
-
-  goBack() {
-    this.location.back();
   }
 }

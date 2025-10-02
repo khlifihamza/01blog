@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.dev.backend.dto.AdminPostResponse;
@@ -82,6 +83,33 @@ public class AdminController {
             usersResponse.add(userResponse);
         }
         return ResponseEntity.ok(usersResponse);
+    }
+
+    @GetMapping("/search-users")
+    public ResponseEntity<List<UserResponse>> getSearchedUsers(@RequestParam String query) {
+        List<User> users = userService.getSearchedUsers(query);
+        List<UserResponse> usersResponse = new ArrayList<>();
+        for (User user : users) {
+            UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail(),
+                    null,
+                    user.getRole().name(), user.getCreatedAt().toString(), user.getPosts().size(),
+                    user.getStatus().name());
+            usersResponse.add(userResponse);
+        }
+        return ResponseEntity.ok(usersResponse);
+    }
+
+    @GetMapping("/search-posts")
+    public ResponseEntity<List<AdminPostResponse>> getSearchedPosts(@RequestParam String query) {
+        List<Post> posts = postService.getSearchedPosts(query);
+        List<AdminPostResponse> postsResponse = new ArrayList<>();
+        for (Post post : posts) {
+            AdminPostResponse postResponse = new AdminPostResponse(post.getId(), post.getTitle(),
+                    post.getUser().getUsername(), post.getCreatedAt().toString(), post.getLikes().size(),
+                    post.getComments().size(), post.getStatus().name());
+            postsResponse.add(postResponse);
+        }
+        return ResponseEntity.ok(postsResponse);
     }
 
     @PatchMapping("/ban-user/{username}")

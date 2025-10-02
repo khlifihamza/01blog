@@ -9,7 +9,6 @@ public record DetailPostResponse(
         UserDto author,
         String publishedDate,
         String thumbnail,
-        int readTime,
         int likes,
         int comments,
         boolean isLiked,

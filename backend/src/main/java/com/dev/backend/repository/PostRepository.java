@@ -29,4 +29,8 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
                 ORDER BY p.createdAt DESC
             """)
     List<Post> findFeedPosts(@Param("userId") UUID userId);
+
+    List<Post> findByTitleContainingIgnoreCase(String query);
+
+    List<Post> findTop9ByOrderByLikes();
 }

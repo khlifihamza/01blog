@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,6 +11,8 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { Router } from '@angular/router';
 import { Notification } from '../../shared/models/notification.model';
 import { NotificationService } from '../../core/services/notification.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { NavbarComponent } from '../../shared/navbar/navbar';
 
 @Component({
   selector: 'app-notifications',
@@ -25,6 +27,7 @@ import { NotificationService } from '../../core/services/notification.service';
     MatMenuModule,
     MatToolbarModule,
     MatBadgeModule,
+    NavbarComponent,
   ],
   templateUrl: './notification.html',
   styleUrl: './notification.css',
@@ -37,7 +40,7 @@ export class NotificationsComponent implements OnInit {
   constructor(
     private router: Router,
     private notificationService: NotificationService,
-    private location: Location
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
@@ -51,7 +54,7 @@ export class NotificationsComponent implements OnInit {
         this.updateFilteredNotifications();
         this.updateCounts();
       },
-      error: (error) => console.log(error),
+      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
@@ -107,7 +110,7 @@ export class NotificationsComponent implements OnInit {
           this.updateFilteredNotifications();
           this.updateCounts();
         },
-        error: (error) => console.log(error),
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
       });
     }
   }
@@ -122,7 +125,7 @@ export class NotificationsComponent implements OnInit {
           this.updateFilteredNotifications();
           this.updateCounts();
         },
-        error: (error) => console.log(error),
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
       });
     }
   }
@@ -134,7 +137,7 @@ export class NotificationsComponent implements OnInit {
         this.updateFilteredNotifications();
         this.updateCounts();
       },
-      error: (error) => console.log(error),
+      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
@@ -146,12 +149,8 @@ export class NotificationsComponent implements OnInit {
           this.updateFilteredNotifications();
           this.updateCounts();
         },
-        error: (error) => console.log(error),
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
       });
     }
-  }
-
-  goBack() {
-    this.location.back();
   }
 }

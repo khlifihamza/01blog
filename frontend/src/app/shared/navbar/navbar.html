@@ -1,0 +1,85 @@
+<mat-toolbar class="navbar">
+  <div class="navbar-container">
+    <!-- Logo Section -->
+    <div class="logo-section">
+      <div class="logo-link" (click)="goHome()">
+        <mat-icon class="logo-icon">article</mat-icon>
+        <span class="logo-text">01Blog</span>
+      </div>
+    </div>
+
+    <nav class="desktop-nav">
+      <div class="nav-link" (click)="writeStory()">
+        <mat-icon class="nav-icon">add_circle</mat-icon>
+        <span class="nav-text">Write</span>
+      </div>
+      <div class="nav-link" (click)="openExplore()">
+        <mat-icon class="nav-icon">explore</mat-icon>
+        <span class="nav-text">Explore</span>
+      </div>
+      @if(isAdmin()){
+      <div class="nav-link" (click)="openAdminDashboard()">
+        <mat-icon class="nav-icon">admin_panel_settings</mat-icon>
+        <span class="nav-text">Admin</span>
+      </div>
+      }
+      <div
+        class="nav-link"
+        (click)="openNotifications()"
+        [matBadge]="notificationCount()"
+        matBadgeColor="warn"
+        [matBadgeHidden]="notificationCount() === 0"
+      >
+        <mat-icon class="nav-icon">notifications</mat-icon>
+        <span class="nav-text">Notifications</span>
+      </div>
+      <div class="nav-link" (click)="viewProfile()">
+        <mat-icon class="nav-icon">account_circle</mat-icon>
+        <span class="nav-text">Profile</span>
+      </div>
+      <div class="nav-link" (click)="logout()">
+        <mat-icon class="nav-icon">logout</mat-icon>
+        <span class="nav-text">Logout</span>
+      </div>
+    </nav>
+    <button mat-icon-button class="mobile-menu-btn" [matMenuTriggerFor]="mobileMenu" #menuTrigger="matMenuTrigger">
+      <mat-icon>menu</mat-icon>
+    </button>
+
+    <!-- Mobile Menu -->
+    <mat-menu #mobileMenu="matMenu" class="mobile-menu">
+      <div class="nav-link" (click)="writeStory()">
+        <mat-icon class="nav-icon">edit</mat-icon>
+        <span>Write</span>
+      </div>
+      <div class="nav-link" (click)="openExplore()">
+        <mat-icon class="nav-icon">explore</mat-icon>
+        <span>Explore</span>
+      </div>
+      @if(isAdmin()){
+      <div class="nav-link" (click)="openAdminDashboard()">
+        <mat-icon class="nav-icon">admin_panel_settings</mat-icon>
+        <span>Admin</span>
+      </div>
+      }
+      <div
+        class="nav-link"
+        (click)="openNotifications()"
+        [matBadge]="notificationCount()"
+        matBadgeColor="warn"
+        [matBadgeHidden]="notificationCount() === 0"
+      >
+        <mat-icon class="nav-icon">notifications</mat-icon>
+        <span>Notifications</span>
+      </div>
+      <div class="nav-link" (click)="viewProfile()">
+        <mat-icon class="nav-icon">account_circle</mat-icon>
+        <span>Profile</span>
+      </div>
+      <div class="nav-link" (click)="logout()">
+        <mat-icon class="nav-icon">logout</mat-icon>
+        <span>Logout</span>
+      </div>
+    </mat-menu>
+  </div>
+</mat-toolbar>

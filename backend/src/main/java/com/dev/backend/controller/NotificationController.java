@@ -56,7 +56,7 @@ public class NotificationController {
         List<NotificationResponse> notificationsResponse = new ArrayList<>();
         for (Notification notification : notifications) {
             NotificationResponse notificationResponse = new NotificationResponse(notification.getId(),
-                    notification.getType(),
+                    notification.getType().name().toLowerCase(),
                     notification.getTitle(), notification.getContent(),
                     notification.getCreatedAt().toString(),
                     notification.getSeen(), notification.getLink());

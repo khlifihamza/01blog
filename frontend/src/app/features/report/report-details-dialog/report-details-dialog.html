@@ -110,27 +110,14 @@
     <div class="action-buttons">
       <!-- Navigation Buttons -->
       @if(data.postId){
-      <button mat-raised-button color="primary" (click)="navigateToContent()">
+      <button mat-raised-button class="button-color" (click)="navigateToContent()">
         <mat-icon>article</mat-icon>
         View Post
       </button>
       } @if(data.ReportedUser){
-      <button mat-raised-button color="primary" (click)="navigateToProfile()">
+      <button mat-raised-button class="button-color" (click)="navigateToProfile()">
         <mat-icon>person</mat-icon>
         View Profile
-      </button>
-      }
-
-      <!-- Action Buttons -->
-      @if(data.status === 'PENDING'){
-      <button mat-raised-button color="warn" (click)="resolveReport()">
-        <mat-icon>check_circle</mat-icon>
-        Resolve
-      </button>
-
-      <button mat-button (click)="dismissReport()">
-        <mat-icon>close</mat-icon>
-        Dismiss
       </button>
       }
 

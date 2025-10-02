@@ -5,6 +5,8 @@ export interface CreatePostPayload {
   files?: String[];
 }
 export interface MediaItem {
+  id: string;
+  position: number;
   file: File;
   preview: string;
   type: string;
@@ -24,7 +26,6 @@ export interface FeedPost {
     avatar: string | null;
   };
   createdAt: string;
-  readTime: number;
   likes: number;
   comments: number;
   thumbnail: string;
@@ -43,7 +44,6 @@ export interface DetailPost {
     isFollowed: boolean;
   };
   publishedDate: string;
-  readTime: number;
   likes: number;
   comments: number;
   thumbnail: string;
@@ -63,8 +63,8 @@ export interface EditPost {
 export interface ProfilePost {
   id: string;
   title: string;
+  content: string;
   createdAt: string;
-  readTime: number;
   likes: number;
   comments: number;
   thumbnail: string;
@@ -80,17 +80,29 @@ export interface Post {
   status: 'PUBLISHED' | 'HIDDEN';
 }
 
+export interface DiscoveryPost {
+  id: string;
+  title: string;
+  content: string;
+  author: {
+    username: string;
+    avatar: string;
+  };
+  publishedDate: string;
+  likes: number;
+  comments: number;
+  thumbnail: string;
+}
 export interface Comment {
   id: string;
   username: string;
   avatar: string | null;
   createAt: string;
   content: string;
-  likes: number;
+  isOwner: boolean;
 }
 
-export interface CreateCommentPayload{
+export interface CreateCommentPayload {
   postId: string;
   content: string;
 }
-

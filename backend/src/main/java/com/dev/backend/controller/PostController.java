@@ -35,6 +35,7 @@ import com.dev.backend.dto.EditPostResponse;
 import com.dev.backend.dto.FeedPostResponse;
 import com.dev.backend.dto.UploadResponse;
 import com.dev.backend.dto.UserDto;
+import com.dev.backend.exception.SafeHtmlException;
 import com.dev.backend.model.Post;
 import com.dev.backend.model.PostStatus;
 import com.dev.backend.model.User;
@@ -67,10 +68,12 @@ public class PostController {
         List<FeedPostResponse> feedPostsResponses = new ArrayList<>();
         for (Post post : posts) {
             Author author = new Author(post.getUser().getUsername(),
-                    post.getUser().getAvatar());
+                    post.getUser().getAvatar() != null
+                            ? "http://localhost:8080/api/post/file/" + post.getUser().getAvatar()
+                            : null);
             FeedPostResponse feedPost = new FeedPostResponse(post.getId(), post.getTitle(), post.getContent(), author,
-                    post.getCreatedAt().toString(), 0, post.getLikes().size(), post.getComments().size(),
-                    post.getThumbnail());
+                    post.getCreatedAt().toString(), post.getLikes().size(), post.getComments().size(),
+                    "http://localhost:8080/api/post/file/" + post.getThumbnail());
             feedPostsResponses.add(feedPost);
         }
         return ResponseEntity.ok(feedPostsResponses);
@@ -86,8 +89,9 @@ public class PostController {
             if (post.getStatus() == PostStatus.HIDDEN && !user.getId().equals(currentUser.getId())) {
                 continue;
             }
-            ProfilePostResponse postResponse = new ProfilePostResponse(post.getId(), post.getTitle(),
-                    post.getCreatedAt().toString(), 0, 0, 0, post.getThumbnail());
+            ProfilePostResponse postResponse = new ProfilePostResponse(post.getId(), post.getTitle(), post.getContent(),
+                    post.getCreatedAt().toString(), post.getLikes().size(), post.getComments().size(),
+                    "http://localhost:8080/api/post/file/" + post.getThumbnail());
             postsResponse.add(postResponse);
         }
         return ResponseEntity.ok(postsResponse);
@@ -95,7 +99,7 @@ public class PostController {
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse> createPost(@Validated @RequestBody PostRequest postDto,
-            @AuthenticationPrincipal User currentUser) {
+            @AuthenticationPrincipal User currentUser) throws SafeHtmlException {
         postService.savePost(postDto, currentUser.getId());
         return ResponseEntity.ok(new ApiResponse("Post created successfully"));
     }
@@ -149,12 +153,15 @@ public class PostController {
         Post post = postService.getPost(id);
         User user = post.getUser();
         UserDto author = new UserDto(user.getUsername(),
-                user.getAvatar(),
+                user.getAvatar() != null
+                        ? "http://localhost:8080/api/post/file/" + user.getAvatar()
+                        : null,
                 user.getBio(), user.getFollowers().size(), user.getFollowing().size(),
                 followService.isCurrentUserFollowUser(currentUser.getId(), user.getId()));
         boolean isAuthor = currentUser.getId().equals(user.getId());
         DetailPostResponse postResponse = new DetailPostResponse(post.getId(), post.getTitle(), post.getContent(),
-                author, post.getCreatedAt().toString(), post.getThumbnail(), 0, post.getLikes().size(),
+                author, post.getCreatedAt().toString(), "http://localhost:8080/api/post/file/" + post.getThumbnail(),
+                post.getLikes().size(),
                 post.getComments().size(),
                 likeService.isUserLikedPost(currentUser, post.getId()), false, isAuthor);
         return ResponseEntity.ok(postResponse);
@@ -188,13 +195,13 @@ public class PostController {
             @AuthenticationPrincipal User currentUser) {
         Post post = postService.getPost(id);
         EditPostResponse editpost = new EditPostResponse(post.getId(), post.getTitle(), post.getContent(),
-                post.getThumbnail(), post.getFiles().split(", "));
+                "http://localhost:8080/api/post/file/" + post.getThumbnail(), post.getFiles().split(", "));
         return ResponseEntity.ok(editpost);
     }
 
     @PatchMapping("/update/{id}")
     public ResponseEntity<ApiResponse> updatePost(@PathVariable UUID id, @Validated @RequestBody PostRequest postDto,
-            @AuthenticationPrincipal User currentUser) {
+            @AuthenticationPrincipal User currentUser) throws SafeHtmlException {
         postService.updatePost(id, postDto, currentUser.getId());
         return ResponseEntity.ok(new ApiResponse("Blog updated successful"));
     }

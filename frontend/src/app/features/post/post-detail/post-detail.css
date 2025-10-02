@@ -3,14 +3,6 @@
   background: #fafafa;
 }
 
-.post-header {
-  background: white;
-  border-bottom: 1px solid #e0e0e0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
 .header-content {
   display: flex;
   justify-content: space-between;
@@ -18,7 +10,6 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
 }
 
 .header-actions {
@@ -42,6 +33,7 @@
   padding: 48px;
   margin-bottom: 32px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  word-wrap: break-word;
 }
 
 .article-header {
@@ -290,12 +282,14 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 8px;
+  justify-content: space-between;
 }
 
 .comment-author {
   font-weight: 600;
   color: var(--text-primary);
   cursor: pointer;
+  margin-right: 12px;
 }
 
 .comment-date {

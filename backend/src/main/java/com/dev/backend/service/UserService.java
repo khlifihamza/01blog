@@ -4,11 +4,17 @@ import com.dev.backend.repository.UserRepository;
 import com.dev.backend.model.User;
 import com.dev.backend.model.UserStatus;
 import com.dev.backend.dto.LoginRequest;
+import com.dev.backend.dto.ProfileEditResponse;
 import com.dev.backend.dto.RegisterRequest;
 import com.dev.backend.model.Role;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,6 +24,9 @@ public class UserService {
     private final UserRepository userRepository;
 
     private final PasswordEncoder passwordEncoder;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     public UserService(
             UserRepository userRepository,
@@ -63,8 +72,35 @@ public class UserService {
         return userRepository.findByUsername(username).orElseThrow();
     }
 
+    public void saveData(String username, ProfileEditResponse data) throws IOException {
+        User user = userRepository.findByUsername(username).orElseThrow();
+        if (!user.getUsername().equals(data.username()) && userRepository.existsByUsername(data.username())) {
+            if (data.avatar() != null) {
+                Path filePath = Paths.get(uploadDir + "/avatars" + data.avatar());
+                Files.delete(filePath);
+            }
+            throw new IllegalArgumentException("Username already exists.");
+        }
+        if (!user.getEmail().equals(data.email()) && userRepository.existsByEmail(data.email())) {
+            if (data.avatar() != null) {
+                Path filePath = Paths.get(uploadDir + "/avatars" + data.avatar());
+                Files.delete(filePath);
+            }
+            throw new IllegalArgumentException("Email already exists.");
+        }
+        user.setUsername(data.username());
+        user.setEmail(data.email());
+        user.setAvatar(data.avatar());
+        user.setBio(data.bio());
+        userRepository.save(user);
+    }
+
     public List<User> getAllUSers() {
         return userRepository.findAll();
+    }
+
+    public List<User> getSearchedUsers(String Query) {
+        return userRepository.findByUsernameContainingIgnoreCase(Query);
     }
 
     public void banUser(String username) {
@@ -95,5 +131,9 @@ public class UserService {
 
     public long getAllUsersCount() {
         return userRepository.count();
+    }
+
+    public List<User> getTop9Profiles() {
+        return userRepository.findTop9ByOrderByFollowers();
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import com.dev.backend.dto.PostRequest;
+import com.dev.backend.exception.SafeHtmlException;
 import com.dev.backend.model.Follow;
 import com.dev.backend.model.NotificationType;
 import com.dev.backend.model.Post;
@@ -29,10 +30,24 @@ public class PostService {
     @Autowired
     private NotificationService notificationService;
 
-    public Post savePost(PostRequest postDto, UUID userId) {
+    @Autowired
+    private HtmlSanitizerService htmlSanitizerService;
+
+    public Post savePost(PostRequest postDto, UUID userId) throws SafeHtmlException {
+        String sanitizedTitle = htmlSanitizerService.sanitizeTitle(postDto.title());
+        String sanitizedContent = htmlSanitizerService.sanitizeContent(postDto.content());
+
+        if (sanitizedTitle.trim().isEmpty()) {
+            throw new SafeHtmlException("Title cannot be empty or contain only HTML");
+        }
+
+        if (sanitizedContent.trim().isEmpty()) {
+            throw new SafeHtmlException("Title cannot be empty or contain only HTML");
+        }
+
         User user = userRepository.getReferenceById(userId);
         Post post = new Post();
-        post.setTitle(postDto.title());
+        post.setTitle(sanitizedTitle);
         post.setContent(postDto.content());
         post.setFiles(String.join(", ", postDto.files()));
         post.setUser(user);
@@ -47,13 +62,24 @@ public class PostService {
         return post;
     }
 
-    public Post updatePost(UUID id, PostRequest updatedPost, UUID currentUserId) {
+    public Post updatePost(UUID id, PostRequest updatedPost, UUID currentUserId) throws SafeHtmlException {
+        String sanitizedTitle = htmlSanitizerService.sanitizeTitle(updatedPost.title());
+        String sanitizedContent = htmlSanitizerService.sanitizeContent(updatedPost.content());
+
+        if (sanitizedTitle.trim().isEmpty()) {
+            throw new SafeHtmlException("Title cannot be empty or contain only HTML");
+        }
+
+        if (sanitizedContent.trim().isEmpty()) {
+            throw new SafeHtmlException("Title cannot be empty or contain only HTML");
+        }
+
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         if (!post.getUser().getId().equals(currentUserId)) {
             throw new AccessDeniedException("You cannot delete another user's post.");
         }
-        post.setTitle(updatedPost.title());
+        post.setTitle(sanitizedTitle);
         post.setContent(updatedPost.content());
         post.setFiles(String.join(", ", updatedPost.files()));
         post.setThumbnail(updatedPost.thumbnail());
@@ -103,5 +129,13 @@ public class PostService {
 
     public long getAllPostsCount() {
         return postRepository.count();
+    }
+
+    public List<Post> getSearchedPosts(String query) {
+        return postRepository.findByTitleContainingIgnoreCase(query);
+    }
+
+    public List<Post> getTop9Posts() {
+        return postRepository.findTop9ByOrderByLikes();
     }
 }

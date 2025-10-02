@@ -1,39 +1,29 @@
 <div class="notifications-container">
   <!-- Header -->
-  <mat-toolbar class="notifications-header">
-    <div class="header-content">
-      <div class="header-left">
-        <button mat-icon-button (click)="goBack()">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <span class="header-title">Notifications</span>
-        @if(unreadCount() > 0){
-        <mat-chip class="unread-badge">{{ unreadCount() }} new</mat-chip>
-        }
-      </div>
-
-      <div class="header-actions">
-        <button mat-button (click)="markAllAsRead()" [disabled]="unreadCount() === 0">
-          <mat-icon>done_all</mat-icon>
-          Mark all read
-        </button>
-
-        <button mat-icon-button [matMenuTriggerFor]="notificationMenu">
-          <mat-icon>more_vert</mat-icon>
-        </button>
-
-        <mat-menu #notificationMenu="matMenu">
-          <button mat-menu-item (click)="clearAll()">
-            <mat-icon>clear_all</mat-icon>
-            <span>Clear All</span>
-          </button>
-        </mat-menu>
-      </div>
-    </div>
-  </mat-toolbar>
+  <app-navbar></app-navbar>
 
   <!-- Notifications Content -->
   <div class="notifications-content">
+    <div class="header-actions">
+      <div class="notification-left">
+        <mat-icon>notifications</mat-icon>
+        <h1>Notifications</h1>
+      </div>
+      <button mat-icon-button [matMenuTriggerFor]="notificationMenu">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+
+      <mat-menu #notificationMenu="matMenu">
+        <button mat-menu-item (click)="markAllAsRead()" [disabled]="unreadCount() === 0">
+          <mat-icon>done_all</mat-icon>
+          <span>Mark all read</span>
+        </button>
+        <button mat-menu-item (click)="clearAll()">
+          <mat-icon>clear_all</mat-icon>
+          <span>Delete All</span>
+        </button>
+      </mat-menu>
+    </div>
     <!-- Tabs -->
     <mat-tab-group class="notifications-tabs" animationDuration="300ms">
       <mat-tab label="All" [matBadge]="unreadCount()" matBadgeColor="primary">

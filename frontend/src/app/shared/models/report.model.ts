@@ -16,3 +16,9 @@ export interface Report {
   status: 'PENDING' | 'RESOLVED' | 'DISMISSED';
   createdAt: string;
 }
+
+export interface ReportData {
+  postId: string | null;
+  postTitle: string | null;
+  username: string | null;
+}

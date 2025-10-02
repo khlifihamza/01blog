@@ -20,7 +20,12 @@ import { AdminService } from '../../core/services/admin.service';
 import { Insights } from '../../shared/models/admin.model';
 import { ReportDetailsDialogComponent } from '../report/report-details-dialog/report-details-dialog';
 import { MatDialog } from '@angular/material/dialog';
-import { FormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog';
+import { ConfirmDialogData } from '../../shared/models/confirm-dialog.model';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { NavbarComponent } from '../../shared/navbar/navbar';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -28,6 +33,7 @@ import { FormsModule } from '@angular/forms';
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -40,6 +46,7 @@ import { FormsModule } from '@angular/forms';
     MatSelectModule,
     MatFormFieldModule,
     MatInputModule,
+    NavbarComponent,
   ],
   templateUrl: './admin.html',
   styleUrl: './admin.css',
@@ -64,24 +71,46 @@ export class AdminComponent implements OnInit {
 
   // Filtered data
   filteredReports = signal<Report[]>([]);
-  filteredUsers = signal<User[]>([]);
-  filteredPosts = signal<Post[]>([]);
 
   // Filters
   selectedReportStatus = '';
-  selectedPostCategory = '';
-  userSearchQuery = '';
-  postSearchQuery = '';
+  userSearchQuery = new FormControl('');
+  postSearchQuery = new FormControl('');
 
   constructor(
     private router: Router,
     private adminService: AdminService,
     private location: Location,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
     this.loadData();
+    this.setupSearch();
+  }
+
+  setupSearch() {
+    this.userSearchQuery.valueChanges
+      .pipe(debounceTime(300), distinctUntilChanged())
+      .subscribe((searchValue) => {
+        this.adminService.searchUsers(searchValue!.toLowerCase()).subscribe({
+          next: (users) => {
+            this.users.set(users);
+          },
+          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+        });
+      });
+    this.postSearchQuery.valueChanges
+      .pipe(debounceTime(300), distinctUntilChanged())
+      .subscribe((searchValue) => {
+        this.adminService.searchPosts(searchValue!.toLowerCase()).subscribe({
+          next: (posts) => {
+            this.posts.set(posts);
+          },
+          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+        });
+      });
   }
 
   loadData() {
@@ -99,7 +128,7 @@ export class AdminComponent implements OnInit {
         this.pendingReports.set(insights.pendingReports);
         this.totalEngagement.set(insights.totalEngagement);
       },
-      error: (error) => console.log(error),
+      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
@@ -109,7 +138,7 @@ export class AdminComponent implements OnInit {
         this.reports.set(reports);
         this.filterReports();
       },
-      error: (error) => console.log(error),
+      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
@@ -117,9 +146,8 @@ export class AdminComponent implements OnInit {
     this.adminService.getUsers().subscribe({
       next: (users) => {
         this.users.set(users);
-        this.filterUsers();
       },
-      error: (error) => console.log(error),
+      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
@@ -129,7 +157,7 @@ export class AdminComponent implements OnInit {
         this.posts.set(posts);
         this.filterPosts();
       },
-      error: (error) => console.log(error),
+      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
@@ -145,25 +173,16 @@ export class AdminComponent implements OnInit {
     this.filteredReports.set(reports);
   }
 
-  filterUsers() {
-    const users = this.userSearchQuery
-      ? this.users().filter(
-          (u) =>
-            u.username.toLowerCase().includes(this.userSearchQuery.toLowerCase()) ||
-            u.email.toLowerCase().includes(this.userSearchQuery.toLowerCase())
-        )
-      : this.users();
-    this.filteredUsers.set(users);
-  }
+  // searchUsers() {
+  //   this.adminService.searchUsers(this.userSearchQuery.toLowerCase()).subscribe({
+  //     next: (users) => {
+  //       this.users.set(users);
+  //     },
+  //     error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+  //   });
+  // }
 
-  filterPosts() {
-    const posts = this.postSearchQuery
-      ? this.posts().filter((p) =>
-          p.title.toLowerCase().includes(this.postSearchQuery.toLowerCase())
-        )
-      : this.posts();
-    this.filteredPosts.set(posts);
-  }
+  filterPosts() {}
 
   viewReport(report: Report) {
     const detailedReport = {
@@ -179,7 +198,6 @@ export class AdminComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        console.log('Report action taken:', result.report);
         if (result.action === 'resolved') {
           this.resolveReport(result.report);
         }
@@ -191,24 +209,52 @@ export class AdminComponent implements OnInit {
   }
 
   resolveReport(report: Report) {
-    this.adminService.resolveReport(report.id).subscribe({
-      next: () => {
-        report.status = 'RESOLVED';
-        this.pendingReports.update((value) => Math.max(0, value - 1));
-        this.updateReport(report);
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: <ConfirmDialogData>{
+        title: 'Resolve Report',
+        message: 'Are you sure you want to resolve this report?',
+        confirmText: 'Resolve',
+        cancelText: 'Cancel',
       },
-      error: (error) => console.log(error),
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.adminService.resolveReport(report.id).subscribe({
+          next: () => {
+            report.status = 'RESOLVED';
+            this.pendingReports.update((value) => Math.max(0, value - 1));
+            this.updateReport(report);
+          },
+          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+        });
+      }
     });
   }
 
   dismissReport(report: Report) {
-    this.adminService.dismissReport(report.id).subscribe({
-      next: () => {
-        report.status = 'DISMISSED';
-        this.pendingReports.update((value) => Math.max(0, value - 1));
-        this.updateReport(report);
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: <ConfirmDialogData>{
+        title: 'Dismiss Report',
+        message: 'Are you sure you want to dismiss this report?',
+        confirmText: 'Dismiss',
+        cancelText: 'Cancel',
       },
-      error: (error) => console.log(error),
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.adminService.dismissReport(report.id).subscribe({
+          next: () => {
+            report.status = 'DISMISSED';
+            this.pendingReports.update((value) => Math.max(0, value - 1));
+            this.updateReport(report);
+          },
+          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+        });
+      }
     });
   }
 
@@ -231,39 +277,78 @@ export class AdminComponent implements OnInit {
   }
 
   banUser(username: string) {
-    this.adminService.banUser(username).subscribe({
-      next: () => {
-        const user = this.users().find((u) => u.username === username);
-        if (user) {
-          user.status = 'BANNED';
-        }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: <ConfirmDialogData>{
+        title: 'Ban User',
+        message: 'Are you sure you want to ban this user?',
+        confirmText: 'Ban',
+        cancelText: 'Cancel',
       },
-      error: (error) => console.log(error),
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.adminService.banUser(username).subscribe({
+          next: () => {
+            const user = this.users().find((u) => u.username === username);
+            if (user) {
+              user.status = 'BANNED';
+            }
+          },
+          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+        });
+      }
     });
   }
 
   unbanUser(username: string) {
-    this.adminService.unbanUser(username).subscribe({
-      next: () => {
-        const user = this.users().find((u) => u.username === username);
-        if (user) {
-          user.status = 'ACTIVE';
-        }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: <ConfirmDialogData>{
+        title: 'Unban User',
+        message: 'Are you sure you want to unban this user?',
+        confirmText: 'Unban',
+        cancelText: 'Cancel',
       },
-      error: (error) => console.log(error),
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.adminService.unbanUser(username).subscribe({
+          next: () => {
+            const user = this.users().find((u) => u.username === username);
+            if (user) {
+              user.status = 'ACTIVE';
+            }
+          },
+          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+        });
+      }
     });
   }
 
   deleteUser(user: User) {
-    if (confirm('Are you sure you want to delete this user?')) {
-      this.adminService.deleteUser(user.username).subscribe({
-        next: () => {
-          this.users.set(this.users().filter((u) => u.id !== user.id));
-          this.filterUsers();
-        },
-        error: (error) => console.log(error),
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: <ConfirmDialogData>{
+        title: 'Delete User',
+        message: 'Are you sure you want to delete this user?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.adminService.deleteUser(user.username).subscribe({
+          next: () => {
+            this.users.set(this.users().filter((u) => u.id !== user.id));
+          },
+          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+        });
+      }
+    });
   }
 
   viewPost(postId: string) {
@@ -271,42 +356,78 @@ export class AdminComponent implements OnInit {
   }
 
   hidePost(postId: string) {
-    this.adminService.hidePost(postId).subscribe({
-      next: () => {
-        const post = this.posts().find((p) => p.id === postId);
-        if (post) {
-          post.status = 'HIDDEN';
-        }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: <ConfirmDialogData>{
+        title: 'Hide Post',
+        message: 'Are you sure you want to hide this post?',
+        confirmText: 'Hide',
+        cancelText: 'Cancel',
       },
-      error: (error) => console.log(error),
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.adminService.hidePost(postId).subscribe({
+          next: () => {
+            const post = this.posts().find((p) => p.id === postId);
+            if (post) {
+              post.status = 'HIDDEN';
+            }
+          },
+          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+        });
+      }
     });
   }
 
   unhidePost(postId: string) {
-    this.adminService.unhidePost(postId).subscribe({
-      next: () => {
-        const post = this.posts().find((p) => p.id === postId);
-        if (post) {
-          post.status = 'PUBLISHED';
-        }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: <ConfirmDialogData>{
+        title: 'Unhide Post',
+        message: 'Are you sure you want to unhide this post?',
+        confirmText: 'Unhide',
+        cancelText: 'Cancel',
       },
-      error: (error) => console.log(error),
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.adminService.unhidePost(postId).subscribe({
+          next: () => {
+            const post = this.posts().find((p) => p.id === postId);
+            if (post) {
+              post.status = 'PUBLISHED';
+            }
+          },
+          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+        });
+      }
     });
   }
 
   deletePost(post: Post) {
-    if (confirm('Are you sure you want to delete this post?')) {
-      this.adminService.deletePost(post.id).subscribe({
-        next: () => {
-          this.posts.set(this.posts().filter((p) => p.id !== post.id));
-          this.filterPosts();
-        },
-        error: (error) => console.log(error),
-      });
-    }
-  }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: <ConfirmDialogData>{
+        title: 'Delete Post',
+        message: 'Are you sure you want to delete this post?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      },
+    });
 
-  goBack() {
-    this.location.back();
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.adminService.deletePost(post.id).subscribe({
+          next: () => {
+            this.posts.set(this.posts().filter((p) => p.id !== post.id));
+            this.filterPosts();
+          },
+          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+        });
+      }
+    });
   }
 }

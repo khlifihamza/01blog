@@ -1,0 +1,85 @@
+<div class="edit-profile-container">
+  <!-- Header -->
+  <app-navbar></app-navbar>
+
+  <!-- Profile Content -->
+  <div class="edit-content">
+    <div class="header-content">
+      <div class="header-left">
+        <span class="header-title">Edit Profile</span>
+      </div>
+
+      <div class="header-actions">
+        <button
+          mat-raised-button
+          [class.header-button]="!profileForm.invalid && !isLoading()"
+          (click)="saveProfile()"
+          [disabled]="profileForm.invalid || isLoading()"
+        >
+          <mat-icon>save</mat-icon>
+          Save Changes
+        </button>
+      </div>
+    </div>
+    <form [formGroup]="profileForm" class="profile-form">
+      <!-- Avatar Section -->
+      <div class="avatar-section">
+        <div class="avatar-upload" (click)="avatarInput.click()">
+          <input
+            #avatarInput
+            type="file"
+            accept="image/*"
+            (change)="onAvatarSelect($event)"
+            style="display: none"
+          />
+
+          <img
+            [src]="newAvatarPreview() || currentProfile()?.avatar"
+            [alt]="currentProfile()?.username"
+            class="avatar-preview"
+          />
+          <div class="avatar-overlay">
+            <mat-icon>camera_alt</mat-icon>
+          </div>
+        </div>
+      </div>
+
+      <!-- Basic Information -->
+      <mat-card class="form-section">
+        <mat-card-header>
+          <mat-card-title>Basic Information</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Username</mat-label>
+              <input matInput formControlName="username" placeholder="@username" />
+              <mat-error *ngIf="profileForm.get('username')?.hasError('required')">
+                Username is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Email</mat-label>
+              <input matInput formControlName="email" placeholder="Enter your Email" />
+              <mat-error *ngIf="profileForm.get('name')?.hasError('required')">
+                Email is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Bio</mat-label>
+              <textarea
+                matInput
+                formControlName="bio"
+                rows="4"
+                placeholder="Tell us about yourself..."
+              ></textarea>
+              <mat-hint>{{ profileForm.get('bio')?.value?.length || 0 }}/500 characters</mat-hint>
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </form>
+  </div>
+</div>

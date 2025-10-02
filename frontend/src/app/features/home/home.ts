@@ -7,16 +7,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FeedPost } from '../../shared/models/post.model';
 import { MatBadgeModule } from '@angular/material/badge';
-import { MatMenuModule } from '@angular/material/menu';
 import { FormsModule } from '@angular/forms';
-import { MatFormFieldModule, MatLabel } from '@angular/material/form-field';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatInputModule } from '@angular/material/input';
-import { AuthService } from '../../core/services/auth.service';
 import { PostService } from '../../core/services/post.service';
-import { NotificationService } from '../../core/services/notification.service';
-import { ProfileService } from '../../core/services/profile.service';
-import { FeedUser } from '../../shared/models/user.model';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { NavbarComponent } from '../../shared/navbar/navbar';
+import { calculReadTime } from '../../shared/utils/readtime';
 
 @Component({
   selector: 'app-feed',
@@ -30,85 +28,39 @@ import { FeedUser } from '../../shared/models/user.model';
     MatIconModule,
     MatProgressSpinnerModule,
     MatBadgeModule,
-    MatMenuModule,
-    MatLabel,
     MatFormFieldModule,
     MatToolbarModule,
     MatInputModule,
+    NavbarComponent,
   ],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
 export class HomeComponent implements OnInit {
-  user = signal<FeedUser | null>(null);
-  searchQuery = '';
   isLoading = false;
-  notificationCount = signal(0);
   allPosts = signal<FeedPost[]>([]);
-  filteredPosts = signal<FeedPost[]>([]);
 
   constructor(
     private router: Router,
-    private authService: AuthService,
     private postService: PostService,
-    private profileService: ProfileService,
-    private notificationService: NotificationService
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
-    this.loadUser();
     this.loadFeedPosts();
-    this.loadNotificationCount();
   }
 
-  loadUser() {
-    this.profileService.getUserInfo().subscribe({
-      next: (user) => {
-        this.user.set(user);
-      },
-      error: (error) => console.log(error),
-    });
-  }
-
-  loadNotificationCount() {
-    this.notificationService.getUnreadNotificationCount().subscribe({
-      next: (count) => {
-        this.notificationCount.set(count);
-      },
-      error: (error) => console.log(error),
-    });
+  getReadTime(htmlString: string): number {
+    return calculReadTime(htmlString);
   }
 
   loadFeedPosts() {
     this.postService.getFeedPosts().subscribe({
       next: (posts) => {
         this.allPosts.set(posts);
-        this.filterPosts();
       },
-      error: (error) => console.log(error),
+      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
-  }
-
-  isAdmin() {
-    return this.user()?.role == 'ADMIN';
-  }
-
-  onSearch() {
-    this.filterPosts();
-  }
-
-  filterPosts() {
-    let filtered = [...this.allPosts()];
-    if (this.searchQuery.trim()) {
-      const query = this.searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (post) =>
-          post.title.toLowerCase().includes(query) ||
-          post.author.username.toLowerCase().includes(query)
-      );
-    }
-
-    this.filteredPosts.set(filtered);
   }
 
   formatDate(dateStr: string): string {
@@ -125,30 +77,5 @@ export class HomeComponent implements OnInit {
 
   openPost(post: FeedPost) {
     this.router.navigate(['/post', post.id]);
-  }
-
-  writeStory() {
-    this.router.navigate(['/post/create']);
-  }
-
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
-
-  viewProfile() {
-    this.router.navigate(['/profile', this.user()!.username]);
-  }
-
-  editProfile() {
-    this.router.navigate(['/edit-profile']);
-  }
-
-  openNotifications() {
-    this.router.navigate(['/notifications']);
-  }
-
-  openAdminDashboard() {
-    this.router.navigate(['/admin']);
   }
 }

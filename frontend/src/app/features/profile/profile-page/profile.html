@@ -1,31 +1,6 @@
 <div class="profile-container">
   <!-- Header -->
-  <mat-toolbar class="profile-header">
-    <div class="header-content">
-      <button mat-icon-button (click)="goBack()">
-        <mat-icon>arrow_back</mat-icon>
-      </button>
-      <span class="header-title">Profile</span>
-
-      <button mat-icon-button [matMenuTriggerFor]="profileMenu">
-        <mat-icon>more_vert</mat-icon>
-      </button>
-
-      <mat-menu #profileMenu="matMenu">
-        @if(profile()?.isOwner){
-        <button mat-menu-item (click)="editProfile()">
-          <mat-icon>edit</mat-icon>
-          <span>Edit Profile</span>
-        </button>
-        } @else{
-        <button mat-menu-item (click)="reportPost()">
-          <mat-icon>flag</mat-icon>
-          <span>Report</span>
-        </button>
-        }
-      </mat-menu>
-    </div>
-  </mat-toolbar>
+  <app-navbar></app-navbar>
 
   <!-- Profile Content -->
   @if(profile()){
@@ -34,10 +9,11 @@
     <div class="profile-banner">
       <div class="profile-info">
         <div class="avatar-section">
-          <img [src]="profile()!.avatar ? profile()!.avatar : 'default-avatar.png'" [alt]="profile()!.username" class="profile-avatar" />
-          <button mat-fab color="primary" class="edit-avatar-btn" (click)="editAvatar()">
-            <mat-icon>camera_alt</mat-icon>
-          </button>
+          <img
+            [src]="profile()!.avatar ? profile()!.avatar : 'default-avatar.png'"
+            [alt]="profile()!.username"
+            class="profile-avatar"
+          />
         </div>
 
         <div class="basic-info">
@@ -45,11 +21,30 @@
         </div>
         @if(!profile()!.isOwner){
         <div class="profile-actions">
-          <button mat-raised-button color="primary" (click)="followUser()">
-            {{ isFollowing() ? 'Following' : 'Follow' }}
-          </button>
+          <app-follow
+            [username]="profile()!.username"
+            [isFollowing]="isFollowing()"
+            (followChange)="onFollowChange($event)"
+          >
+          </app-follow>
         </div>
         }
+        <button mat-icon-button [matMenuTriggerFor]="profileMenu">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #profileMenu="matMenu">
+          @if(profile()?.isOwner){
+          <button mat-menu-item (click)="editProfile()">
+            <mat-icon>edit</mat-icon>
+            <span>Edit Profile</span>
+          </button>
+          } @else{
+          <button mat-menu-item (click)="reportPost()">
+            <mat-icon>flag</mat-icon>
+            <span>Report</span>
+          </button>
+          }
+        </mat-menu>
       </div>
     </div>
 
@@ -106,7 +101,7 @@
               <h1 class="featured-title">{{ post.title }}</h1>
 
               <div class="post-stats">
-                <span class="read-time">{{ post.readTime }} min read</span>
+                <span class="read-time">{{ getReadTime(post.content) }} min read</span>
                 <span class="separator">•</span>
                 <span class="likes">
                   <mat-icon>favorite_border</mat-icon>
@@ -121,10 +116,7 @@
             </div>
 
             <div class="featured-image">
-              <img
-                [src]="'http://localhost:8080/api/post/file/' + post.thumbnail"
-                [alt]="post.title"
-              />
+              <img [src]="post.thumbnail" [alt]="post.title" />
             </div>
           </div>
         </mat-card>

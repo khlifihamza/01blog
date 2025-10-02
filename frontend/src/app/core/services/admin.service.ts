@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiResponse, User } from '../../shared/models/user.model';
-import { Report, ReportRequest } from '../../shared/models/report.model';
+import { Report } from '../../shared/models/report.model';
 import { Post } from '../../shared/models/post.model';
 import { Insights } from '../../shared/models/admin.model';
 
@@ -32,6 +32,14 @@ export class AdminService {
 
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.url}/get-users`);
+  }
+
+  searchUsers(query: string): Observable<User[]> {
+    return this.http.get<User[]>(`${this.url}/search-users?query=${query}`);
+  }
+
+  searchPosts(query: string): Observable<Post[]> {
+    return this.http.get<Post[]>(`${this.url}/search-posts?query=${query}`);
   }
 
   getPosts(): Observable<Post[]> {
