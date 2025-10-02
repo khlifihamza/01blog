@@ -12,5 +12,5 @@ public record ProfileUserResponse(
         int following,
         int posts,
         boolean isOwner,
-        boolean isFollowed) {
+        boolean isFollowing) {
 }

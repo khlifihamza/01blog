@@ -17,8 +17,7 @@
   align-items: center;
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
+  margin: 0 auto 15px;
 }
 
 .header-left {
@@ -39,10 +38,16 @@
   align-items: center;
 }
 
+.header-button{  
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white !important;
+}
+
 .create-content {
   max-width: 800px;
   margin: 0 auto;
   padding: 32px 24px;
+  width: 100%;
 }
 
 .blog-form {
@@ -233,6 +238,19 @@
   height: 16px;
 }
 
+@media (max-width: 850px){
+  .create-content {
+    padding: 24px 16px;
+    width: 90%;
+  }
+
+  .floating-add-btn {
+    width: 28px;
+    height: 28px;
+    min-height: 28px;
+  }
+}
+
 @media (max-width: 768px) {
   .header-content {
     padding: 0 16px;
@@ -240,6 +258,7 @@
 
   .create-content {
     padding: 24px 16px;
+    width: 85%;
   }
 
   .header-actions {
@@ -254,5 +273,12 @@
     width: 28px;
     height: 28px;
     min-height: 28px;
+  }
+}
+
+@media (max-width: 400px){
+  .create-content {
+    padding: 16px 8px;
+    width: 80%;
   }
 }

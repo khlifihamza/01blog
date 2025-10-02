@@ -163,6 +163,11 @@
   font-weight: 500;
 }
 
+.button-color{
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white !important;
+}
+
 /* Chip Styles */
 .type-post {
   background: #e3f2fd;

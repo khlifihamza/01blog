@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule,Location } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,12 +12,15 @@ import { Comment, CreateCommentPayload, DetailPost } from '../../../shared/model
 import { PostService } from '../../../core/services/post.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { FollowService } from '../../../core/services/follow.service';
 import { LikeService } from '../../../core/services/like.service';
 import { CommentService } from '../../../core/services/comment.service';
 import { FormsModule } from '@angular/forms';
 import { ReportDialogComponent } from '../../report/report-dialog/report-dialog';
-// import { ReportDialogComponent } from './report-dialog.component';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog';
+import { ConfirmDialogData } from '../../../shared/models/confirm-dialog.model';
+import { FollowComponent } from '../../../shared/follow/follow';
+import { NavbarComponent } from '../../../shared/navbar/navbar';
+import { calculReadTime } from '../../../shared/utils/readtime';
 
 @Component({
   selector: 'app-post-detail',
@@ -32,6 +35,8 @@ import { ReportDialogComponent } from '../../report/report-dialog/report-dialog'
     MatToolbarModule,
     MatChipsModule,
     MatDialogModule,
+    FollowComponent,
+    NavbarComponent,
   ],
   templateUrl: './post-detail.html',
   styleUrl: './post-detail.css',
@@ -51,7 +56,6 @@ export class PostDetailComponent implements OnInit {
     private router: Router,
     private sanitizer: DomSanitizer,
     private snackBar: MatSnackBar,
-    private followService: FollowService,
     private likeService: LikeService,
     private commentService: CommentService,
     private dialog: MatDialog,
@@ -77,7 +81,7 @@ export class PostDetailComponent implements OnInit {
           this.formatContent(this.post()!.content)
         );
       },
-      error: (error) => console.log(error),
+      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
@@ -86,7 +90,7 @@ export class PostDetailComponent implements OnInit {
       next: (comments) => {
         this.Comments.set(comments);
       },
-      error: (error) => console.log(error),
+      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
@@ -107,6 +111,37 @@ export class PostDetailComponent implements OnInit {
     });
   }
 
+  deleteComment(commentId: string) {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: <ConfirmDialogData>{
+        title: 'Delete Comment',
+        message: 'Are you sure you want to delete this comment?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.commentService.deleteComment(commentId).subscribe({
+          next: (response) => {
+            const index = this.Comments()!.findIndex((n) => n.id === commentId);
+            this.Comments()!.splice(index, 1);
+            this.snackBar.open(response.message.toString(), 'Close', { duration: 5000 });
+          },
+          error: (error) => {
+            this.snackBar.open(error.error, 'Close', { duration: 5000 });
+          },
+        });
+      }
+    });
+  }
+
+  getReadTime(htmlString: string): number {
+    return calculReadTime(htmlString);
+  }
+
   formatDate(dateStr: string): string {
     const now = new Date();
     const date = new Date(dateStr);
@@ -120,7 +155,10 @@ export class PostDetailComponent implements OnInit {
   }
 
   formatContent(content: string): string {
-    return content.replace(/(<(img|video)\b[^>]*>(?:<\/video>)?)\s*<button[\s\S]*?<\/button>/g, '$1');
+    return content.replace(
+      /(<(img|video)\b[^>]*>(?:<\/video>)?)\s*<button[\s\S]*?<\/button>/g,
+      '$1'
+    );
   }
 
   toggleLike() {
@@ -149,41 +187,36 @@ export class PostDetailComponent implements OnInit {
     }
   }
 
-  followUser() {
-    if (!this.isFollowing()) {
-      this.followService.follow(this.post()!.author.username).subscribe({
-        next: () => {
-          this.isFollowing.set(!this.isFollowing());
-          if (this.post()!.author) {
-            this.post()!.author.followers += this.isFollowing() ? 1 : -1;
-          }
-        },
-        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
-      });
-    } else {
-      this.followService.unfollow(this.post()!.author.username).subscribe({
-        next: () => {
-          this.isFollowing.set(!this.isFollowing());
-          if (this.post()!.author) {
-            this.post()!.author.followers += this.isFollowing() ? 1 : -1;
-          }
-        },
-        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
-      });
-    }
+  onFollowChange(isFollowing: boolean) {
+    this.isFollowing.set(isFollowing);
+    this.post()!.author.followers += this.isFollowing() ? 1 : -1;
   }
 
   deletePost() {
     let postId = this.route.snapshot.paramMap.get('id');
     if (postId != null) {
-      this.postService.deletePost(postId).subscribe({
-        next: (reposnse) => {
-          this.snackBar.open(reposnse.message.toString(), 'Close', { duration: 5000 });
-          this.goBack();
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '350px',
+        data: <ConfirmDialogData>{
+          title: 'Delete Post',
+          message: 'Are you sure you want to delete this Post?',
+          confirmText: 'Delete',
+          cancelText: 'Cancel',
         },
-        error: (error) => {
-          this.snackBar.open(error.error, 'Close', { duration: 5000 });
-        },
+      });
+
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result) {
+          this.postService.deletePost(postId).subscribe({
+            next: (response) => {
+              this.snackBar.open(response.message.toString(), 'Close', { duration: 5000 });
+              this.goBack();
+            },
+            error: (error) => {
+              this.snackBar.open(error.error, 'Close', { duration: 5000 });
+            },
+          });
+        }
       });
     }
   }
@@ -205,7 +238,7 @@ export class PostDetailComponent implements OnInit {
   }
 
   goBack() {
-     this.location.back();
+    this.location.back();
   }
 
   editPost() {

@@ -1,7 +1,7 @@
 import { Component, signal, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,7 +15,9 @@ import { CreatePostPayload, MediaItem, UploadResponse } from '../../../shared/mo
 import { DndUploadDirective } from '../../../core/directives/dnd-upload.directive';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { addLinkTosrc } from '../../../shared/utils/formathtml';
+import { ConfirmDialogData } from '../../../shared/models/confirm-dialog.model';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog';
+import { NavbarComponent } from '../../../shared/navbar/navbar';
 
 @Component({
   selector: 'app-create-post',
@@ -34,6 +36,7 @@ import { addLinkTosrc } from '../../../shared/utils/formathtml';
     DndUploadDirective,
     MatMenuModule,
     MatToolbarModule,
+    NavbarComponent
   ],
   templateUrl: './create-post.html',
   styleUrls: ['./create-post.css'],
@@ -57,13 +60,13 @@ export class CreatePostComponent {
     'Share your journey, insights, and experiences with the 01Student community...';
   showValidationError = false;
   private currentContent = '';
-  private mediaCounter = 0;
 
   constructor(
     private fb: FormBuilder,
     private postService: PostService,
     private snackBar: MatSnackBar,
-    private location: Location
+    private location: Location,
+    private dialog: MatDialog
   ) {
     this.blogForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(100)]],
@@ -85,7 +88,6 @@ export class CreatePostComponent {
     this.updateCursorPosition();
   }
 
-  
   private updateMediaPositions() {
     const mediaElements = this.editorDiv.nativeElement.querySelectorAll('.media-element');
     const updatedMediaFiles: MediaItem[] = [];
@@ -93,11 +95,11 @@ export class CreatePostComponent {
     mediaElements.forEach((element, index) => {
       const mediaId = element.getAttribute('data-media-id');
       if (mediaId) {
-        const mediaItem = this.mediaFiles().find(item => item.id === mediaId);
+        const mediaItem = this.mediaFiles().find((item) => item.id === mediaId);
         if (mediaItem) {
           updatedMediaFiles.push({
             ...mediaItem,
-            position: index
+            position: index,
           });
         }
       }
@@ -110,7 +112,7 @@ export class CreatePostComponent {
   private getOrderedMediaFiles(): File[] {
     return this.mediaFiles()
       .sort((a, b) => a.position - b.position)
-      .map(item => item.file);
+      .map((item) => item.file);
   }
 
   updateCursorPosition() {
@@ -195,18 +197,21 @@ export class CreatePostComponent {
       reader.onload = (e) => {
         const imageUrl = e.target?.result as string;
         const mediaId = this.generateMediaId();
-        
+
         this.insertMedia('image', imageUrl, file.name, mediaId);
-        
+
         const type = 'image';
-        this.mediaFiles.update((arr) => [...arr, { 
-          id: mediaId,
-          file, 
-          preview: String(reader.result), 
-          type,
-          position: 0 
-        }]);
-        
+        this.mediaFiles.update((arr) => [
+          ...arr,
+          {
+            id: mediaId,
+            file,
+            preview: String(reader.result),
+            type,
+            position: 0,
+          },
+        ]);
+
         this.updateMediaPositions();
       };
       reader.readAsDataURL(file);
@@ -224,17 +229,20 @@ export class CreatePostComponent {
       reader.onload = (e) => {
         const videoUrl = e.target?.result as string;
         const mediaId = this.generateMediaId();
-        
+
         this.insertMedia('video', videoUrl, file.name, mediaId);
-        
+
         const type = 'video';
-        this.mediaFiles.update((arr) => [...arr, { 
-          id: mediaId,
-          file, 
-          preview: String(reader.result), 
-          type,
-          position: 0
-        }]);
+        this.mediaFiles.update((arr) => [
+          ...arr,
+          {
+            id: mediaId,
+            file,
+            preview: String(reader.result),
+            type,
+            position: 0,
+          },
+        ]);
         this.updateMediaPositions();
       };
       reader.readAsDataURL(file);
@@ -261,7 +269,7 @@ export class CreatePostComponent {
     }
 
     if (range.commonAncestorContainer.nodeName == '#text') {
-      this.snackBar.open("can't insert media next to text", 'Close', {
+      this.snackBar.open("can't insert media next to text or other media", 'Close', {
         duration: 5000,
       });
       return;
@@ -286,7 +294,7 @@ export class CreatePostComponent {
       mediaElement.style.maxWidth = '100%';
       mediaElement.style.height = 'auto';
     }
-    
+
     const deleteBtn = document.createElement('button');
     deleteBtn.className =
       'delete-btn mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-unthemed';
@@ -305,7 +313,6 @@ export class CreatePostComponent {
       mediaDiv.remove();
       this.onContentChange({ target: this.editorDiv.nativeElement } as any);
       this.deleteMedia(mediaId);
-      this.mediaCounter--;
     };
 
     mediaDiv.appendChild(mediaElement);
@@ -321,8 +328,6 @@ export class CreatePostComponent {
     selection.removeAllRanges();
     selection.addRange(newRange);
     this.onContentChange({ target: this.editorDiv.nativeElement } as any);
-
-    this.mediaCounter++;
   }
 
   isContentValid(): boolean {
@@ -331,39 +336,52 @@ export class CreatePostComponent {
 
   publishPost() {
     if (this.isContentValid()) {
-      this.isLoading.set(true);
-      const createPost = (res: UploadResponse) => {
-        let htmlString = this.editorDiv.nativeElement.innerHTML;
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '350px',
+        data: <ConfirmDialogData>{
+          title: 'Create Post',
+          message: 'Are you sure you want to Create this post?',
+          confirmText: 'Create',
+          cancelText: 'Cancel',
+        },
+      });
 
-        let content = addLinkTosrc(htmlString, res.fileNames);
-        const createPostPayload: CreatePostPayload = {
-          title: this.blogForm.value.title,
-          content: content,
-          thumbnail: res.thumbnail,
-          files: res.fileNames,
-        };
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result) {
+          this.isLoading.set(true);
+          const createPost = (res: UploadResponse) => {
+            let htmlString = this.editorDiv.nativeElement.innerHTML;
 
-        this.postService.createPost(createPostPayload).subscribe({
-          next: () => {
-            this.isLoading.set(false);
-            this.snackBar.open('Blog created successful', 'Close', { duration: 5000 });
-            this.goBack();
-          },
-          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
-        });
-      };
+            const createPostPayload: CreatePostPayload = {
+              title: this.blogForm.value.title,
+              content: htmlString,
+              thumbnail: res.thumbnail,
+              files: res.fileNames,
+            };
 
-      const formData = new FormData();
-      if (this.thumbnailFile) formData.append('thumbnail', this.thumbnailFile);
-    
-      const orderedFiles = this.getOrderedMediaFiles();
-      if (orderedFiles.length > 0) {
-        orderedFiles.forEach((file) => formData.append('files', file));
-      }
-      
-      this.postService.uploadFiles(formData).subscribe({
-        next: (response) => createPost(response),
-        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+            this.postService.createPost(createPostPayload).subscribe({
+              next: () => {
+                this.isLoading.set(false);
+                this.snackBar.open('Blog created successful', 'Close', { duration: 5000 });
+                this.goBack();
+              },
+              error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+            });
+          };
+
+          const formData = new FormData();
+          if (this.thumbnailFile) formData.append('thumbnail', this.thumbnailFile);
+
+          const orderedFiles = this.getOrderedMediaFiles();
+          if (orderedFiles.length > 0) {
+            orderedFiles.forEach((file) => formData.append('files', file));
+          }
+
+          this.postService.uploadFiles(formData).subscribe({
+            next: (response) => createPost(response),
+            error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+          });
+        }
       });
     }
   }
@@ -377,14 +395,17 @@ export class CreatePostComponent {
         const imageUrl = String(reader.result);
         const mediaId = this.generateMediaId();
         this.insertMedia(type, imageUrl, file.name, mediaId);
-        
-        this.mediaFiles.update((arr) => [...arr, { 
-          id: mediaId,
-          file, 
-          preview: imageUrl, 
-          type,
-          position: 0
-        }]);
+
+        this.mediaFiles.update((arr) => [
+          ...arr,
+          {
+            id: mediaId,
+            file,
+            preview: imageUrl,
+            type,
+            position: 0,
+          },
+        ]);
         this.updateMediaPositions();
       };
       reader.readAsDataURL(file);

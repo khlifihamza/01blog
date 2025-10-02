@@ -8,7 +8,6 @@ public record FeedPostResponse(
                 String content,
                 Author author,
                 String createdAt,
-                int readTime,
                 int likes,
                 int comments,
                 String thumbnail) {

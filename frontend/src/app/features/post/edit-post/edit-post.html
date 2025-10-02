@@ -1,18 +1,18 @@
 <div class="create-blog-container">
   <!-- Header -->
-  <mat-toolbar class="create-header">
+  <app-navbar></app-navbar>
+
+  <!-- Main Content -->
+  <div class="create-content">
     <div class="header-content">
       <div class="header-left">
-        <button mat-icon-button (click)="goBack()">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
         <span class="header-title">Update Your Story</span>
       </div>
 
       <div class="header-actions">
         <button
           mat-raised-button
-          color="primary"
+          [class.header-button]="isContentValid() && !isLoading()"
           (click)="updatePost()"
           [disabled]="!isContentValid() || isLoading()"
         >
@@ -21,10 +21,6 @@
         </button>
       </div>
     </div>
-  </mat-toolbar>
-
-  <!-- Main Content -->
-  <div class="create-content">
     <form [formGroup]="editForm" class="blog-form">
       <!-- Title -->
       <mat-form-field appearance="outline" class="title-field">

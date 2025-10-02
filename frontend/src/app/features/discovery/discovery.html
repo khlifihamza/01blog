@@ -1,0 +1,226 @@
+<div class="discover-container">
+  <!-- Header -->
+  <app-navbar></app-navbar>
+
+  <!-- Search Section -->
+  <div class="search-section">
+    <div class="search-container">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search stories, people...</mat-label>
+        <input matInput [formControl]="searchQuery" placeholder="What are you looking for?" />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+      @if(searchQuery.value !== ''){
+      <div class="search-filters">
+        <mat-chip-listbox
+          class="filter-chips"
+          [(ngModel)]="selectedFilter"
+          (ngModelChange)="onFilterChange()"
+        >
+          <mat-chip-option value="all">All</mat-chip-option>
+          <mat-chip-option value="posts">Posts</mat-chip-option>
+          <mat-chip-option value="people">People</mat-chip-option>
+        </mat-chip-listbox>
+      </div>
+      }
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="discover-content">
+    <!-- Search Results -->
+    @if(searchQuery.value !== ''){
+    <div class="search-results">
+      <h2 class="section-title">Search Results for "{{ searchQuery.value }}"</h2>
+
+      <!-- Posts Results -->
+      @if(searchedPosts().length > 0 && (selectedFilter === 'all' || selectedFilter === 'posts')){
+      <div class="results-section">
+        <h3 class="subsection-title">Posts</h3>
+        <div class="posts-grid">
+          @for (post of searchedPosts(); track post.id) {
+          <mat-card class="post-card" (click)="openPost(post)">
+            <div class="post-image">
+              <img
+                [src]="post.thumbnail"
+                [alt]="post.title"
+              />
+            </div>
+
+            <mat-card-content class="post-content">
+              <div class="post-meta">
+                <img
+                  [src]="post.author.avatar ? post.author.avatar : 'default-avatar.png'"
+                  [alt]="post.author.username"
+                  class="author-avatar-small"
+                />
+                <div class="author-info">
+                  <span class="author-name">{{ post.author.username }}</span>
+                </div>
+                <span class="publish-date">{{ formatDate(post.publishedDate) }}</span>
+              </div>
+
+              <h3 class="post-title">{{ post.title }}</h3>
+
+              <div class="post-footer">
+                <div class="post-stats">
+                  <span class="read-time">{{ getReadTime(post.content) }} min</span>
+                  <span class="likes">
+                    <mat-icon>favorite_border</mat-icon>
+                    {{ post.likes }}
+                  </span>
+                  <span class="comments">
+                    <mat-icon>comment</mat-icon>
+                    {{ post.comments }}
+                  </span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- People Results -->
+      @if(searchedUsers().length > 0 && (selectedFilter === 'all' || selectedFilter === 'people')){
+      <div class="results-section">
+        <h3 class="subsection-title">People</h3>
+        <div class="users-grid">
+          @for (user of searchedUsers(); track user.id) {
+          <mat-card class="user-card">
+            <mat-card-content class="user-content">
+              <div class="user-header">
+                <img
+                  [src]="user.avatar ? user.avatar : 'default-avatar.png'"
+                  [alt]="user.username"
+                  class="user-avatar"
+                  (click)="viewProfile(user)"
+                />
+                <div class="user-info">
+                  <h4 class="user-name" (click)="viewProfile(user)">{{ user.username }}</h4>
+                </div>
+                <app-follow
+                  [username]="user.username"
+                  [isFollowing]="user.isFollowing"
+                  (followChange)="onFollowChange(user, $event)"
+                >
+                </app-follow>
+              </div>
+
+              <p class="user-bio">{{ user.bio }}</p>
+
+              <div class="user-stats">
+                <span>{{ user.followers }} followers</span>
+                <span class="separator">•</span>
+                <span>{{ user.posts }} posts</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+          }
+        </div>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- No Search Results -->
+    @if(searchQuery.value !== '' && searchedPosts().length === 0 && searchedUsers().length === 0){
+    <div class="no-results">
+      <mat-icon>search_off</mat-icon>
+      <h3>No results found</h3>
+      <p>Try different keywords</p>
+    </div>
+    }
+
+    <!-- Default Content (when no search) -->
+    @if(searchQuery.value === ''){
+    <div class="default-content">
+      <!-- Suggested Users -->
+      <div class="suggestions-section">
+        <h2 class="section-title">Suggested Users to Follow</h2>
+        <div class="users-grid">
+          @for (user of suggestedUsers(); track user.id) {
+          <mat-card class="user-card">
+            <mat-card-content class="user-content">
+              <div class="user-header">
+                <img
+                  [src]="user.avatar ? user.avatar : 'default-avatar.png'"
+                  [alt]="user.username"
+                  class="user-avatar"
+                  (click)="viewProfile(user)"
+                />
+                <div class="user-info">
+                  <h4 class="user-name" (click)="viewProfile(user)">{{ user.username }}</h4>
+                </div>
+                <app-follow
+                  [username]="user.username"
+                  [isFollowing]="user.isFollowing"
+                  (followChange)="onFollowChange(user, $event)"
+                >
+                </app-follow>
+              </div>
+
+              <p class="user-bio">{{ user.bio }}</p>
+
+              <div class="user-stats">
+                <span>{{ user.followers }} followers</span>
+                <span class="separator">•</span>
+                <span>{{ user.posts }} posts</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+          }
+        </div>
+      </div>
+
+      <!-- Related Posts -->
+      <div class="related-section">
+        <h2 class="section-title">You Might Like</h2>
+        <div class="posts-grid">
+          @for (post of suggestedPosts(); track post.id) {
+          <mat-card class="post-card" (click)="openPost(post)">
+            <div class="post-image">
+              <img
+                [src]="post.thumbnail"
+                [alt]="post.title"
+              />
+            </div>
+
+            <mat-card-content class="post-content">
+              <div class="post-meta">
+                <img
+                  [src]="post.author.avatar ? post.author.avatar : 'default-avatar.png'"
+                  [alt]="post.author.username"
+                  class="author-avatar-small"
+                />
+                <div class="author-info">
+                  <span class="author-name">{{ post.author.username }}</span>
+                </div>
+                <span class="publish-date">{{ formatDate(post.publishedDate) }}</span>
+              </div>
+
+              <h3 class="post-title">{{ post.title }}</h3>
+
+              <div class="post-footer">
+                <div class="post-stats">
+                  <span class="read-time">{{ getReadTime(post.content) }} min</span>
+                  <span class="likes">
+                    <mat-icon>favorite_border</mat-icon>
+                    {{ post.likes }}
+                  </span>
+                  <span class="comments">
+                    <mat-icon>comment</mat-icon>
+                    {{ post.comments }}
+                  </span>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+          }
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+</div>

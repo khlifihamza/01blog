@@ -29,7 +29,18 @@ export interface UserProfile {
   following: number;
   posts: number;
   isOwner: boolean;
-  isFollowed: boolean;
+  isFollowing: boolean;
+}
+
+export interface EditUserProfile {
+  username: string;
+  email: string;
+  avatar: string | null;
+  bio: string | null;
+}
+
+export interface AvatarResponse {
+  avatar: string;
 }
 
 export interface User {
@@ -41,6 +52,16 @@ export interface User {
   joinDate: string;
   postsCount: number;
   status: 'ACTIVE' | 'BANNED';
+}
+
+export interface DiscoveryUser {
+  id: string;
+  username: string;
+  avatar: string;
+  bio: string;
+  followers: number;
+  posts: number;
+  isFollowing: boolean;
 }
 
 export interface FeedUser {

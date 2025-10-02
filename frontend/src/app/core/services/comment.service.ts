@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ApiResponse } from '../../shared/models/user.model';
 import { Comment, CreateCommentPayload } from '../../shared/models/post.model';
+import { ApiResponse } from '../../shared/models/user.model';
 
 @Injectable({
   providedIn: 'root',
@@ -13,10 +13,14 @@ export class CommentService {
   constructor(private http: HttpClient) {}
 
   addComment(createCommentPayload: CreateCommentPayload): Observable<Comment> {
-    return this.http.post<any>(`${this.url}/add`, createCommentPayload);
+    return this.http.post<Comment>(`${this.url}/add`, createCommentPayload);
+  }
+
+  deleteComment(commentId: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(`${this.url}/delete/${commentId}`);
   }
 
   getComments(postId: string): Observable<Comment[]> {
-    return this.http.get<any>(`${this.url}/${postId}`);
+    return this.http.get<Comment[]>(`${this.url}/${postId}`);
   }
 }

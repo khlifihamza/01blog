@@ -16,19 +16,15 @@ import { DndUploadDirective } from '../../../core/directives/dnd-upload.directiv
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatInputModule } from '@angular/material/input';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { PostService } from '../../../core/services/post.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { addLinkTosrc } from '../../../shared/utils/formathtml';
-
-// Enhanced MediaItem interface with position tracking
-interface MediaItemWithPosition extends MediaItem {
-  id: string;
-  position: number;
-}
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog';
+import { ConfirmDialogData } from '../../../shared/models/confirm-dialog.model';
+import { NavbarComponent } from '../../../shared/navbar/navbar';
 
 @Component({
   selector: 'app-edit-post',
@@ -47,6 +43,7 @@ interface MediaItemWithPosition extends MediaItem {
     DndUploadDirective,
     MatMenuModule,
     MatToolbarModule,
+    NavbarComponent,
   ],
   templateUrl: './edit-post.html',
   styleUrl: './edit-post.css',
@@ -69,7 +66,7 @@ export class EditPostComponent implements OnInit {
   private currentContent = '';
   isContentEmpty = true;
   showValidationError = false;
-  mediaFiles = signal<MediaItemWithPosition[]>([]);
+  mediaFiles = signal<MediaItem[]>([]);
   buttonPosition = { top: 28, left: -45 };
   showAddButton = false;
   private mediaCounter = 0;
@@ -81,7 +78,8 @@ export class EditPostComponent implements OnInit {
     private postService: PostService,
     private sanitizer: DomSanitizer,
     private snackBar: MatSnackBar,
-    private location: Location
+    private location: Location,
+    private dialog: MatDialog
   ) {
     this.editForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(100)]],
@@ -104,7 +102,7 @@ export class EditPostComponent implements OnInit {
         this.currentContent = post.content;
         this.oldThumbnail = post.thumbnail;
         this.oldFileNames = post.fileNames;
-        this.thumbnailPreview.set('http://localhost:8080/api/post/file/' + post.thumbnail);
+        this.thumbnailPreview.set(post.thumbnail);
         this.editForm.patchValue({
           title: post.title,
           content: this.sanitizer.bypassSecurityTrustHtml(post.content),
@@ -112,21 +110,51 @@ export class EditPostComponent implements OnInit {
         this.safeContent = this.sanitizer.bypassSecurityTrustHtml(post.content);
         setTimeout(() => {
           this.setupExistingMediaDeleteButtons();
-          this.addMediaIdsToExistingElements();
+          this.convertExistingMediaToMediaItems();
         }, 0);
       },
-      error: (error) => console.log(error),
+      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
-  private addMediaIdsToExistingElements() {
+  private convertExistingMediaToMediaItems() {
     const mediaElements = this.editorDiv.nativeElement.querySelectorAll('.media-element');
-    mediaElements.forEach((element) => {
-      if (!element.getAttribute('data-media-id')) {
-        const mediaId = this.generateMediaId();
+    const mediaItems: MediaItem[] = [];
+
+    mediaElements.forEach((element, index) => {
+      let mediaId = element.getAttribute('data-media-id');
+      if (!mediaId) {
+        mediaId = this.generateMediaId();
         element.setAttribute('data-media-id', mediaId);
       }
+      const imgElement = element.querySelector('img');
+      const videoElement = element.querySelector('video');
+
+      if (imgElement && this.oldFileNames[index]) {
+        const fileName = this.oldFileNames[index];
+        const file = new File([''], fileName, { type: 'image/jpeg' });
+
+        mediaItems.push({
+          id: mediaId,
+          file: file,
+          preview: imgElement.src,
+          type: 'image',
+          position: index,
+        });
+      } else if (videoElement && this.oldFileNames[index]) {
+        const fileName = this.oldFileNames[index];
+        const file = new File([''], fileName, { type: 'video/mp4' });
+
+        mediaItems.push({
+          id: mediaId,
+          file: file,
+          preview: videoElement.src,
+          type: 'video',
+          position: index,
+        });
+      }
     });
+    this.mediaFiles.set(mediaItems);
   }
 
   onFocus() {
@@ -136,35 +164,46 @@ export class EditPostComponent implements OnInit {
 
   private updateMediaPositions() {
     const mediaElements = this.editorDiv?.nativeElement?.querySelectorAll('.media-element');
-    
+
     if (!mediaElements || mediaElements.length === 0) {
       return;
     }
 
-    this.mediaFiles.update(currentFiles => {
+    this.mediaFiles.update((currentFiles) => {
       const updatedFiles = [...currentFiles];
-      
+
       mediaElements.forEach((element, index) => {
         const mediaId = element.getAttribute('data-media-id');
         if (mediaId) {
-          const fileIndex = updatedFiles.findIndex(item => item.id === mediaId);
+          const fileIndex = updatedFiles.findIndex((item) => item.id === mediaId);
           if (fileIndex !== -1) {
             updatedFiles[fileIndex] = {
               ...updatedFiles[fileIndex],
-              position: index
+              position: index,
             };
           }
         }
       });
-      
+
       return updatedFiles.sort((a, b) => a.position - b.position);
     });
   }
 
-  private getOrderedMediaFiles(): File[] {
-    return this.mediaFiles()
-      .sort((a, b) => a.position - b.position)
-      .map(item => item.file);
+  private getOrderedMediaFiles(): { newFiles: File[]; allFileNames: string[] } {
+    const sortedMediaItems = this.mediaFiles().sort((a, b) => a.position - b.position);
+    const newFiles: File[] = [];
+    const allFileNames: string[] = [];
+
+    sortedMediaItems.forEach((item, index) => {
+      if (item.file.size > 0) {
+        newFiles.push(item.file);
+        allFileNames.push(`new_file_${index}`);
+      } else {
+        allFileNames.push(item.file.name);
+      }
+    });
+
+    return { newFiles, allFileNames };
   }
 
   private generateMediaId(): string {
@@ -173,51 +212,65 @@ export class EditPostComponent implements OnInit {
 
   updatePost() {
     if (this.editForm.valid) {
-      this.isLoading.set(true);
-      const updatePost = () => {
-        let htmlString = this.editorDiv.nativeElement.innerHTML;
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '350px',
+        data: <ConfirmDialogData>{
+          title: 'Update Post',
+          message: 'Are you sure you want to Update this post?',
+          confirmText: 'Update',
+          cancelText: 'Cancel',
+        },
+      });
 
-        let content = addLinkTosrc(htmlString, this.oldFileNames);
-        const updatePostPayload: CreatePostPayload = {
-          title: this.editForm.value.title,
-          content: content,
-          thumbnail: this.oldThumbnail!,
-          files: this.oldFileNames,
-        };
-        this.postService.updatePost(updatePostPayload, this.postId).subscribe({
-          next: (response) => {
-            this.isLoading.set(false);
-            this.snackBar.open(response.message, 'Close', { duration: 5000 });
-            this.goBack();
-          },
-          error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
-        });
-      };
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result) {
+          this.isLoading.set(true);
+          const updatePost = () => {
+            let htmlString = this.editorDiv.nativeElement.innerHTML;
+            const updatePostPayload: CreatePostPayload = {
+              title: this.editForm.value.title,
+              content: htmlString,
+              thumbnail: this.oldThumbnail!,
+              files: this.oldFileNames,
+            };
+            this.postService.updatePost(updatePostPayload, this.postId).subscribe({
+              next: (response) => {
+                this.isLoading.set(false);
+                this.snackBar.open(response.message, 'Close', { duration: 5000 });
+                this.goBack();
+              },
+              error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+            });
+          };
 
-      if (!this.thumbnailFile) {
-        this.postService.getOldThumbnail(this.oldThumbnail!).subscribe({
-          next: (blob) => {
-            this.thumbnailFile = new File([blob], this.oldThumbnail!, { type: blob.type });
+          if (!this.thumbnailFile) {
+            const charIndex = this.oldThumbnail?.lastIndexOf('/');
+            const fileName = this.oldThumbnail?.slice(charIndex! + 1);
+            this.postService.getOldThumbnail(fileName!).subscribe({
+              next: (blob) => {
+                this.thumbnailFile = new File([blob], this.oldThumbnail!, { type: blob.type });
+                this.uploadAndUpdate(updatePost);
+              },
+              error: (err) => console.error('Download failed:', err),
+            });
+          } else {
             this.uploadAndUpdate(updatePost);
-          },
-          error: (err) => console.error('Download failed:', err),
-        });
-      } else {
-        this.uploadAndUpdate(updatePost);
-      }
+          }
+        }
+      });
     }
   }
 
   private uploadAndUpdate(updatePost: () => void) {
     const formData = new FormData();
+    const { newFiles, allFileNames } = this.getOrderedMediaFiles();
 
     if (this.thumbnailFile) {
       formData.append('thumbnail', this.thumbnailFile);
     }
-    
-    const orderedFiles = this.getOrderedMediaFiles();
-    if (orderedFiles.length > 0) {
-      orderedFiles.forEach((file) => formData.append('files', file));
+
+    if (newFiles.length > 0) {
+      newFiles.forEach((file) => formData.append('files', file));
     }
 
     if (formData.has('thumbnail') || formData.has('files')) {
@@ -226,14 +279,25 @@ export class EditPostComponent implements OnInit {
           if (this.thumbnailFile) {
             this.oldThumbnail = response.thumbnail;
           }
-          if (orderedFiles.length > 0) {
-            this.oldFileNames = response.fileNames;
+          if (newFiles.length > 0) {
+            const newFileNames = response.fileNames;
+            let newFileIndex = 0;
+
+            this.oldFileNames = allFileNames.map((fileName) => {
+              if (fileName.startsWith('new_file_')) {
+                return newFileNames[newFileIndex++];
+              }
+              return fileName;
+            });
+          } else {
+            this.oldFileNames = allFileNames;
           }
           updatePost();
         },
         error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
       });
     } else {
+      this.oldFileNames = allFileNames;
       updatePost();
     }
   }
@@ -303,17 +367,20 @@ export class EditPostComponent implements OnInit {
         const type: 'image' | 'video' = file.type.startsWith('video') ? 'video' : 'image';
         const imageUrl = String(reader.result);
         const mediaId = this.generateMediaId();
-        
+
         this.insertMedia(type, imageUrl, file.name, mediaId);
-        
-        this.mediaFiles.update((arr) => [...arr, { 
-          id: mediaId,
-          file, 
-          preview: imageUrl, 
-          type,
-          position: 0 
-        }]);
-        
+
+        this.mediaFiles.update((arr) => [
+          ...arr,
+          {
+            id: mediaId,
+            file,
+            preview: imageUrl,
+            type,
+            position: 0,
+          },
+        ]);
+
         setTimeout(() => this.updateMediaPositions(), 0);
       };
       reader.readAsDataURL(file);
@@ -342,19 +409,21 @@ export class EditPostComponent implements OnInit {
       reader.onload = (e) => {
         const imageUrl = e.target?.result as string;
         const mediaId = this.generateMediaId();
-        
-        
+
         this.insertMedia('image', imageUrl, file.name, mediaId);
-        
+
         const type = 'image';
-        this.mediaFiles.update((arr) => [...arr, { 
-          id: mediaId,
-          file, 
-          preview: String(reader.result), 
-          type,
-          position: 0 
-        }]);
-        
+        this.mediaFiles.update((arr) => [
+          ...arr,
+          {
+            id: mediaId,
+            file,
+            preview: String(reader.result),
+            type,
+            position: 0,
+          },
+        ]);
+
         setTimeout(() => this.updateMediaPositions(), 0);
       };
       reader.readAsDataURL(file);
@@ -372,19 +441,21 @@ export class EditPostComponent implements OnInit {
       reader.onload = (e) => {
         const videoUrl = e.target?.result as string;
         const mediaId = this.generateMediaId();
-        
-        
+
         this.insertMedia('video', videoUrl, file.name, mediaId);
-        
+
         const type = 'video';
-        this.mediaFiles.update((arr) => [...arr, { 
-          id: mediaId,
-          file, 
-          preview: String(reader.result), 
-          type,
-          position: 0 
-        }]);
-        
+        this.mediaFiles.update((arr) => [
+          ...arr,
+          {
+            id: mediaId,
+            file,
+            preview: String(reader.result),
+            type,
+            position: 0,
+          },
+        ]);
+
         setTimeout(() => this.updateMediaPositions(), 0);
       };
       reader.readAsDataURL(file);
@@ -407,7 +478,7 @@ export class EditPostComponent implements OnInit {
     }
 
     if (range.commonAncestorContainer.nodeName == '#text') {
-      this.snackBar.open("can't insert media next to text", 'Close', {
+      this.snackBar.open("can't insert media next to text or other media", 'Close', {
         duration: 5000,
       });
       return;
@@ -432,7 +503,7 @@ export class EditPostComponent implements OnInit {
       mediaElement.style.maxWidth = '100%';
       mediaElement.style.height = 'auto';
     }
-    
+
     const deleteBtn = document.createElement('button');
     deleteBtn.className =
       'delete-btn mdc-icon-button mat-mdc-icon-button mat-mdc-button-base mat-unthemed';
@@ -504,9 +575,12 @@ export class EditPostComponent implements OnInit {
         e.preventDefault();
         e.stopPropagation();
         const mediaDiv = button.closest('.media-element') as HTMLElement;
-        console.log(mediaDiv);
         if (mediaDiv) {
+          const mediaId = mediaDiv.getAttribute('data-media-id');
           mediaDiv.remove();
+          if (mediaId) {
+            this.deleteMedia(mediaId);
+          }
           this.onContentChange({ target: this.editorDiv.nativeElement } as any);
         }
       };

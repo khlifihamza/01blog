@@ -9,8 +9,10 @@ import { AdminGuard } from './core/guards/admin.guard';
 import { CreatePostComponent } from './features/post/create-post/create-post';
 import { PostDetailComponent } from './features/post/post-detail/post-detail';
 import { EditPostComponent } from './features/post/edit-post/edit-post';
-import { ProfileComponent } from './features/profile/profile';
+import { ProfileComponent } from './features/profile/profile-page/profile';
 import { NotificationsComponent } from './features/notification/notification';
+import { DiscoveryComponent } from './features/discovery/discovery';
+import { EditProfileComponent } from './features/profile/edit-profile/edit-profile';
 
 export const routes: Routes = [
   {
@@ -42,4 +44,6 @@ export const routes: Routes = [
   { path: 'edit-post/:id', component: EditPostComponent, canActivate: [AuthGuard] },
   { path: 'profile/:username', component: ProfileComponent, canActivate: [AuthGuard] },
   { path: 'notifications', component: NotificationsComponent, canActivate: [AuthGuard] },
+  { path: 'discovery', component: DiscoveryComponent, canActivate: [AuthGuard] },
+  { path: 'edit-profile', component: EditProfileComponent, canActivate: [AuthGuard] },
 ];
