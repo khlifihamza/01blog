@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -98,10 +99,10 @@ public class PostController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse> createPost(@Validated @RequestBody PostRequest postDto,
+    public ResponseEntity<?> createPost(@Validated @RequestBody PostRequest postDto,
             @AuthenticationPrincipal User currentUser) throws SafeHtmlException {
         postService.savePost(postDto, currentUser.getId());
-        return ResponseEntity.ok(new ApiResponse("Post created successfully"));
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/upload")
