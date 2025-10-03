@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -33,7 +33,7 @@ import { calculReadTime } from '../../../shared/utils/readtime';
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent{
   profile = signal<UserProfile | null>(null);
   isFollowing = signal(false);
   userPosts = signal<ProfilePost[]>([]);

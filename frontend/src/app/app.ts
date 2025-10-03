@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App implements OnInit {
+export class App{
   showNavbar = true;
 
   constructor(private router: Router) {}

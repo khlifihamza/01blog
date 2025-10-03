@@ -1,5 +1,5 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { Component, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
@@ -44,7 +44,7 @@ import { calculReadTime } from '../../shared/utils/readtime';
   templateUrl: './discovery.html',
   styleUrl: './discovery.css',
 })
-export class DiscoveryComponent implements OnInit {
+export class DiscoveryComponent{
   searchQuery = new FormControl('');
   selectedFilter = 'all';
   searchedPosts = signal<DiscoveryPost[]>([]);
@@ -56,7 +56,6 @@ export class DiscoveryComponent implements OnInit {
     private router: Router,
     private discoveryService: DiscoveryService,
     private snackBar: MatSnackBar,
-    private location: Location
   ) {}
 
   ngOnInit() {

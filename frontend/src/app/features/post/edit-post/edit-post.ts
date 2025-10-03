@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, ElementRef, signal, ViewChild } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import {
   FormBuilder,
@@ -48,7 +48,7 @@ import { NavbarComponent } from '../../../shared/navbar/navbar';
   templateUrl: './edit-post.html',
   styleUrl: './edit-post.css',
 })
-export class EditPostComponent implements OnInit {
+export class EditPostComponent{
   @ViewChild('editorDiv') editorDiv!: ElementRef<HTMLDivElement>;
   @ViewChild('addButton') addButton!: ElementRef<HTMLButtonElement>;
   @ViewChild('imageInput') imageInput!: ElementRef<HTMLInputElement>;

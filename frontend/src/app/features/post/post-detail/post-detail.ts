@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -41,7 +41,7 @@ import { calculReadTime } from '../../../shared/utils/readtime';
   templateUrl: './post-detail.html',
   styleUrl: './post-detail.css',
 })
-export class PostDetailComponent implements OnInit {
+export class PostDetailComponent {
   post = signal<DetailPost | null>(null);
   isFollowing = signal(false);
   isLiked = signal(false);

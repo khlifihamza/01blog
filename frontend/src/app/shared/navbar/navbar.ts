@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, HostListener, signal, ViewChild } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -10,7 +10,7 @@ import { ProfileService } from '../../core/services/profile.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NotificationService } from '../../core/services/notification.service';
 import { MatButtonModule } from '@angular/material/button';
-import { MatMenu, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
+import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 
 @Component({
   selector: 'app-navbar',
@@ -25,7 +25,7 @@ import { MatMenu, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.css'],
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent{
   user = signal<FeedUser | null>(null);
   notificationCount = signal(0);
   @ViewChild('menuTrigger') menuTrigger!: MatMenuTrigger;

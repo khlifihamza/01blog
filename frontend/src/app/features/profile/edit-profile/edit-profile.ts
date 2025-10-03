@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -38,7 +38,7 @@ import { MatDialog } from '@angular/material/dialog';
   templateUrl: './edit-profile.html',
   styleUrl: './edit-profile.css',
 })
-export class EditProfileComponent implements OnInit {
+export class EditProfileComponent{
   currentProfile = signal<EditUserProfile | null>(null);
   profileForm: FormGroup;
   isLoading = signal(false);

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -32,7 +32,7 @@ import { NavbarComponent } from '../../shared/navbar/navbar';
   templateUrl: './notification.html',
   styleUrl: './notification.css',
 })
-export class NotificationsComponent implements OnInit {
+export class NotificationsComponent{
   allNotifications = signal<Notification[]>([]);
   unreadNotifications: Notification[] = [];
   unreadCount = signal(0);

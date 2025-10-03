@@ -1,5 +1,5 @@
-import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { Component, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -51,7 +51,7 @@ import { NavbarComponent } from '../../shared/navbar/navbar';
   templateUrl: './admin.html',
   styleUrl: './admin.css',
 })
-export class AdminComponent implements OnInit {
+export class AdminComponent {
   // Stats
   insights = signal<Insights | null>(null);
   totalUsers = signal(0);
@@ -80,7 +80,6 @@ export class AdminComponent implements OnInit {
   constructor(
     private router: Router,
     private adminService: AdminService,
-    private location: Location,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
