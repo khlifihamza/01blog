@@ -47,7 +47,7 @@
             style="display: none"
           />
 
-          @if(!thumbnailPreview){
+          @if(!thumbnailPreview()){
           <div class="upload-placeholder">
             <mat-icon>cloud_upload</mat-icon>
             <p>Click to upload image</p>
@@ -76,6 +76,7 @@
             (keyup)="updateCursorPosition()"
             (mouseup)="updateCursorPosition()"
             (focus)="onFocus()"
+            (paste)="onPaste($event)"
             appDndUpload
             (filesDropped)="onFilesDropped($event)"
             [class.empty]="isContentEmpty"

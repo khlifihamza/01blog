@@ -41,10 +41,7 @@
           @for (post of searchedPosts(); track post.id) {
           <mat-card class="post-card" (click)="openPost(post)">
             <div class="post-image">
-              <img
-                [src]="post.thumbnail"
-                [alt]="post.title"
-              />
+              <img [src]="post.thumbnail" [alt]="post.title" />
             </div>
 
             <mat-card-content class="post-content">
@@ -103,7 +100,7 @@
                 <app-follow
                   [username]="user.username"
                   [isFollowing]="user.isFollowing"
-                  (followChange)="onFollowChange(user, $event)"
+                  (followChange)="onFollowChange(user)"
                 >
                 </app-follow>
               </div>
@@ -156,7 +153,7 @@
                 <app-follow
                   [username]="user.username"
                   [isFollowing]="user.isFollowing"
-                  (followChange)="onFollowChange(user, $event)"
+                  (followChange)="onFollowChange(user)"
                 >
                 </app-follow>
               </div>
@@ -172,6 +169,16 @@
           </mat-card>
           }
         </div>
+
+        <!-- Loading Spinner for Users -->
+        @if(isLoadingMoreSearchResults) {
+        <div
+          class="loading-container"
+          style="display: flex; justify-content: center; padding: 20px"
+        >
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+        }
       </div>
 
       <!-- Related Posts -->
@@ -181,10 +188,7 @@
           @for (post of suggestedPosts(); track post.id) {
           <mat-card class="post-card" (click)="openPost(post)">
             <div class="post-image">
-              <img
-                [src]="post.thumbnail"
-                [alt]="post.title"
-              />
+              <img [src]="post.thumbnail" [alt]="post.title" />
             </div>
 
             <mat-card-content class="post-content">

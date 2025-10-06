@@ -50,11 +50,11 @@
 
     <!-- Stats Section -->
     <div class="stats-section">
-      <div class="stat-item" (click)="showFollowers()">
+      <div class="stat-item">
         <span class="stat-number">{{ profile()!.followers }}</span>
         <span class="stat-label">Followers</span>
       </div>
-      <div class="stat-item" (click)="showFollowing()">
+      <div class="stat-item">
         <span class="stat-number">{{ profile()!.following }}</span>
         <span class="stat-label">Following</span>
       </div>
@@ -120,6 +120,22 @@
             </div>
           </div>
         </mat-card>
+        }
+        <!-- Loading Spinner -->
+        @if(isLoadingMore) {
+        <div
+          class="loading-container"
+          style="display: flex; justify-content: center; padding: 20px"
+        >
+          <mat-spinner diameter="40"></mat-spinner>
+        </div>
+        }
+
+        <!-- End of Feed Message -->
+        @if(!hasMore && userPosts().length > 0) {
+        <div class="end-message" style="text-align: center; padding: 20px; color: #666">
+          <p>You've reached the end of the feed</p>
+        </div>
         }
       </div>
     </div>

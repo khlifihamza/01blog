@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -9,8 +9,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { LoginRequest } from '../../../shared/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-login',
@@ -23,7 +23,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
   ],
   templateUrl: './login.html',
   styleUrls: ['./login.css'],
@@ -31,13 +31,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 export class LoginComponent {
   loginForm: FormGroup;
   passwordVisible = false;
-  loading = false;
+  loading = signal(false);
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private authService: AuthService,
-    private snackBar: MatSnackBar
+    private errorService: ErrorService
   ) {
     this.loginForm = this.fb.group({
       identifier: ['', [Validators.required]],
@@ -54,23 +54,23 @@ export class LoginComponent {
       return;
     }
 
-    const registrationRequest: LoginRequest = {
+    const loginRequest: LoginRequest = {
       identifier: this.loginForm.value.identifier,
       password: this.loginForm.value.password,
     };
 
-    this.loading = true;
+    this.loading.set(true);
 
-    this.authService.login(registrationRequest).subscribe({
+    this.authService.login(loginRequest).subscribe({
       next: (response) => {
-        this.loading = false;
-        this.snackBar.open('Login successful', 'Close', { duration: 5000 });
-        localStorage.setItem("token", response.token.toString());
+        this.loading.set(false);
+        this.errorService.showSuccess('Logged in successfully!');
+        localStorage.setItem('token', response.token.toString());
         this.router.navigate(['/']);
       },
       error: (error) => {
-        this.loading = false;
-        this.snackBar.open(error?.error || 'Login failed', 'Close', { duration: 5000 });
+        this.loading.set(false);
+        this.errorService.handleError(error);
       },
     });
   }

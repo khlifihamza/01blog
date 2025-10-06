@@ -24,83 +24,49 @@
         </button>
       </mat-menu>
     </div>
-    <!-- Tabs -->
-    <mat-tab-group class="notifications-tabs" animationDuration="300ms">
-      <mat-tab label="All" [matBadge]="unreadCount()" matBadgeColor="primary">
-        <div class="notifications-list">
-          @for (notification of allNotifications(); track notification.id) {
-          <div
-            class="notification-item"
-            [class.unread]="!notification.isRead"
-            (click)="handleNotificationClick(notification)"
-          >
-            <div class="notification-icon" [class]="'icon-' + notification.type">
-              <mat-icon>{{ getNotificationIcon(notification.type) }}</mat-icon>
-            </div>
-
-            <div class="notification-content">
-              <div class="notification-header">
-                <h4 class="notification-title">{{ notification.title }}</h4>
-                <span class="notification-time">{{ formatTime(notification.createdAt) }}</span>
-              </div>
-              <p class="notification-message">{{ notification.message }}</p>
-            </div>
-
-            <div class="notification-actions">
-              @if(!notification.isRead){
-              <button mat-icon-button (click)="markAsRead(notification, $event)">
-                <mat-icon>done</mat-icon>
-              </button>
-              }
-              <button mat-icon-button (click)="deleteNotification(notification, $event)">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </div>
-          </div>
-          } @if(allNotifications().length === 0){
-          <div class="empty-state">
-            <mat-icon>notifications_none</mat-icon>
-            <h3>No notifications yet</h3>
-            <p>When you get notifications, they'll show up here</p>
-          </div>
-          }
+    <div class="notifications-list">
+      @for (notification of allNotifications(); track notification.id) {
+      <div
+        class="notification-item"
+        [class.unread]="!notification.isRead"
+        (click)="handleNotificationClick(notification)"
+      >
+        <div class="notification-icon" [class]="'icon-' + notification.type">
+          <mat-icon>{{ getNotificationIcon(notification.type) }}</mat-icon>
         </div>
-      </mat-tab>
 
-      <mat-tab label="Unread" [matBadge]="unreadCount()" matBadgeColor="warn">
-        <div class="notifications-list">
-          @for (notification of unreadNotifications; track notification.id) {
-          <div class="notification-item unread" (click)="handleNotificationClick(notification)">
-            <div class="notification-icon" [class]="'icon-' + notification.type">
-              <mat-icon>{{ getNotificationIcon(notification.type) }}</mat-icon>
-            </div>
-
-            <div class="notification-content">
-              <div class="notification-header">
-                <h4 class="notification-title">{{ notification.title }}</h4>
-                <span class="notification-time">{{ formatTime(notification.createdAt) }}</span>
-              </div>
-              <p class="notification-message">{{ notification.message }}</p>
-            </div>
-
-            <div class="notification-actions">
-              <button mat-icon-button (click)="markAsRead(notification, $event)">
-                <mat-icon>done</mat-icon>
-              </button>
-              <button mat-icon-button (click)="deleteNotification(notification, $event)">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </div>
+        <div class="notification-content">
+          <div class="notification-header">
+            <h4 class="notification-title">{{ notification.title }}</h4>
+            <span class="notification-time">{{ formatTime(notification.createdAt) }}</span>
           </div>
-          } @if(unreadNotifications.length === 0){
-          <div class="empty-state">
-            <mat-icon>done_all</mat-icon>
-            <h3>All caught up!</h3>
-            <p>You've read all your notifications</p>
-          </div>
-          }
+          <p class="notification-message">{{ notification.message }}</p>
         </div>
-      </mat-tab>
-    </mat-tab-group>
+
+        <div class="notification-actions">
+          @if(!notification.isRead){
+          <button mat-icon-button (click)="markAsRead(notification, $event)">
+            <mat-icon>done</mat-icon>
+          </button>
+          }
+          <button mat-icon-button (click)="deleteNotification(notification, $event)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+      } @if(allNotifications().length === 0){
+      <div class="empty-state">
+        <mat-icon>notifications_none</mat-icon>
+        <h3>No notifications yet</h3>
+        <p>When you get notifications, they'll show up here</p>
+      </div>
+      }
+
+      @if(loading){
+      <div class="loading-spinner">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+      }
+    </div>
   </div>
 </div>

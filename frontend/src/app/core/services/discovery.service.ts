@@ -15,7 +15,7 @@ export class DiscoveryService {
     return this.http.get<any>(`${this.url}/suggest`);
   }
 
-  getSearchedData(query: string): Observable<DiscoveryResponse> {
-    return this.http.get<any>(`${this.url}/search?query=${query}`);
+  getSearchedData(query: string, page: number = 0, size: number = 10): Observable<DiscoveryResponse> {
+    return this.http.get<any>(`${this.url}/search?query=${query}&page=${page}&size=${size}`);
   }
 }

@@ -1,12 +1,15 @@
 package com.dev.backend.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import com.dev.backend.dto.NotificationResponse;
 import com.dev.backend.model.Notification;
 import com.dev.backend.model.NotificationType;
 import com.dev.backend.model.Post;
@@ -59,8 +62,19 @@ public class NotificationService {
         }
     }
 
-    public List<Notification> getNotifications(UUID currentUserId) {
-        return notificationRepository.findByRecipientIdOrderByCreatedAtDesc(currentUserId);
+    public List<NotificationResponse> getNotifications(UUID currentUserId, Pageable pageable) {
+        List<Notification> notifications = notificationRepository
+                .findByRecipientIdOrderByCreatedAtDesc(currentUserId, pageable).getContent();
+        List<NotificationResponse> notificationsResponse = new ArrayList<>();
+        for (Notification notification : notifications) {
+            NotificationResponse notificationResponse = new NotificationResponse(notification.getId(),
+                    notification.getType().name().toLowerCase(),
+                    notification.getTitle(), notification.getContent(),
+                    notification.getCreatedAt().toString(),
+                    notification.getSeen(), notification.getLink());
+            notificationsResponse.add(notificationResponse);
+        }
+        return notificationsResponse;
     }
 
     public void deleteNotification(UUID id, UUID currentUserId) {

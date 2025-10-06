@@ -18,8 +18,8 @@ export class AdminService {
     return this.http.get<Insights>(`${this.url}/get-insights`);
   }
 
-  getReports(): Observable<Report[]> {
-    return this.http.get<Report[]>(`${this.url}/get-reports`);
+  getReports(page: number = 0, size: number = 20): Observable<Report[]> {
+    return this.http.get<Report[]>(`${this.url}/get-reports?page=${page}&size=${size}`);
   }
 
   resolveReport(id: string) {
@@ -30,20 +30,20 @@ export class AdminService {
     return this.http.patch<ApiResponse>(`${this.url}/dismiss-report/${id}`, {});
   }
 
-  getUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.url}/get-users`);
+  getUsers(page: number = 0, size: number = 20): Observable<User[]> {
+    return this.http.get<User[]>(`${this.url}/get-users?page=${page}&size=${size}`);
   }
 
-  searchUsers(query: string): Observable<User[]> {
-    return this.http.get<User[]>(`${this.url}/search-users?query=${query}`);
+  searchUsers(query: string, page: number = 0, size: number = 20): Observable<User[]> {
+    return this.http.get<User[]>(`${this.url}/search-users?query=${query}&page=${page}&size=${size}`);
   }
 
-  searchPosts(query: string): Observable<Post[]> {
-    return this.http.get<Post[]>(`${this.url}/search-posts?query=${query}`);
+  searchPosts(query: string, page: number = 0, size: number = 20): Observable<Post[]> {
+    return this.http.get<Post[]>(`${this.url}/search-posts?query=${query}&page=${page}&size=${size}`);
   }
 
-  getPosts(): Observable<Post[]> {
-    return this.http.get<Post[]>(`${this.url}/get-posts`);
+  getPosts(page: number = 0, size: number = 20): Observable<Post[]> {
+    return this.http.get<Post[]>(`${this.url}/get-posts?page=${page}&size=${size}`);
   }
 
   banUser(username: string): Observable<ApiResponse> {

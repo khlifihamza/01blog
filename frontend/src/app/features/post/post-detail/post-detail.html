@@ -51,7 +51,7 @@
               <div class="publish-info">
                 <span>{{ formatDate(post()!.publishedDate) }}</span>
                 <span class="separator">•</span>
-                <span>{{ getReadTime(post()!.content) }} min read</span>
+                <span>{{ readTime() }} min read</span>
               </div>
             </div>
           </div>
@@ -135,7 +135,7 @@
 
       <div class="comment-form">
         <textarea
-          [(ngModel)]="commentText"
+          [(ngModel)]="newCommentText"
           placeholder="Share your thoughts..."
           rows="3"
         ></textarea>
@@ -162,6 +162,10 @@
                 <mat-icon>more_vert</mat-icon>
               </button>
               <mat-menu #commentMenu="matMenu">
+                <button mat-menu-item (click)="editComment(comment.id, comment.content)">
+                  <mat-icon>update</mat-icon>
+                  <span>Update</span>
+                </button>
                 <button mat-menu-item (click)="deleteComment(comment.id)">
                   <mat-icon>delete</mat-icon>
                   <span>Delete</span>
@@ -169,8 +173,37 @@
               </mat-menu>
               }
             </div>
-            <p class="comment-text">{{ comment.content }}</p>
+            @if(editingCommentId === comment.id) {
+              <div class="comment-edit-form">
+                <textarea
+                  [(ngModel)]="commentText"
+                  rows="3"
+                  class="edit-textarea"
+                ></textarea>
+                <div class="comment-edit-actions">
+                  <button mat-button color="primary" (click)="updateComment()">Save</button>
+                  <button mat-button (click)="cancelEdit()">Cancel</button>
+                </div>
+              </div>
+            } @else {
+              <p class="comment-text">{{ comment.content }}</p>
+            }
           </div>
+        </div>
+        }
+
+        <!-- Loading more comments -->
+        @if(isLoadingMore) {
+        <div style="text-align: center; padding: 20px">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Loading more comments...</p>
+        </div>
+        }
+
+        <!-- End of comments message -->
+        @if(!hasMore && Comments() && Comments()!.length > 0) {
+        <div style="text-align: center; padding: 20px; color: #666">
+          <p>No more comments to load</p>
         </div>
         }
       </div>

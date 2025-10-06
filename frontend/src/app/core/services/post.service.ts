@@ -35,12 +35,16 @@ export class PostService {
     return this.http.get<any>(`${this.url}/edit/${id}`);
   }
 
-  getPosts(username: string): Observable<ProfilePost[]> {
-    return this.http.get<any>(`${this.url}/profile/${username}`);
+  getProfilePosts(
+    username: string,
+    page: number = 0,
+    size: number = 10
+  ): Observable<ProfilePost[]> {
+    return this.http.get<any>(`${this.url}/profile/${username}?page=${page}&size=${size}`);
   }
 
-  getFeedPosts(): Observable<FeedPost[]> {
-    return this.http.get<any>(`${this.url}/feed`);
+  getFeedPosts(page: number = 0, size: number = 10): Observable<FeedPost[]> {
+    return this.http.get<any>(`${this.url}/feed?page=${page}&size=${size}`);
   }
 
   uploadFiles(files: FormData): Observable<UploadResponse> {

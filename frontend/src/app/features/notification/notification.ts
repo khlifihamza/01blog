@@ -1,9 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -11,8 +11,8 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { Router } from '@angular/router';
 import { Notification } from '../../shared/models/notification.model';
 import { NotificationService } from '../../core/services/notification.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { NavbarComponent } from '../../shared/navbar/navbar';
+import { ErrorService } from '../../core/services/error.service';
 
 @Component({
   selector: 'app-notifications',
@@ -22,7 +22,7 @@ import { NavbarComponent } from '../../shared/navbar/navbar';
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatTabsModule,
+    MatProgressSpinnerModule,
     MatChipsModule,
     MatMenuModule,
     MatToolbarModule,
@@ -32,34 +32,77 @@ import { NavbarComponent } from '../../shared/navbar/navbar';
   templateUrl: './notification.html',
   styleUrl: './notification.css',
 })
-export class NotificationsComponent{
+export class NotificationsComponent {
   allNotifications = signal<Notification[]>([]);
-  unreadNotifications: Notification[] = [];
   unreadCount = signal(0);
+  loading = false;
+  page = 0;
+  pageSize = 10;
+  hasMoreNotifications = true;
 
   constructor(
     private router: Router,
     private notificationService: NotificationService,
-    private snackBar: MatSnackBar
+    private errorService: ErrorService
   ) {}
 
   ngOnInit() {
     this.loadNotifications();
   }
 
+  @HostListener('window:scroll')
+  onScroll() {
+    if (this.loading || !this.hasMoreNotifications) return;
+
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const scrollThreshold = document.documentElement.scrollHeight - 300;
+
+    if (scrollPosition >= scrollThreshold) {
+      this.loadMoreNotifications();
+    }
+  }
+
   loadNotifications() {
-    this.notificationService.getNotifications().subscribe({
+    this.loading = true;
+    this.page = 0;
+    this.hasMoreNotifications = true;
+    
+    this.notificationService.getNotifications(this.page, this.pageSize).subscribe({
       next: (notifications) => {
         this.allNotifications.set(notifications);
-        this.updateFilteredNotifications();
+        this.hasMoreNotifications = notifications.length >= this.pageSize;
         this.updateCounts();
+        this.loading = false;
       },
-      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      error: (error) => {
+        this.errorService.handleError(error);
+        this.loading = false;
+      },
     });
   }
 
-  updateFilteredNotifications() {
-    this.unreadNotifications = this.allNotifications().filter((n) => !n.isRead);
+  loadMoreNotifications() {
+    if (this.loading || !this.hasMoreNotifications) return;
+
+    this.loading = true;
+    this.page++;
+
+    this.notificationService.getNotifications(this.page, this.pageSize).subscribe({
+      next: (notifications) => {
+        if (notifications.length < this.pageSize) {
+          this.hasMoreNotifications = false;
+        }
+        if (notifications.length > 0) {
+          this.allNotifications.update(current => [...current, ...notifications]);
+        }
+        this.loading = false;
+      },
+      error: (error) => {
+        this.errorService.handleError(error);
+        this.loading = false;
+        this.page--;
+      },
+    });
   }
 
   updateCounts() {
@@ -95,7 +138,6 @@ export class NotificationsComponent{
   handleNotificationClick(notification: Notification) {
     if (!notification.isRead) {
       notification.isRead = true;
-      this.updateFilteredNotifications();
       this.updateCounts();
     }
     this.router.navigate([notification.link]);
@@ -107,10 +149,9 @@ export class NotificationsComponent{
       this.notificationService.markAsRead(notification.id).subscribe({
         next: () => {
           notification.isRead = !notification.isRead;
-          this.updateFilteredNotifications();
           this.updateCounts();
         },
-        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+        error: (error) => this.errorService.handleError(error),
       });
     }
   }
@@ -121,11 +162,12 @@ export class NotificationsComponent{
     if (index > -1) {
       this.notificationService.delete(notification.id).subscribe({
         next: () => {
-          this.allNotifications().splice(index, 1);
-          this.updateFilteredNotifications();
+          const currentNotifications = this.allNotifications();
+          currentNotifications.splice(index, 1);
+          this.allNotifications.set([...currentNotifications]);
           this.updateCounts();
         },
-        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+        error: (error) => this.errorService.handleError(error),
       });
     }
   }
@@ -133,11 +175,11 @@ export class NotificationsComponent{
   markAllAsRead() {
     this.notificationService.markAllAsRead().subscribe({
       next: () => {
-        this.allNotifications().forEach((n) => (n.isRead = true));
-        this.updateFilteredNotifications();
+        const updatedNotifications = this.allNotifications().map(n => ({...n, isRead: true}));
+        this.allNotifications.set(updatedNotifications);
         this.updateCounts();
       },
-      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      error: (error) => this.errorService.handleError(error),
     });
   }
 
@@ -146,10 +188,9 @@ export class NotificationsComponent{
       this.notificationService.deleteAll().subscribe({
         next: () => {
           this.allNotifications.set([]);
-          this.updateFilteredNotifications();
           this.updateCounts();
         },
-        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+        error: (error) => this.errorService.handleError(error),
       });
     }
   }

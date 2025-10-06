@@ -180,7 +180,7 @@ public class User extends BaseEntity implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return getStatus() == UserStatus.ACTIVE;
     }
 
     @Override

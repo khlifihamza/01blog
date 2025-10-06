@@ -75,6 +75,7 @@
             (mouseup)="updateCursorPosition()"
             (focus)="onFocus()"
             appDndUpload
+            (paste)="onPaste($event)"
             (filesDropped)="onFilesDropped($event)"
             [attr.data-placeholder]="contentPlaceholder"
             [class.empty]="isContentEmpty"
