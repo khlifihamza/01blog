@@ -61,7 +61,6 @@ export class AdminComponent implements OnInit {
   pendingReports = signal(0);
   totalEngagement = signal(0);
 
-  // Responsive breakpoint
   isMobile = signal(false);
   isTablet = signal(false);
 

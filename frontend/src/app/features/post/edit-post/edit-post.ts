@@ -64,9 +64,9 @@ export class EditPostComponent {
   isContentEmpty = true;
   showValidationError = false;
   mediaFiles = signal<MediaItem[]>([]);
-  buttonPosition = { top: 28, left: -45 };
-  showAddButton = false;
-  private mediaCounter = 0;
+  buttonPosition = signal({ top: 16, left: -45 });
+  showAddButton = signal(false);
+  jump = false;
   safeContent: SafeHtml | null = null;
 
   constructor(
@@ -181,7 +181,7 @@ export class EditPostComponent {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
     this.processElement(tempDiv);
-    return tempDiv.innerHTML;
+    return tempDiv.innerText;
   }
 
   private processElement(element: HTMLElement): void {
@@ -289,8 +289,13 @@ export class EditPostComponent {
   }
 
   onFocus() {
-    this.showAddButton = true;
+    this.showAddButton.set(true);
     this.updateCursorPosition();
+    this.jump = false;
+  }
+
+  onBlur() {
+    this.jump = true;
   }
 
   private updateMediaPositions() {
@@ -453,7 +458,8 @@ export class EditPostComponent {
 
     this.showValidationError = this.currentContent.length > 0 && this.currentContent.length < 100;
 
-    setTimeout(() => this.updateMediaPositions(), 0);
+    this.updateMediaPositions();
+
     this.updateCursorPosition();
   }
 
@@ -464,16 +470,62 @@ export class EditPostComponent {
     }
 
     const range = selection.getRangeAt(0);
+    const editor = this.editorDiv.nativeElement;
+    const editorRect = editor.getBoundingClientRect();
+
+    const editorHeight = editor.clientHeight;
+
+    const buttonHeight = 32;
+
+    const minTop = 16.5;
+    const maxTop = editorHeight - buttonHeight;
 
     const rangeRect = range.getBoundingClientRect();
-    const editorRect = this.editorDiv.nativeElement.getBoundingClientRect();
 
-    if (rangeRect.height > 0) {
-      this.buttonPosition = {
-        top: rangeRect.top - editorRect.top + rangeRect.height / 2 - 16,
-        left: -45,
-      };
+    let calculatedTop = 0;
+
+    if (rangeRect.height > 0 && rangeRect.width > 0) {
+      calculatedTop = Math.floor(rangeRect.top - editorRect.top + rangeRect.height / 2 - 16);
+    } else {
+      const rects = range.getClientRects();
+      if (rects.length > 0) {
+        const rect = rects[0];
+        calculatedTop = Math.ceil(rect.top - editorRect.top - 8);
+      } else {
+        const computedStyle = window.getComputedStyle(editor);
+        const lineHeight = parseFloat(computedStyle.lineHeight) || 24;
+
+        try {
+          const tempSpan = document.createElement('span');
+          tempSpan.innerHTML = '\u200B';
+          range.insertNode(tempSpan);
+          const spanRect = tempSpan.getBoundingClientRect();
+
+          calculatedTop = Math.floor(spanRect.top - editorRect.top + lineHeight / 2 - 20);
+          console.log(calculatedTop);
+
+          const parent = tempSpan.parentNode;
+          if (parent) {
+            parent.removeChild(tempSpan);
+          }
+
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } catch (e) {
+          calculatedTop = this.buttonPosition().top;
+        }
+      }
     }
+
+    const clampedTop = Math.max(minTop, Math.min(calculatedTop, maxTop));
+
+    this.buttonPosition.set({
+      top:
+        Math.abs(clampedTop - this.buttonPosition().top) > 20 && !this.jump
+          ? clampedTop
+          : this.buttonPosition().top,
+      left: -45,
+    });
   }
 
   onFilesDropped(files: File[]): void {
@@ -607,19 +659,6 @@ export class EditPostComponent {
       selection.removeAllRanges();
       selection.addRange(afterMediaRange);
       range = afterMediaRange;
-    } else {
-      if (this.editorDiv.nativeElement === range.commonAncestorContainer) {
-        this.errorService.showWarning("Can't insert media at the very start of the story");
-        return;
-      }
-
-      if (range.commonAncestorContainer.nodeType === Node.TEXT_NODE) {
-        const parent = range.commonAncestorContainer.parentElement;
-        if (parent && !parent.classList.contains('media-element')) {
-          this.errorService.showWarning("Can't insert media next to text or inside other content");
-          return;
-        }
-      }
     }
 
     const mediaDiv = document.createElement('div');

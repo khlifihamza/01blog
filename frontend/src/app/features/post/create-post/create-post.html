@@ -74,6 +74,7 @@
             (keyup)="updateCursorPosition()"
             (mouseup)="updateCursorPosition()"
             (focus)="onFocus()"
+            (blur)="onBlur()"
             appDndUpload
             (paste)="onPaste($event)"
             (filesDropped)="onFilesDropped($event)"
@@ -86,9 +87,9 @@
             #addButton
             mat-icon-button
             class="floating-add-btn"
-            [style.top.px]="buttonPosition.top"
-            [style.left.px]="buttonPosition.left"
-            [style.display]="showAddButton ? 'flex' : 'none'"
+            [style.top.px]="buttonPosition().top"
+            [style.left.px]="buttonPosition().left"
+            [style.display]="showAddButton() ? 'flex' : 'none'"
             [matMenuTriggerFor]="mediaMenu"
             (click)="onAddClick($event)"
           >

@@ -1,4 +1,9 @@
-import { Component, signal, ViewChild, ElementRef, HostListener, AfterViewInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  signal,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -38,7 +43,7 @@ import { ErrorService } from '../../../core/services/error.service';
   templateUrl: './create-post.html',
   styleUrls: ['./create-post.css'],
 })
-export class CreatePostComponent implements AfterViewInit, OnDestroy {
+export class CreatePostComponent {
   @ViewChild('editorDiv') editorDiv!: ElementRef<HTMLDivElement>;
   @ViewChild('addButton') addButton!: ElementRef<HTMLButtonElement>;
   @ViewChild('imageInput') imageInput!: ElementRef<HTMLInputElement>;
@@ -50,16 +55,14 @@ export class CreatePostComponent implements AfterViewInit, OnDestroy {
   thumbnailFile: File | null = null;
   thumbnailPreview = signal<string | null>(null);
 
-  showAddButton = false;
-  buttonPosition = { top: 20, left: -45 };
+  showAddButton = signal(false);
+  buttonPosition = signal({ top: 20, left: -45 });
   isContentEmpty = true;
+  jump = false;
   contentPlaceholder =
     'Share your journey, insights, and experiences with the 01Student community...';
   showValidationError = false;
   private currentContent = '';
-  private cursorUpdateTimeout: any;
-  private lastUpdateTime = 0;
-  private readonly UPDATE_THROTTLE = 100; // ms
 
   constructor(
     private fb: FormBuilder,
@@ -72,27 +75,6 @@ export class CreatePostComponent implements AfterViewInit, OnDestroy {
       content: ['', [Validators.required, Validators.minLength(100)]],
       thumbnail: ['', [Validators.required]],
     });
-  }
-
-  ngAfterViewInit() {
-    // Set initial cursor position at the start of the editor
-    setTimeout(() => {
-      this.setInitialCursorPosition();
-      this.updateCursorPosition();
-    }, 0);
-  }
-
-  private setInitialCursorPosition() {
-    const editor = this.editorDiv.nativeElement;
-    const range = document.createRange();
-    const selection = window.getSelection();
-    
-    if (selection) {
-      range.setStart(editor, 0);
-      range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
   }
 
   onPaste(event: ClipboardEvent): void {
@@ -164,7 +146,7 @@ export class CreatePostComponent implements AfterViewInit, OnDestroy {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
     this.processElement(tempDiv);
-    return tempDiv.innerHTML;
+    return tempDiv.innerText;
   }
 
   private processElement(element: HTMLElement): void {
@@ -241,13 +223,8 @@ export class CreatePostComponent implements AfterViewInit, OnDestroy {
     this.showValidationError = this.currentContent.length > 0 && this.currentContent.length < 100;
 
     this.updateMediaPositions();
-    // Debounce cursor update during content changes
-    if (this.cursorUpdateTimeout) {
-      clearTimeout(this.cursorUpdateTimeout);
-    }
-    this.cursorUpdateTimeout = setTimeout(() => {
-      this.updateCursorPosition();
-    }, 100);
+
+    this.updateCursorPosition();
   }
 
   private updateMediaPositions() {
@@ -278,24 +255,6 @@ export class CreatePostComponent implements AfterViewInit, OnDestroy {
   }
 
   updateCursorPosition() {
-    const now = Date.now();
-    
-    // Throttle updates to avoid excessive calls
-    if (now - this.lastUpdateTime < this.UPDATE_THROTTLE) {
-      if (this.cursorUpdateTimeout) {
-        clearTimeout(this.cursorUpdateTimeout);
-      }
-      this.cursorUpdateTimeout = setTimeout(() => {
-        this.performCursorUpdate();
-      }, this.UPDATE_THROTTLE);
-      return;
-    }
-
-    this.lastUpdateTime = now;
-    this.performCursorUpdate();
-  }
-
-  private performCursorUpdate() {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) {
       return;
@@ -305,82 +264,69 @@ export class CreatePostComponent implements AfterViewInit, OnDestroy {
     const editor = this.editorDiv.nativeElement;
     const editorRect = editor.getBoundingClientRect();
 
-    // Use getBoundingClientRect for better performance
+    const editorHeight = editor.clientHeight;
+
+    const buttonHeight = 32;
+
+    const minTop = 16.5;
+    const maxTop = editorHeight - buttonHeight;
+
     const rangeRect = range.getBoundingClientRect();
-    
+
+    let calculatedTop = 0;
+
     if (rangeRect.height > 0 && rangeRect.width > 0) {
-      // Simple calculation without DOM manipulation
-      this.buttonPosition = {
-        top: rangeRect.top - editorRect.top + rangeRect.height / 2 - 16,
-        left: -45,
-      };
+      calculatedTop = Math.floor(rangeRect.top - editorRect.top + rangeRect.height / 2 - 16);
     } else {
-      // Fallback for collapsed ranges (cursor position)
       const rects = range.getClientRects();
       if (rects.length > 0) {
         const rect = rects[0];
-        this.buttonPosition = {
-          top: rect.top - editorRect.top - 8,
-          left: -45,
-        };
+        calculatedTop = Math.ceil(rect.top - editorRect.top - 8);
       } else {
-        // Last resort: use line height calculation
         const computedStyle = window.getComputedStyle(editor);
         const lineHeight = parseFloat(computedStyle.lineHeight) || 24;
-        
-        // Try to get position from range
+
         try {
           const tempSpan = document.createElement('span');
-          tempSpan.innerHTML = '\u200B'; // Zero-width space
+          tempSpan.innerHTML = '\u200B';
           range.insertNode(tempSpan);
           const spanRect = tempSpan.getBoundingClientRect();
-          
-          this.buttonPosition = {
-            top: spanRect.top - editorRect.top + (lineHeight / 2) - 16,
-            left: -45,
-          };
-          
-          // Clean up
+
+          calculatedTop = Math.floor(spanRect.top - editorRect.top + lineHeight / 2 - 20);
+          console.log(calculatedTop);
+
           const parent = tempSpan.parentNode;
           if (parent) {
             parent.removeChild(tempSpan);
           }
-          
-          // Restore selection
+
           selection.removeAllRanges();
           selection.addRange(range);
         } catch (e) {
-          // If all else fails, keep current position
+          calculatedTop = this.buttonPosition().top;
         }
       }
     }
+
+    const clampedTop = Math.max(minTop, Math.min(calculatedTop, maxTop));
+
+    this.buttonPosition.set({
+      top:
+        Math.abs(clampedTop - this.buttonPosition().top) > 20 && !this.jump
+          ? clampedTop
+          : this.buttonPosition().top,
+      left: -45,
+    });
   }
 
   onFocus() {
-    this.showAddButton = true;
+    this.showAddButton.set(true);
     this.updateCursorPosition();
+    this.jump = false;
   }
 
   onBlur() {
-    // Keep button visible for a short time to allow clicking
-    setTimeout(() => {
-      if (!this.addButton?.nativeElement.matches(':hover')) {
-        this.showAddButton = false;
-      }
-    }, 150);
-  }
-
-  @HostListener('document:selectionchange')
-  onSelectionChange() {
-    if (document.activeElement === this.editorDiv?.nativeElement) {
-      // Throttle selection change updates
-      if (this.cursorUpdateTimeout) {
-        clearTimeout(this.cursorUpdateTimeout);
-      }
-      this.cursorUpdateTimeout = setTimeout(() => {
-        this.updateCursorPosition();
-      }, this.UPDATE_THROTTLE);
-    }
+    this.jump = true;
   }
 
   onFilesDropped(files: File[]): void {
@@ -404,7 +350,6 @@ export class CreatePostComponent implements AfterViewInit, OnDestroy {
       };
       reader.readAsDataURL(file);
     }
-    this.editorDiv?.nativeElement.focus();
   }
 
   removeThumbnail(event: Event) {
@@ -514,19 +459,6 @@ export class CreatePostComponent implements AfterViewInit, OnDestroy {
       selection.removeAllRanges();
       selection.addRange(afterMediaRange);
       range = afterMediaRange;
-    } else {
-      if (this.editorDiv.nativeElement === range.commonAncestorContainer) {
-        this.errorService.showWarning("Can't insert media at the very start of the story");
-        return;
-      }
-
-      if (range.commonAncestorContainer.nodeType === Node.TEXT_NODE) {
-        const parent = range.commonAncestorContainer.parentElement;
-        if (parent && !parent.classList.contains('media-element')) {
-          this.errorService.showWarning("Can't insert media next to text or inside other content");
-          return;
-        }
-      }
     }
 
     const mediaDiv = document.createElement('div');
@@ -661,11 +593,5 @@ export class CreatePostComponent implements AfterViewInit, OnDestroy {
 
   deleteMedia(mediaId: string): void {
     this.mediaFiles.update((arr) => arr.filter((v) => v.id !== mediaId));
-  }
-
-  ngOnDestroy() {
-    if (this.cursorUpdateTimeout) {
-      clearTimeout(this.cursorUpdateTimeout);
-    }
   }
 }
