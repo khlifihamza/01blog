@@ -201,6 +201,7 @@
   font-size: 16px;
   font-weight: 600;
   background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white !important;
   border-radius: 12px;
   box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.3);
   transition: all 0.2s ease;

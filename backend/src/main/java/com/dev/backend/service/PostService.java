@@ -1,12 +1,33 @@
 package com.dev.backend.service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.dev.backend.dto.AdminPostResponse;
+import com.dev.backend.dto.Author;
+import com.dev.backend.dto.DetailPostResponse;
+import com.dev.backend.dto.DiscoveryPostResponse;
+import com.dev.backend.dto.EditPostResponse;
+import com.dev.backend.dto.FeedPostResponse;
 import com.dev.backend.dto.PostRequest;
+import com.dev.backend.dto.ProfilePostResponse;
+import com.dev.backend.dto.UploadResponse;
+import com.dev.backend.dto.UserDto;
 import com.dev.backend.exception.SafeHtmlException;
 import com.dev.backend.model.Follow;
 import com.dev.backend.model.NotificationType;
@@ -31,7 +52,22 @@ public class PostService {
     private NotificationService notificationService;
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
+    private FollowService followService;
+
+    @Autowired
+    private LikeService likeService;
+
+    @Autowired
     private HtmlSanitizerService htmlSanitizerService;
+
+    @Value("${file.upload-dir}")
+    private String uploadDir;
+
+    @Value("${file.fetchUrl}")
+    private String fetchUrl;
 
     public Post savePost(PostRequest postDto, UUID userId) throws SafeHtmlException {
         String sanitizedTitle = htmlSanitizerService.sanitizeTitle(postDto.title());
@@ -111,31 +147,195 @@ public class PostService {
         postRepository.save(post);
     }
 
-    public List<Post> getPosts(UUID userId) {
-        return postRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    public List<FeedPostResponse> getFeedPosts(UUID userId, Pageable pageable) {
+        List<Post> posts = postRepository.findFeedPosts(userId, pageable).getContent();
+        List<FeedPostResponse> feedPostsResponses = new ArrayList<>();
+        for (Post post : posts) {
+            Author author = new Author(post.getUser().getUsername(),
+                    post.getUser().getAvatar() != null
+                            ? fetchUrl + post.getUser().getAvatar()
+                            : null);
+            FeedPostResponse feedPost = new FeedPostResponse(post.getId(), post.getTitle(), post.getContent(), author,
+                    post.getCreatedAt().toString(), post.getLikes().size(), post.getComments().size(),
+                    fetchUrl + post.getThumbnail());
+            feedPostsResponses.add(feedPost);
+        }
+        return feedPostsResponses;
     }
 
-    public List<Post> getFeedPosts(UUID userId) {
-        return postRepository.findFeedPosts(userId);
+    public DetailPostResponse getPost(UUID postId, UUID currentUserId) {
+        Post post = postRepository.findById(postId).orElseThrow();
+        User user = post.getUser();
+        UserDto author = new UserDto(user.getUsername(),
+                user.getAvatar() != null
+                        ? fetchUrl + user.getAvatar()
+                        : null,
+                user.getBio(), user.getFollowers().size(), user.getFollowing().size(),
+                followService.isCurrentUserFollowUser(currentUserId, user.getId()));
+        boolean isAuthor = currentUserId.equals(user.getId());
+        DetailPostResponse postResponse = new DetailPostResponse(post.getId(), post.getTitle(), post.getContent(),
+                author, post.getCreatedAt().toString(), fetchUrl + post.getThumbnail(),
+                post.getLikes().size(),
+                post.getComments().size(),
+                likeService.isUserLikedPost(currentUserId, post.getId()), false, isAuthor);
+        return postResponse;
     }
 
-    public Post getPost(UUID postId) {
-        return postRepository.findById(postId).orElseThrow();
+    public EditPostResponse getPostToEdit(UUID postId, UUID currentUserId) {
+        Post post = postRepository.findById(postId).orElseThrow();
+        if (!post.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("You cannot Edit another user's post.");
+        }
+        EditPostResponse editpost = new EditPostResponse(post.getId(), post.getTitle(), post.getContent(),
+                fetchUrl + post.getThumbnail(), post.getFiles().split(", "));
+        return editpost;
+    }
+
+    public List<ProfilePostResponse> getProfilePosts(String username, UUID currentUserId, Pageable pageable) {
+        UUID userId = userService.getUserByUsername(username).getId();
+        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable).getContent();
+        List<ProfilePostResponse> postsResponse = new ArrayList<>();
+        for (Post post : posts) {
+            if (post.getStatus() == PostStatus.HIDDEN && !userId.equals(currentUserId)) {
+                continue;
+            }
+            ProfilePostResponse postResponse = new ProfilePostResponse(post.getId(), post.getTitle(), post.getContent(),
+                    post.getCreatedAt().toString(), post.getLikes().size(), post.getComments().size(),
+                    fetchUrl + post.getThumbnail());
+            postsResponse.add(postResponse);
+        }
+        return postsResponse;
     }
 
     public List<Post> getAllPosts() {
         return postRepository.findAll();
     }
 
+    public List<AdminPostResponse> getAllPosts(Pageable pageable) {
+        List<Post> posts = postRepository.findAll(pageable).getContent();
+        List<AdminPostResponse> postsResponse = new ArrayList<>();
+        for (Post post : posts) {
+            AdminPostResponse postResponse = new AdminPostResponse(post.getId(), post.getTitle(),
+                    post.getUser().getUsername(), post.getCreatedAt().toString(), post.getLikes().size(),
+                    post.getComments().size(), post.getStatus().name());
+            postsResponse.add(postResponse);
+        }
+        return postsResponse;
+    }
+
     public long getAllPostsCount() {
         return postRepository.count();
     }
 
-    public List<Post> getSearchedPosts(String query) {
-        return postRepository.findByTitleContainingIgnoreCase(query);
+    public List<AdminPostResponse> getSearchedPosts(String query, Pageable pageable) {
+        List<Post> posts = postRepository.findByTitleContainingIgnoreCase(query, pageable).getContent();
+        List<AdminPostResponse> postsResponse = new ArrayList<>();
+        for (Post post : posts) {
+            AdminPostResponse postResponse = new AdminPostResponse(post.getId(), post.getTitle(),
+                    post.getUser().getUsername(), post.getCreatedAt().toString(), post.getLikes().size(),
+                    post.getComments().size(), post.getStatus().name());
+            postsResponse.add(postResponse);
+        }
+        return postsResponse;
     }
 
-    public List<Post> getTop9Posts() {
-        return postRepository.findTop9ByOrderByLikes();
+    public List<DiscoveryPostResponse> getSearchedDiscoveryPosts(String query, Pageable pageable) {
+        List<Post> posts = postRepository.findByTitleContainingIgnoreCase(query, pageable).getContent();
+        List<DiscoveryPostResponse> postsResponse = new ArrayList<>();
+        for (Post post : posts) {
+            DiscoveryPostResponse discoveryPostResponse = new DiscoveryPostResponse(post.getId(),
+                    post.getTitle(),
+                    post.getContent(),
+                    new Author(post.getUser().getUsername(),
+                            post.getUser().getAvatar() != null
+                                    ? fetchUrl
+                                            + post.getUser().getAvatar()
+                                    : null),
+                    post.getCreatedAt().toString(), post.getLikes().size(),
+                    post.getComments().size(),
+                    fetchUrl + post.getThumbnail());
+            postsResponse.add(discoveryPostResponse);
+        }
+        return postsResponse;
+    }
+
+    public List<DiscoveryPostResponse> getTop9Posts() {
+        List<Post> posts = postRepository.findTop9ByOrderByLikes();
+        List<DiscoveryPostResponse> postsResponse = new ArrayList<>();
+        for (Post post : posts) {
+            DiscoveryPostResponse discoveryPostResponse = new DiscoveryPostResponse(post.getId(),
+                    post.getTitle(),
+                    post.getContent(),
+                    new Author(post.getUser().getUsername(),
+                            post.getUser().getAvatar() != null
+                                    ? fetchUrl
+                                            + post.getUser().getAvatar()
+                                    : null),
+                    post.getCreatedAt().toString(), post.getLikes().size(),
+                    post.getComments().size(),
+                    fetchUrl + post.getThumbnail());
+            postsResponse.add(discoveryPostResponse);
+        }
+        return postsResponse;
+    }
+
+    public UploadResponse upload(MultipartFile thumbnail, List<MultipartFile> files) throws IOException {
+        String thumbnailId = "";
+        String thumbnailName = thumbnail.getOriginalFilename();
+        String thumbnailExtension = (thumbnailName != null && thumbnailName.contains("."))
+                ? thumbnailName.substring(thumbnailName.lastIndexOf("."))
+                : "";
+        thumbnailId = UUID.randomUUID() + thumbnailExtension;
+
+        Path path = Paths.get(uploadDir + "/images", thumbnailId);
+
+        Files.createDirectories(path.getParent());
+        Files.copy(thumbnail.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+        List<String> fileNames = new ArrayList<>();
+        if (files != null && !files.isEmpty()) {
+            for (MultipartFile file : files) {
+                String fileName = file.getOriginalFilename();
+                String extension = (fileName != null && fileName.contains("."))
+                        ? fileName.substring(fileName.lastIndexOf("."))
+                        : "";
+                String id = UUID.randomUUID() + extension;
+
+                String contentType = file.getContentType();
+                String subDir = "";
+                if (contentType != null) {
+                    subDir = (contentType.startsWith("image")) ? "/images" : "/videos";
+                }
+
+                path = Paths.get(uploadDir + subDir, id);
+
+                Files.createDirectories(path.getParent());
+                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+
+                fileNames.add(id);
+            }
+        }
+        UploadResponse response = new UploadResponse(thumbnailId, fileNames);
+        return response;
+    }
+
+    public ResponseEntity<?> getFile(String mediaName) throws IOException {
+        Path path = (Files.exists(Paths.get(uploadDir + "/images").resolve(mediaName).normalize()))
+                ? Paths.get(uploadDir + "/images").resolve(mediaName).normalize()
+                : Paths.get(uploadDir + "/videos").resolve(mediaName).normalize();
+
+        if (path == null || !Files.exists(path)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String mimeType = Files.probeContentType(path);
+        if (mimeType == null) {
+            mimeType = "application/octet-stream";
+        }
+
+        byte[] fileBytes = Files.readAllBytes(path);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(mimeType))
+                .body(fileBytes);
     }
 }

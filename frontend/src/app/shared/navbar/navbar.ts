@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, HostListener, signal, ViewChild } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -7,10 +7,10 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { FeedUser } from '../models/user.model';
 import { ProfileService } from '../../core/services/profile.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { NotificationService } from '../../core/services/notification.service';
 import { MatButtonModule } from '@angular/material/button';
-import { MatMenu, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
+import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
+import { ErrorService } from '../../core/services/error.service';
 
 @Component({
   selector: 'app-navbar',
@@ -25,7 +25,7 @@ import { MatMenu, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.css'],
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent {
   user = signal<FeedUser | null>(null);
   notificationCount = signal(0);
   @ViewChild('menuTrigger') menuTrigger!: MatMenuTrigger;
@@ -35,7 +35,7 @@ export class NavbarComponent implements OnInit {
     private router: Router,
     private authService: AuthService,
     private profileService: ProfileService,
-    private snackBar: MatSnackBar,
+    private errorService: ErrorService,
     private notificationService: NotificationService
   ) {}
 
@@ -49,7 +49,7 @@ export class NavbarComponent implements OnInit {
       next: (user) => {
         this.user.set(user);
       },
-      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      error: (error) => this.errorService.handleError(error),
     });
   }
 
@@ -58,10 +58,10 @@ export class NavbarComponent implements OnInit {
       next: (count) => {
         this.notificationCount.set(count);
       },
-      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      error: (error) => this.errorService.handleError(error),
     });
   }
-  
+
   @HostListener('window:resize', ['$event'])
   onResize(event: Event) {
     if (window.innerWidth > this.breakpoint && this.menuTrigger) {

@@ -1,7 +1,11 @@
-import { Component, signal, ViewChild, ElementRef, HostListener } from '@angular/core';
+import {
+  Component,
+  signal,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,15 +13,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { PostService } from '../../../core/services/post.service';
 import { CreatePostPayload, MediaItem, UploadResponse } from '../../../shared/models/post.model';
 import { DndUploadDirective } from '../../../core/directives/dnd-upload.directive';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { ConfirmDialogData } from '../../../shared/models/confirm-dialog.model';
-import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
+import { addLinkTosrc } from '../../../shared/utils/fromathtml';
+import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-create-post',
@@ -26,7 +29,6 @@ import { NavbarComponent } from '../../../shared/navbar/navbar';
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
-    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
@@ -36,7 +38,7 @@ import { NavbarComponent } from '../../../shared/navbar/navbar';
     DndUploadDirective,
     MatMenuModule,
     MatToolbarModule,
-    NavbarComponent
+    NavbarComponent,
   ],
   templateUrl: './create-post.html',
   styleUrls: ['./create-post.css'],
@@ -53,9 +55,10 @@ export class CreatePostComponent {
   thumbnailFile: File | null = null;
   thumbnailPreview = signal<string | null>(null);
 
-  showAddButton = false;
-  buttonPosition = { top: 28, left: -45 };
+  showAddButton = signal(false);
+  buttonPosition = signal({ top: 20, left: -45 });
   isContentEmpty = true;
+  jump = false;
   contentPlaceholder =
     'Share your journey, insights, and experiences with the 01Student community...';
   showValidationError = false;
@@ -64,15 +67,150 @@ export class CreatePostComponent {
   constructor(
     private fb: FormBuilder,
     private postService: PostService,
-    private snackBar: MatSnackBar,
-    private location: Location,
-    private dialog: MatDialog
+    private errorService: ErrorService,
+    private location: Location
   ) {
     this.blogForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(100)]],
       content: ['', [Validators.required, Validators.minLength(100)]],
       thumbnail: ['', [Validators.required]],
     });
+  }
+
+  onPaste(event: ClipboardEvent): void {
+    event.preventDefault();
+    this.contentPlaceholder = '';
+    const clipboardData = event.clipboardData;
+    if (!clipboardData) return;
+
+    const items = clipboardData.items;
+    let imageProcessed = false;
+
+    if (items) {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile();
+          if (file) {
+            this.handleImagePaste(file);
+            imageProcessed = true;
+          }
+        }
+      }
+    }
+    if (!imageProcessed) {
+      let htmlContent = clipboardData.getData('text/html');
+      const plainText = clipboardData.getData('text/plain');
+
+      if (htmlContent) {
+        htmlContent = this.normalizeWhiteSpace(htmlContent);
+      } else if (plainText) {
+        htmlContent = `<span>${plainText}</span>`;
+      } else {
+        return;
+      }
+      this.insertHtmlAtCursor(htmlContent);
+    }
+  }
+
+  private handleImagePaste(file: File): void {
+    const reader = new FileReader();
+
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      if (e.target && e.target.result) {
+        const imgSrc = e.target.result as string;
+        const mediaId = this.generateMediaId();
+
+        this.insertMedia('image', imgSrc, file.name, mediaId);
+
+        const type = 'image';
+        this.mediaFiles.update((arr) => [
+          ...arr,
+          {
+            id: mediaId,
+            file,
+            preview: String(reader.result),
+            type,
+            position: 0,
+          },
+        ]);
+
+        this.updateMediaPositions();
+      }
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  private normalizeWhiteSpace(html: string): string {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    this.processElement(tempDiv);
+    return tempDiv.innerText;
+  }
+
+  private processElement(element: HTMLElement): void {
+    Array.from(element.children).forEach((child) => {
+      if (child instanceof HTMLElement) {
+        child.style.whiteSpace = '';
+        if (child.hasAttribute('style')) {
+          const styleAttr = child.getAttribute('style') || '';
+          const cleanedStyle = styleAttr
+            .split(';')
+            .filter((style) => !style.trim().toLowerCase().startsWith('white-space'))
+            .join(';');
+          if (cleanedStyle) {
+            child.setAttribute('style', cleanedStyle);
+          } else {
+            child.removeAttribute('style');
+          }
+        }
+        this.processElement(child);
+      }
+    });
+  }
+
+  private insertHtmlAtCursor(html: string): void {
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const container = range.commonAncestorContainer as HTMLElement;
+
+    const mediaParent =
+      container.nodeType === Node.ELEMENT_NODE
+        ? (container as HTMLElement).closest('.media-element')
+        : container.parentElement?.closest('.media-element');
+
+    if (mediaParent) {
+      const afterMediaRange = document.createRange();
+      afterMediaRange.setStartAfter(mediaParent);
+      afterMediaRange.collapse(true);
+
+      selection.removeAllRanges();
+      selection.addRange(afterMediaRange);
+    }
+
+    range.deleteContents();
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+
+    const fragment = document.createDocumentFragment();
+    let lastNode: Node | null = null;
+
+    while (tempDiv.firstChild) {
+      lastNode = fragment.appendChild(tempDiv.firstChild);
+    }
+
+    range.insertNode(fragment);
+
+    if (lastNode) {
+      range.setStartAfter(lastNode);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
   }
 
   onContentChange(event: Event) {
@@ -85,6 +223,7 @@ export class CreatePostComponent {
     this.showValidationError = this.currentContent.length > 0 && this.currentContent.length < 100;
 
     this.updateMediaPositions();
+
     this.updateCursorPosition();
   }
 
@@ -122,28 +261,72 @@ export class CreatePostComponent {
     }
 
     const range = selection.getRangeAt(0);
+    const editor = this.editorDiv.nativeElement;
+    const editorRect = editor.getBoundingClientRect();
+
+    const editorHeight = editor.clientHeight;
+
+    const buttonHeight = 32;
+
+    const minTop = 16.5;
+    const maxTop = editorHeight - buttonHeight;
 
     const rangeRect = range.getBoundingClientRect();
-    const editorRect = this.editorDiv.nativeElement.getBoundingClientRect();
 
-    if (rangeRect.height > 0) {
-      this.buttonPosition = {
-        top: rangeRect.top - editorRect.top + rangeRect.height / 2 - 16,
-        left: -45,
-      };
+    let calculatedTop = 0;
+
+    if (rangeRect.height > 0 && rangeRect.width > 0) {
+      calculatedTop = Math.floor(rangeRect.top - editorRect.top + rangeRect.height / 2 - 16);
+    } else {
+      const rects = range.getClientRects();
+      if (rects.length > 0) {
+        const rect = rects[0];
+        calculatedTop = Math.ceil(rect.top - editorRect.top - 8);
+      } else {
+        const computedStyle = window.getComputedStyle(editor);
+        const lineHeight = parseFloat(computedStyle.lineHeight) || 24;
+
+        try {
+          const tempSpan = document.createElement('span');
+          tempSpan.innerHTML = '\u200B';
+          range.insertNode(tempSpan);
+          const spanRect = tempSpan.getBoundingClientRect();
+
+          calculatedTop = Math.floor(spanRect.top - editorRect.top + lineHeight / 2 - 20);
+          console.log(calculatedTop);
+
+          const parent = tempSpan.parentNode;
+          if (parent) {
+            parent.removeChild(tempSpan);
+          }
+
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } catch (e) {
+          calculatedTop = this.buttonPosition().top;
+        }
+      }
     }
+
+    const clampedTop = Math.max(minTop, Math.min(calculatedTop, maxTop));
+
+    this.buttonPosition.set({
+      top:
+        Math.abs(clampedTop - this.buttonPosition().top) > 20 && !this.jump
+          ? clampedTop
+          : this.buttonPosition().top,
+      left: -45,
+    });
   }
 
   onFocus() {
-    this.showAddButton = true;
+    this.showAddButton.set(true);
     this.updateCursorPosition();
+    this.jump = false;
   }
 
-  @HostListener('document:selectionchange')
-  onSelectionChange() {
-    if (document.activeElement === this.editorDiv?.nativeElement) {
-      this.updateCursorPosition();
-    }
+  onBlur() {
+    this.jump = true;
   }
 
   onFilesDropped(files: File[]): void {
@@ -167,7 +350,6 @@ export class CreatePostComponent {
       };
       reader.readAsDataURL(file);
     }
-    this.editorDiv?.nativeElement.focus();
   }
 
   removeThumbnail(event: Event) {
@@ -259,20 +441,24 @@ export class CreatePostComponent {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
 
-    const range = selection.getRangeAt(0);
+    let range = selection.getRangeAt(0);
+    const container = range.commonAncestorContainer as HTMLElement;
 
-    if (this.editorDiv.nativeElement == range.commonAncestorContainer) {
-      this.snackBar.open("can't insert media in the start of the story", 'Close', {
-        duration: 5000,
-      });
-      return;
+    let mediaParent: HTMLElement | null = null;
+
+    if (container.nodeType === Node.ELEMENT_NODE) {
+      mediaParent = (container as HTMLElement).closest('.media-element');
+    } else if (container.parentElement) {
+      mediaParent = container.parentElement.closest('.media-element');
     }
 
-    if (range.commonAncestorContainer.nodeName == '#text') {
-      this.snackBar.open("can't insert media next to text or other media", 'Close', {
-        duration: 5000,
-      });
-      return;
+    if (mediaParent) {
+      const afterMediaRange = document.createRange();
+      afterMediaRange.setStartAfter(mediaParent);
+      afterMediaRange.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(afterMediaRange);
+      range = afterMediaRange;
     }
 
     const mediaDiv = document.createElement('div');
@@ -301,12 +487,13 @@ export class CreatePostComponent {
     deleteBtn.setAttribute('mat-icon-button', '');
     deleteBtn.type = 'button';
     deleteBtn.setAttribute('aria-label', 'Delete');
+
     const iconElement = document.createElement('mat-icon');
     iconElement.textContent = 'delete';
     iconElement.className =
       'mat-icon notranslate material-icons mat-ligature-font mat-icon-no-color';
-    deleteBtn.appendChild(iconElement);
 
+    deleteBtn.appendChild(iconElement);
     deleteBtn.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -317,16 +504,20 @@ export class CreatePostComponent {
 
     mediaDiv.appendChild(mediaElement);
     mediaDiv.appendChild(deleteBtn);
+
     range.deleteContents();
     range.insertNode(mediaDiv);
+
     const br = document.createElement('br');
     range.setStartAfter(mediaDiv);
     range.insertNode(br);
+
     const newRange = document.createRange();
     newRange.setStartAfter(br);
     newRange.collapse(true);
     selection.removeAllRanges();
     selection.addRange(newRange);
+
     this.onContentChange({ target: this.editorDiv.nativeElement } as any);
   }
 
@@ -336,52 +527,40 @@ export class CreatePostComponent {
 
   publishPost() {
     if (this.isContentValid()) {
-      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-        width: '350px',
-        data: <ConfirmDialogData>{
-          title: 'Create Post',
-          message: 'Are you sure you want to Create this post?',
-          confirmText: 'Create',
-          cancelText: 'Cancel',
-        },
-      });
+      this.isLoading.set(true);
+      const createPost = (res: UploadResponse) => {
+        let htmlString = this.editorDiv.nativeElement.innerHTML;
 
-      dialogRef.afterClosed().subscribe((result) => {
-        if (result) {
-          this.isLoading.set(true);
-          const createPost = (res: UploadResponse) => {
-            let htmlString = this.editorDiv.nativeElement.innerHTML;
+        let content = addLinkTosrc(htmlString, res.fileNames);
 
-            const createPostPayload: CreatePostPayload = {
-              title: this.blogForm.value.title,
-              content: htmlString,
-              thumbnail: res.thumbnail,
-              files: res.fileNames,
-            };
+        const createPostPayload: CreatePostPayload = {
+          title: this.blogForm.value.title,
+          content: content,
+          thumbnail: res.thumbnail,
+          files: res.fileNames,
+        };
 
-            this.postService.createPost(createPostPayload).subscribe({
-              next: () => {
-                this.isLoading.set(false);
-                this.snackBar.open('Blog created successful', 'Close', { duration: 5000 });
-                this.goBack();
-              },
-              error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
-            });
-          };
+        this.postService.createPost(createPostPayload).subscribe({
+          next: () => {
+            this.isLoading.set(false);
+            this.errorService.showSuccess('Blog created successfully');
+            this.goBack();
+          },
+          error: (error) => this.errorService.handleError(error),
+        });
+      };
 
-          const formData = new FormData();
-          if (this.thumbnailFile) formData.append('thumbnail', this.thumbnailFile);
+      const formData = new FormData();
+      if (this.thumbnailFile) formData.append('thumbnail', this.thumbnailFile);
 
-          const orderedFiles = this.getOrderedMediaFiles();
-          if (orderedFiles.length > 0) {
-            orderedFiles.forEach((file) => formData.append('files', file));
-          }
+      const orderedFiles = this.getOrderedMediaFiles();
+      if (orderedFiles.length > 0) {
+        orderedFiles.forEach((file) => formData.append('files', file));
+      }
 
-          this.postService.uploadFiles(formData).subscribe({
-            next: (response) => createPost(response),
-            error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
-          });
-        }
+      this.postService.uploadFiles(formData).subscribe({
+        next: (response) => createPost(response),
+        error: (error) => this.errorService.handleError(error),
       });
     }
   }

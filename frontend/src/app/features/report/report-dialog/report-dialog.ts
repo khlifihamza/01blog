@@ -14,9 +14,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { ReportData, ReportRequest } from '../../../shared/models/report.model';
 import { ReportService } from '../../../core/services/report.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog';
 import { ConfirmDialogData } from '../../../shared/models/confirm-dialog.model';
+import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-report-dialog',
@@ -42,7 +42,7 @@ export class ReportDialogComponent {
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<ReportDialogComponent>,
     private reportService: ReportService,
-    private snackBar: MatSnackBar,
+    private errorService: ErrorService,
     private dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA)
     public data: ReportData
@@ -82,9 +82,9 @@ export class ReportDialogComponent {
             next: () => {
               this.isSubmitting.set(false);
               this.dialogRef.close(reportData);
-              this.snackBar.open('Blog reported successful', 'Close', { duration: 5000 });
+              this.errorService.showSuccess('Blog reported successful');
             },
-            error: (error) => this.snackBar.open(error.error, 'Close', { duration: 5000 }),
+            error: (error) => this.errorService.handleError(error),
           });
         }
       });

@@ -78,10 +78,10 @@
           mat-raised-button
           color="primary"
           type="submit"
-          [disabled]="loginForm.invalid || loading"
+          [disabled]="loginForm.invalid || loading()"
           class="auth-button"
         >
-          @if(loading){
+          @if(loading()){
           <mat-progress-spinner diameter="24"></mat-progress-spinner>
           } @else{
           <span>Sign In</span>
