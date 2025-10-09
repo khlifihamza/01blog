@@ -168,7 +168,7 @@ export class DiscoveryComponent implements OnInit {
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffMins < 60) {
-      return diffMins <= 1 ? 'Just now' : `${diffMins} minutes ago`;
+      return diffMins < 1 ? 'Just now' : `${diffMins} minutes ago`;
     }
 
     if (diffHours < 24) {
