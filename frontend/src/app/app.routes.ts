@@ -13,6 +13,7 @@ import { ProfileComponent } from './features/profile/profile-page/profile';
 import { NotificationsComponent } from './features/notification/notification';
 import { DiscoveryComponent } from './features/discovery/discovery';
 import { EditProfileComponent } from './features/profile/edit-profile/edit-profile';
+import { NotFoundComponent } from './features/errors/not-found/not-found';
 
 export const routes: Routes = [
   {
@@ -46,4 +47,5 @@ export const routes: Routes = [
   { path: 'notifications', component: NotificationsComponent, canActivate: [AuthGuard] },
   { path: 'discovery', component: DiscoveryComponent, canActivate: [AuthGuard] },
   { path: 'edit-profile', component: EditProfileComponent, canActivate: [AuthGuard] },
+  { path: '**', component: NotFoundComponent }
 ];

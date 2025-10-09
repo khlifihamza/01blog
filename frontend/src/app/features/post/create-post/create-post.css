@@ -38,7 +38,7 @@
   align-items: center;
 }
 
-.header-button{  
+.header-button {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white !important;
 }
@@ -210,6 +210,7 @@
   margin: 16px 0;
   text-align: center;
   position: relative;
+  max-width: 100%;
 }
 
 .media-element img,
@@ -238,7 +239,12 @@
   height: 16px;
 }
 
-@media (max-width: 850px){
+.editable-content,
+.editable-content * {
+  white-space: normal !important;
+}
+
+@media (max-width: 850px) {
   .create-content {
     padding: 24px 16px;
     width: 90%;
@@ -276,7 +282,7 @@
   }
 }
 
-@media (max-width: 400px){
+@media (max-width: 400px) {
   .create-content {
     padding: 16px 8px;
     width: 80%;

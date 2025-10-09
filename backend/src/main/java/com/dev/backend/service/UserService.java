@@ -1,40 +1,56 @@
 package com.dev.backend.service;
 
-import com.dev.backend.repository.UserRepository;
-import com.dev.backend.model.User;
-import com.dev.backend.model.UserStatus;
-import com.dev.backend.dto.LoginRequest;
-import com.dev.backend.dto.ProfileEditResponse;
-import com.dev.backend.dto.RegisterRequest;
-import com.dev.backend.model.Role;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.dev.backend.dto.AvatarResponse;
+import com.dev.backend.dto.DiscoveryUserResponse;
+import com.dev.backend.dto.FeedUser;
+import com.dev.backend.dto.LoginRequest;
+import com.dev.backend.dto.ProfileEditResponse;
+import com.dev.backend.dto.ProfileUserResponse;
+import com.dev.backend.dto.RegisterRequest;
+import com.dev.backend.dto.UserResponse;
+import com.dev.backend.model.Role;
+import com.dev.backend.model.User;
+import com.dev.backend.model.UserStatus;
+import com.dev.backend.repository.UserRepository;
 
 @Service
 public class UserService {
-    private final UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
-    private final PasswordEncoder passwordEncoder;
+    @Autowired
+    private FollowService followService;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
 
-    public UserService(
-            UserRepository userRepository,
-            AuthenticationManager authenticationManager,
-            PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    @Value("${file.fetchUrl}")
+    private String fetchUrl;
 
     public User signup(RegisterRequest input) {
         if (userRepository.existsByUsername(input.username())) {
@@ -52,17 +68,13 @@ public class UserService {
     }
 
     public User login(LoginRequest input) {
-        if (input.identifier().contains("@")) {
-            if (!userRepository.existsByEmail(input.identifier())) {
-                throw new IllegalArgumentException("Email don't exists.");
-            }
-            return userRepository.findByEmail(input.identifier()).orElseThrow();
-        }
-        if (!userRepository.existsByUsername(input.identifier())) {
-            throw new IllegalArgumentException("Username don't exists.");
-        }
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        input.identifier(),
+                        input.password()));
 
-        return userRepository.findByUsername(input.identifier()).orElseThrow();
+        User user = (User) authentication.getPrincipal();
+        return user;
     }
 
     public User getUserByUsername(String username) {
@@ -70,6 +82,51 @@ public class UserService {
             throw new IllegalArgumentException("Username don't exists.");
         }
         return userRepository.findByUsername(username).orElseThrow();
+    }
+
+    public ProfileUserResponse getUserResponseByUsername(String username, UUID currentUserId) {
+        User user = userRepository.findByUsername(username).orElseThrow();
+        ProfileUserResponse userResponse = new ProfileUserResponse(user.getId(), user.getUsername(),
+                user.getAvatar() != null
+                        ? fetchUrl + user.getAvatar()
+                        : null,
+                user.getBio(), user.getCreatedAt().toString(), user.getFollowers().size(),
+                user.getFollowing().size(), user.getPosts().size(),
+                user.getId().equals(currentUserId),
+                followService.isCurrentUserFollowUser(currentUserId, user.getId()));
+        return userResponse;
+    }
+
+    public ProfileEditResponse getEditUserResponseByUsername(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow();
+        ProfileEditResponse profileEditResponse = new ProfileEditResponse(user.getUsername(), user.getEmail(),
+                user.getAvatar() != null
+                        ? fetchUrl + user.getAvatar()
+                        : null,
+                user.getBio());
+        return profileEditResponse;
+    }
+
+    public AvatarResponse uploadAvatar(MultipartFile avatar) throws IOException {
+        String thumbnailId = "";
+        String thumbnailName = avatar.getOriginalFilename();
+        String thumbnailExtension = (thumbnailName != null && thumbnailName.contains("."))
+                ? thumbnailName.substring(thumbnailName.lastIndexOf("."))
+                : "";
+        thumbnailId = UUID.randomUUID() + thumbnailExtension;
+        Path path = Paths.get(uploadDir + "/images", thumbnailId);
+        Files.createDirectories(path.getParent());
+        Files.copy(avatar.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+        AvatarResponse response = new AvatarResponse(thumbnailId);
+        return response;
+    }
+
+    public FeedUser getFeedUser(User currentUser) {
+        return new FeedUser(currentUser.getUsername(), currentUser.getRole().name(),
+                currentUser.getAvatar() != null
+                        ? fetchUrl
+                                + currentUser.getAvatar()
+                        : null);
     }
 
     public void saveData(String username, ProfileEditResponse data) throws IOException {
@@ -99,8 +156,47 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public List<User> getSearchedUsers(String Query) {
-        return userRepository.findByUsernameContainingIgnoreCase(Query);
+    public List<UserResponse> getAllUsers(Pageable pageable) {
+        List<User> users = userRepository.findAll(pageable).getContent();
+        List<UserResponse> usersResponse = new ArrayList<>();
+        for (User user : users) {
+            UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail(),
+                    user.getAvatar() != null ? fetchUrl + user.getAvatar() : null,
+                    user.getRole().name(), user.getCreatedAt().toString(), user.getPosts().size(),
+                    user.getStatus().name());
+            usersResponse.add(userResponse);
+        }
+        return usersResponse;
+    }
+
+    public List<UserResponse> getSearchedUsers(String query, Pageable pageable) {
+        List<User> users = userRepository.findByUsernameContainingIgnoreCase(query, pageable).getContent();
+        List<UserResponse> usersResponse = new ArrayList<>();
+        for (User user : users) {
+            UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail(),
+                    user.getAvatar() != null ? fetchUrl + user.getAvatar() : null,
+                    user.getRole().name(), user.getCreatedAt().toString(), user.getPosts().size(),
+                    user.getStatus().name());
+            usersResponse.add(userResponse);
+        }
+        return usersResponse;
+    }
+
+    public List<DiscoveryUserResponse> getSearchedDiscoveryUsers(UUID currentUserId, String query, Pageable pageable) {
+        List<User> users = userRepository.findByUsernameContainingIgnoreCase(query, pageable).getContent();
+        List<DiscoveryUserResponse> usersResponse = new ArrayList<>();
+        for (User user : users) {
+            DiscoveryUserResponse discoveryUserResponse = new DiscoveryUserResponse(user.getId(),
+                    user.getUsername(),
+                    user.getAvatar() != null
+                            ? fetchUrl + user.getAvatar()
+                            : null,
+                    user.getBio(),
+                    user.getFollowers().size(), user.getPosts().size(),
+                    followService.isCurrentUserFollowUser(currentUserId, user.getId()));
+            usersResponse.add(discoveryUserResponse);
+        }
+        return usersResponse;
     }
 
     public void banUser(String username) {
@@ -133,7 +229,20 @@ public class UserService {
         return userRepository.count();
     }
 
-    public List<User> getTop9Profiles() {
-        return userRepository.findTop9ByOrderByFollowers();
+    public List<DiscoveryUserResponse> getTop9Profiles(UUID currentUserId) {
+        List<User> users = userRepository.findTop9ByOrderByFollowers();
+        List<DiscoveryUserResponse> usersResponse = new ArrayList<>();
+        for (User user : users) {
+            DiscoveryUserResponse discoveryUserResponse = new DiscoveryUserResponse(user.getId(),
+                    user.getUsername(),
+                    user.getAvatar() != null
+                            ? fetchUrl + user.getAvatar()
+                            : null,
+                    user.getBio(),
+                    user.getFollowers().size(), user.getPosts().size(),
+                    followService.isCurrentUserFollowUser(currentUserId, user.getId()));
+            usersResponse.add(discoveryUserResponse);
+        }
+        return usersResponse;
     }
 }

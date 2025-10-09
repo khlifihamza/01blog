@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -9,7 +9,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { ProfileService } from '../../../core/services/profile.service';
@@ -17,6 +16,7 @@ import { EditUserProfile } from '../../../shared/models/user.model';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog';
 import { ConfirmDialogData } from '../../../shared/models/confirm-dialog.model';
 import { MatDialog } from '@angular/material/dialog';
+import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-edit-profile',
@@ -32,13 +32,12 @@ import { MatDialog } from '@angular/material/dialog';
     MatSelectModule,
     MatChipsModule,
     MatToolbarModule,
-    MatSnackBarModule,
     NavbarComponent,
   ],
   templateUrl: './edit-profile.html',
   styleUrl: './edit-profile.css',
 })
-export class EditProfileComponent implements OnInit {
+export class EditProfileComponent{
   currentProfile = signal<EditUserProfile | null>(null);
   profileForm: FormGroup;
   isLoading = signal(false);
@@ -48,7 +47,7 @@ export class EditProfileComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private snackBar: MatSnackBar,
+    private errorService: ErrorService,
     private profileService: ProfileService,
     private dialog: MatDialog
   ) {
@@ -72,7 +71,7 @@ export class EditProfileComponent implements OnInit {
         );
         this.profileForm.patchValue(this.currentProfile()!);
       },
-      error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+      error: (error) => this.errorService.handleError(error),
     });
   }
 
@@ -112,11 +111,11 @@ export class EditProfileComponent implements OnInit {
             this.profileService.EditProfileDetails(profileData).subscribe({
               next: () => {
                 this.isLoading.set(false);
-                this.snackBar.open('Profile updated successfully!', 'Close', { duration: 3000 });
+                this.errorService.showSuccess('Profile updated successfully!');
                 this.router.navigate(['/profile']);
               },
               error: (error) => {
-                this.snackBar.open(error.message, 'Close', { duration: 5000 });
+                this.errorService.handleError(error);
                 this.isLoading.set(false);
               },
             });
@@ -127,7 +126,7 @@ export class EditProfileComponent implements OnInit {
             formData.append('avatar', this.newAvatarFile);
             this.profileService.uploadAvatar(formData).subscribe({
               next: (response) => updateData(response.avatar.toString()),
-              error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+              error: (error) => this.errorService.handleError(error),
             });
           } else {
             const avatar =

@@ -7,9 +7,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../../core/services/auth.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { RegistrationRequest } from '../../../shared/models/user.model';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-register',
@@ -21,7 +21,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
   ],
   templateUrl: './register.html',
   styleUrls: ['./register.css'],
@@ -36,7 +36,7 @@ export class RegisterComponent {
     private fb: FormBuilder,
     private router: Router,
     private authService: AuthService,
-    private snackBar: MatSnackBar
+    private errorService: ErrorService
   ) {
     this.registerForm = this.fb.group(
       {
@@ -84,12 +84,12 @@ export class RegisterComponent {
     this.authService.register(registrationRequest).subscribe({
       next: () => {
         this.loading = false;
-        this.snackBar.open('Account created successfully!', 'Close', { duration: 5000 });
+        this.errorService.showSuccess('Account created successfully!');
         this.navigateToLogin();
       },
       error: (error) => {
         this.loading = false;
-        this.snackBar.open(error.error, 'Close', { duration: 5000 });
+        this.errorService.handleError(error);
       },
     });
   }

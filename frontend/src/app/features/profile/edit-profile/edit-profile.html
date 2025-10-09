@@ -54,17 +54,17 @@
             <mat-form-field appearance="outline">
               <mat-label>Username</mat-label>
               <input matInput formControlName="username" placeholder="@username" />
-              <mat-error *ngIf="profileForm.get('username')?.hasError('required')">
-                Username is required
-              </mat-error>
+              @if(profileForm.get('username')?.hasError('required')){
+              <mat-error> Username is required </mat-error>
+              }
             </mat-form-field>
 
             <mat-form-field appearance="outline">
               <mat-label>Email</mat-label>
               <input matInput formControlName="email" placeholder="Enter your Email" />
-              <mat-error *ngIf="profileForm.get('name')?.hasError('required')">
-                Email is required
-              </mat-error>
+              @if(profileForm.get('name')?.hasError('required')){
+              <mat-error> Email is required </mat-error>
+              }
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">

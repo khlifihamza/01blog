@@ -29,7 +29,7 @@ public class LikeService {
     public void like(User currentUser, UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        if (likeRepository.existsByUserAndPost(currentUser, post)) {
+        if (likeRepository.existsByUserIdAndPostId(currentUser.getId(), post.getId())) {
             throw new DataIntegrityViolationException("you already liked this post");
         }
         if (!currentUser.getId().equals(post.getUser().getId())) {
@@ -44,17 +44,15 @@ public class LikeService {
     public void dislike(User currentUser, UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        if (!likeRepository.existsByUserAndPost(currentUser, post)) {
+        if (!likeRepository.existsByUserIdAndPostId(currentUser.getId(), post.getId())) {
             throw new DataIntegrityViolationException("you already disliked this post");
         }
         Like like = likeRepository.findByUserAndPost(currentUser, post);
         likeRepository.delete(like);
     }
 
-    public boolean isUserLikedPost(User currentUser, UUID postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        return likeRepository.existsByUserAndPost(currentUser, post);
+    public boolean isUserLikedPost(UUID currentUserId, UUID postId) {
+        return likeRepository.existsByUserIdAndPostId(currentUserId, postId);
     }
 
     public long getAllLikesCount() {

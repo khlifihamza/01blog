@@ -1,13 +1,16 @@
 package com.dev.backend.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.dto.ReportRequest;
+import com.dev.backend.dto.ReportResponse;
 import com.dev.backend.model.Post;
 import com.dev.backend.model.Report;
 import com.dev.backend.model.ReportStatus;
@@ -62,8 +65,19 @@ public class ReportService {
         reportRepository.save(report);
     }
 
-    public List<Report> getReports() {
-        return reportRepository.findAll();
+    public List<ReportResponse> getReports(Pageable pageable) {
+        List<Report> reports = reportRepository.findAll(pageable).getContent();
+        List<ReportResponse> reportsResponses = new ArrayList<>();
+        for (Report report : reports) {
+            ReportResponse reportResponse = new ReportResponse(report.getId(),
+                    report.getReported_post() == null ? null : report.getReported_post().getId(),
+                    report.getReported_post() == null ? null : report.getReported_post().getTitle(),
+                    report.getReported_user() == null ? null : report.getReported_user().getUsername(),
+                    report.getReporter().getUsername(), report.getReason(),
+                    report.getDetails(), report.getStatus(), report.getCreatedAt().toString());
+            reportsResponses.add(reportResponse);
+        }
+        return reportsResponses;
     }
 
     public long getPendingReportsCount() {

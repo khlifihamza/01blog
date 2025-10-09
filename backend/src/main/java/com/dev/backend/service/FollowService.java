@@ -24,21 +24,22 @@ public class FollowService {
     @Autowired
     private NotificationService notificationService;
 
-    public void followUser(UUID followerId, UUID followingId) {
-        if (followerId.equals(followingId)) {
+    public void followUser(UUID followerId, String username) {
+        UUID userToFollowId = userRepository.findByUsername(username).orElseThrow().getId();
+        if (followerId.equals(userToFollowId)) {
             throw new DataIntegrityViolationException("You cannot follow yourself.");
         }
 
         User follower = userRepository.findById(followerId)
                 .orElseThrow(() -> new EntityNotFoundException("Follower not found"));
-        User following = userRepository.findById(followingId)
+        User following = userRepository.findById(userToFollowId)
                 .orElseThrow(() -> new EntityNotFoundException("Following user not found"));
 
-        if (followRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {
+        if (followRepository.existsByFollowerIdAndFollowingId(followerId, userToFollowId)) {
             throw new DataIntegrityViolationException("you already follow this user");
         }
 
-        if (!followRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {
+        if (!followRepository.existsByFollowerIdAndFollowingId(followerId, userToFollowId)) {
             Follow follow = new Follow(follower, following);
 
             notificationService.createNotificationForFollow(follower, following,
@@ -49,22 +50,23 @@ public class FollowService {
         }
     }
 
-    public void unfollowUser(UUID followerId, UUID followingId) {
-        if (followerId.equals(followingId)) {
+    public void unfollowUser(UUID unfollowerId, String username) {
+        UUID userToUnfollowId = userRepository.findByUsername(username).orElseThrow().getId();
+        if (unfollowerId.equals(userToUnfollowId)) {
             throw new DataIntegrityViolationException("You cannot unfollow yourself.");
         }
 
-        userRepository.findById(followerId)
+        userRepository.findById(unfollowerId)
                 .orElseThrow(() -> new EntityNotFoundException("Follower not found"));
-        userRepository.findById(followingId)
+        userRepository.findById(userToUnfollowId)
                 .orElseThrow(() -> new EntityNotFoundException("Following user not found"));
 
-        if (!followRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {
+        if (!followRepository.existsByFollowerIdAndFollowingId(unfollowerId, userToUnfollowId)) {
             throw new EntityNotFoundException("Follow status not exist");
         }
 
-        if (followRepository.existsByFollowerIdAndFollowingId(followerId, followingId)) {
-            Follow followRow = followRepository.findByFollowerIdAndFollowingId(followerId, followingId);
+        if (followRepository.existsByFollowerIdAndFollowingId(unfollowerId, userToUnfollowId)) {
+            Follow followRow = followRepository.findByFollowerIdAndFollowingId(unfollowerId, userToUnfollowId);
             followRepository.delete(followRow);
         }
     }

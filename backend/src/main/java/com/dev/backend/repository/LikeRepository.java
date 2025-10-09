@@ -13,5 +13,5 @@ import com.dev.backend.model.User;
 public interface LikeRepository extends JpaRepository<Like, UUID> {
     Like findByUserAndPost(User user, Post post);
 
-    boolean existsByUserAndPost(User user, Post post);
+    boolean existsByUserIdAndPostId(UUID userId, UUID postId);
 }

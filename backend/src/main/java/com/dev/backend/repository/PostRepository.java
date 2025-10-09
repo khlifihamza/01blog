@@ -3,6 +3,8 @@ package com.dev.backend.repository;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +14,7 @@ import com.dev.backend.model.Post;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, UUID> {
-    List<Post> findByUserIdOrderByCreatedAtDesc(UUID userId);
+    Page<Post> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
 
     @Query("""
                 SELECT p
@@ -28,9 +30,11 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
                 AND p.status = 'PUBLISHED'
                 ORDER BY p.createdAt DESC
             """)
-    List<Post> findFeedPosts(@Param("userId") UUID userId);
+    Page<Post> findFeedPosts(@Param("userId") UUID userId, Pageable pageable);
 
-    List<Post> findByTitleContainingIgnoreCase(String query);
+    Page<Post> findByTitleContainingIgnoreCase(String query, Pageable pageable);
 
     List<Post> findTop9ByOrderByLikes();
+
+    Page<Post> findAll(Pageable pageable);
 }
