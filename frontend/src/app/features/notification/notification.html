@@ -29,7 +29,7 @@
       <div
         class="notification-item"
         [class.unread]="!notification.isRead"
-        (click)="handleNotificationClick(notification)"
+        (click)="handleNotificationClick(notification, $event)"
       >
         <div class="notification-icon" [class]="'icon-' + notification.type">
           <mat-icon>{{ getNotificationIcon(notification.type) }}</mat-icon>

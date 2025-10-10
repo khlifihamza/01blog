@@ -66,7 +66,7 @@ export class NotificationsComponent {
     this.loading = true;
     this.page = 0;
     this.hasMoreNotifications = true;
-    
+
     this.notificationService.getNotifications(this.page, this.pageSize).subscribe({
       next: (notifications) => {
         this.allNotifications.set(notifications);
@@ -93,7 +93,7 @@ export class NotificationsComponent {
           this.hasMoreNotifications = false;
         }
         if (notifications.length > 0) {
-          this.allNotifications.update(current => [...current, ...notifications]);
+          this.allNotifications.update((current) => [...current, ...notifications]);
         }
         this.loading = false;
       },
@@ -135,10 +135,9 @@ export class NotificationsComponent {
     return date.toLocaleDateString();
   }
 
-  handleNotificationClick(notification: Notification) {
+  handleNotificationClick(notification: Notification, event: Event) {
     if (!notification.isRead) {
-      notification.isRead = true;
-      this.updateCounts();
+      this.markAsRead(notification, event);
     }
     this.router.navigate([notification.link]);
   }
@@ -175,7 +174,7 @@ export class NotificationsComponent {
   markAllAsRead() {
     this.notificationService.markAllAsRead().subscribe({
       next: () => {
-        const updatedNotifications = this.allNotifications().map(n => ({...n, isRead: true}));
+        const updatedNotifications = this.allNotifications().map((n) => ({ ...n, isRead: true }));
         this.allNotifications.set(updatedNotifications);
         this.updateCounts();
       },
