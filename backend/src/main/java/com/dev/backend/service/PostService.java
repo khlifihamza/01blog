@@ -122,7 +122,7 @@ public class PostService {
         return postRepository.save(post);
     }
 
-    public void deletePost(UUID id, UUID currentUserId) {
+    public void deletePost(UUID id, UUID currentUserId) throws IOException {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         User user = userRepository.findById(currentUserId)
@@ -130,6 +130,7 @@ public class PostService {
         if (!post.getUser().getId().equals(user.getId()) && !user.getRole().equals(Role.ADMIN)) {
             throw new AccessDeniedException("You cannot delete another user's post.");
         }
+        deleteMedia(post.getThumbnail(), post.getFiles());
         postRepository.deleteById(id);
     }
 
@@ -337,5 +338,29 @@ public class PostService {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(mimeType))
                 .body(fileBytes);
+    }
+
+    private void deleteMedia(String thumbnail, String files) throws IOException {
+        Path pathThumbnail = Paths.get(uploadDir + "/images").resolve(thumbnail).normalize();
+
+        if (pathThumbnail == null || !Files.exists(pathThumbnail)) {
+            return;
+        }
+
+        Files.delete(pathThumbnail);
+
+        String[] fileNames = files.split(", ");
+
+        for (String file : fileNames) {
+            Path filePath = (Files.exists(Paths.get(uploadDir + "/images").resolve(file).normalize()))
+                    ? Paths.get(uploadDir + "/images").resolve(file).normalize()
+                    : Paths.get(uploadDir + "/videos").resolve(file).normalize();
+
+            if (filePath == null || !Files.exists(filePath)) {
+                return;
+            }
+
+            Files.delete(filePath);
+        }
     }
 }

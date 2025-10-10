@@ -150,4 +150,8 @@ export class HomeComponent implements OnInit {
   openPost(post: FeedPost) {
     this.router.navigate(['/post', post.id]);
   }
+
+  goToDiscovery() {
+    this.router.navigate(['/discovery']);
+  }
 }

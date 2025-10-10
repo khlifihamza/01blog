@@ -99,7 +99,8 @@ public class PostController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<ApiResponse> deletePost(@PathVariable UUID id, @AuthenticationPrincipal User currentUser) {
+    public ResponseEntity<ApiResponse> deletePost(@PathVariable UUID id, @AuthenticationPrincipal User currentUser)
+            throws IOException {
         postService.deletePost(id, currentUser.getId());
         return ResponseEntity.ok(new ApiResponse("Blog deleted successful"));
     }

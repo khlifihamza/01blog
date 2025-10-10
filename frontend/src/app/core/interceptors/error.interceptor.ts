@@ -9,7 +9,6 @@ export const errorInterceptor: HttpInterceptorFn = (request, next) => {
 
   return next(request).pipe(
     catchError((error: HttpErrorResponse) => {
-      errorService.handleError(error);
       return throwError(() => error);
     })
   );

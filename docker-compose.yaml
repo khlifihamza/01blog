@@ -8,18 +8,17 @@ services:
     environment:
       POSTGRES_DB: DB01B 
       POSTGRES_USER: hkhlifi 
-      POSTGRES_PASSWORD: DBFOR01B 
+      POSTGRES_PASSWORD: DBFOR01B
+      TZ: Africa/Casablanca
+      PGTZ: Africa/Casablanca
     ports:
       - "5332:5432" 
     volumes:
       - db_data:/var/lib/postgresql/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     networks:
       - app-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hkhlifi -d DB01B"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   backend:
     container_name: spring-boot-backend
@@ -35,11 +34,13 @@ services:
       SPRING_DATASOURCE_PASSWORD: DBFOR01B
       FILE_UPLOAD_DIR: /app/upload
       FILE_FETCH_URL: http://localhost:8080/api/post/file/
+      TZ: Africa/Casablanca
     volumes:
       - backend_uploads:/app/upload
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     networks:
       - app-network
 

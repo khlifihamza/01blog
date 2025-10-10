@@ -1,4 +1,4 @@
-@import '@angular/material/prebuilt-themes/azure-blue.css';
+/* @import '@angular/material/prebuilt-themes/azure-blue.css'; */
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
 :root {
@@ -19,7 +19,6 @@
   --warning-color: #ff9800;
   --error-color: #f44336;
   --text-primary: #212121;
-  --text-secondary: #757575;
   --background: #fafafa;
   --surface: #ffffff;
   --border: #e0e0e0;

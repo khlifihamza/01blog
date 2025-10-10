@@ -1,5 +1,6 @@
 package com.dev.backend.controller;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -111,7 +112,7 @@ public class AdminController {
 
     @DeleteMapping("/delete-post/{postId}")
     public ResponseEntity<ApiResponse> deletePOst(@PathVariable UUID postId,
-            @AuthenticationPrincipal User currentUser) {
+            @AuthenticationPrincipal User currentUser) throws IOException {
         postService.deletePost(postId, currentUser.getId());
         return ResponseEntity.ok(new ApiResponse("User deleted successfully"));
     }

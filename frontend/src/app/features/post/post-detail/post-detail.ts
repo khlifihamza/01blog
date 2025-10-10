@@ -54,6 +54,7 @@ export class PostDetailComponent implements OnInit {
   commentText: string = '';
   editingCommentId: string | null = null;
   readTime = signal<number>(0);
+  postNotFound = signal(false);
 
   page = 0;
   pageSize = 10;
@@ -92,11 +93,16 @@ export class PostDetailComponent implements OnInit {
         );
         this.readTime.set(this.getReadTime(post.content));
       },
-      error: (error) => this.errorService.handleError(error),
+      error: (error) => {
+        if (error.status === 422) {
+          this.postNotFound.set(true);
+        }
+      },
     });
   }
 
   loadComments(postId: string) {
+    if (this.postNotFound()) return;
     this.commentService.getComments(postId, this.page, this.pageSize).subscribe({
       next: (comments) => {
         this.Comments.set(comments);

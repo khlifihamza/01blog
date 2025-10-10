@@ -7,7 +7,23 @@
     <!-- Featured Post -->
     <div class="featured-section">
       <h2 class="section-title">Stories</h2>
-      @for (post of allPosts(); track post.id) {
+      <!-- Empty State -->
+      @if(allPosts().length === 0 && !isLoading) {
+      <mat-card class="empty-state-card">
+        <div class="empty-state-content">
+          <mat-icon class="empty-icon">explore</mat-icon>
+          <h3 class="empty-title">No Stories Yet</h3>
+          <p class="empty-description">
+            You're not following any accounts yet. Discover and connect with users to see their
+            posts in your feed.
+          </p>
+          <button mat-raised-button color="primary" class="discover-btn" (click)="goToDiscovery()">
+            <mat-icon>search</mat-icon>
+            Discover Users & Posts
+          </button>
+        </div>
+      </mat-card>
+      } @for (post of allPosts(); track post.id) {
       <mat-card class="featured-card" (click)="openPost(post)">
         <div class="featured-content">
           <div class="featured-text">
@@ -44,17 +60,17 @@
         </div>
       </mat-card>
       }
-      
+
       <!-- Loading Spinner -->
       @if(isLoadingMore) {
-      <div class="loading-container" style="display: flex; justify-content: center; padding: 20px;">
+      <div class="loading-container" style="display: flex; justify-content: center; padding: 20px">
         <mat-spinner diameter="40"></mat-spinner>
       </div>
       }
-      
+
       <!-- End of Feed Message -->
       @if(!hasMore && allPosts().length > 10) {
-      <div class="end-message" style="text-align: center; padding: 20px; color: #666;">
+      <div class="end-message" style="text-align: center; padding: 20px; color: #666">
         <p>You've reached the end of the feed</p>
       </div>
       }

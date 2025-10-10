@@ -16,7 +16,7 @@
 }
 
 .dialog-description {
-  color: var(--text-secondary);
+  color: var(--text-primary);
   margin-bottom: 24px;
   line-height: 1.5;
 }
@@ -60,7 +60,7 @@
 }
 
 .info-text p:last-child {
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 mat-dialog-actions {

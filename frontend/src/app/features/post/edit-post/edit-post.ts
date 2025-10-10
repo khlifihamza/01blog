@@ -328,7 +328,6 @@ export class EditPostComponent {
 
   updatePost() {
     if (this.editForm.valid) {
-      console.log('here');
       this.isLoading.set(true);
       const updatePost = () => {
         let htmlString = this.editorDiv.nativeElement.innerHTML;
@@ -359,7 +358,7 @@ export class EditPostComponent {
             this.thumbnailFile = new File([blob], this.oldThumbnail!, { type: blob.type });
             this.uploadAndUpdate(updatePost);
           },
-          error: (err) => console.error('Download failed:', err),
+          error: (err) => this.errorService.handleError(err),
         });
       } else {
         this.uploadAndUpdate(updatePost);
@@ -482,7 +481,6 @@ export class EditPostComponent {
           const spanRect = tempSpan.getBoundingClientRect();
 
           calculatedTop = Math.floor(spanRect.top - editorRect.top + lineHeight / 2 - 20);
-          console.log(calculatedTop);
 
           const parent = tempSpan.parentNode;
           if (parent) {

@@ -174,19 +174,15 @@
               }
             </div>
             @if(editingCommentId === comment.id) {
-              <div class="comment-edit-form">
-                <textarea
-                  [(ngModel)]="commentText"
-                  rows="3"
-                  class="edit-textarea"
-                ></textarea>
-                <div class="comment-edit-actions">
-                  <button mat-button color="primary" (click)="updateComment()">Save</button>
-                  <button mat-button (click)="cancelEdit()">Cancel</button>
-                </div>
+            <div class="comment-edit-form">
+              <textarea [(ngModel)]="commentText" rows="3" class="edit-textarea"></textarea>
+              <div class="comment-edit-actions">
+                <button mat-button color="primary" (click)="updateComment()">Save</button>
+                <button mat-button (click)="cancelEdit()">Cancel</button>
               </div>
+            </div>
             } @else {
-              <p class="comment-text">{{ comment.content }}</p>
+            <p class="comment-text">{{ comment.content }}</p>
             }
           </div>
         </div>
@@ -206,6 +202,25 @@
           <p>No more comments to load</p>
         </div>
         }
+      </div>
+    </div>
+  </div>
+  } @else{
+  <div class="not-found-container">
+    <div class="content">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <h1>404</h1>
+      <h2>Post Not Found</h2>
+      <p>Oops! The Post you're looking for doesn't exist.</p>
+      <div class="actions">
+        <button mat-raised-button color="primary" routerLink="/">
+          <mat-icon>home</mat-icon>
+          Back to Home
+        </button>
+        <button mat-stroked-button color="accent" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Go Back
+        </button>
       </div>
     </div>
   </div>

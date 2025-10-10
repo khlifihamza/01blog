@@ -49,8 +49,6 @@ public class CommentController {
                         @AuthenticationPrincipal User currentUser,
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size) {
-                System.out.println(size);
-                System.out.println(page);
                 List<CommentResponse> comments = commentService.getPostComments(postId, currentUser.getId(),
                                 PageRequest.of(page, size));
                 return ResponseEntity.ok(comments);

@@ -108,7 +108,7 @@
 }
 
 .upload-placeholder small {
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .media-preview {

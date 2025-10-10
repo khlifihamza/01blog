@@ -133,7 +133,7 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .author-avatar-small {
@@ -183,7 +183,7 @@
   align-items: center;
   gap: 16px;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .post-stats .mat-icon {
@@ -259,7 +259,7 @@
 
 .user-username {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   margin: 0 0 4px 0;
 }
 
@@ -283,7 +283,7 @@
 
 .user-stats {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: black;
   margin-bottom: 16px;
 }
 
@@ -294,7 +294,7 @@
 .no-results {
   text-align: center;
   padding: 64px 24px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .no-results mat-icon {
