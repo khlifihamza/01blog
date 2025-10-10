@@ -23,91 +23,93 @@ import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class CommentService {
-    @Autowired
-    private CommentRepository commentRepository;
+        @Autowired
+        private CommentRepository commentRepository;
 
-    @Autowired
-    private PostRepository postRepository;
+        @Autowired
+        private PostRepository postRepository;
 
-    @Autowired
-    private NotificationService notificationService;
+        @Autowired
+        private NotificationService notificationService;
 
-    @Autowired
-    private UserRepository userRepository;
+        @Autowired
+        private UserRepository userRepository;
 
-    @Value("${file.fetchUrl}")
-    private String fetchUrl;
+        @Value("${file.fetchUrl}")
+        private String fetchUrl;
 
-    public CommentResponse comment(User currentUser, UUID postId, String content) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        Comment comment = new Comment(currentUser, post, content);
-        commentRepository.save(comment);
-        CommentResponse commentResponse = new CommentResponse(comment.getId(), comment.getUser().getUsername(),
-                comment.getUser().getAvatar() != null
-                        ? fetchUrl + comment.getUser().getAvatar()
-                        : null,
-                comment.getCreatedAt().toString(), comment.getContent(),
-                currentUser.getId().equals(comment.getUser().getId()));
-        if (!currentUser.getId().equals(post.getUser().getId())) {
-            notificationService.createNotification(post, post.getUser(),
-                    currentUser.getUsername() + " commented on your post",
-                    comment.getContent(), NotificationType.COMMENT);
-        }
-        return commentResponse;
-    }
-
-    public void deleteComment(UUID commentId, UUID currentUserId) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
-        User user = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        if (!comment.getUser().getId().equals(user.getId())) {
-            throw new AccessDeniedException("You cannot delete another user's comment.");
-        }
-        commentRepository.deleteById(commentId);
-    }
-
-    public List<CommentResponse> getPostComments(UUID postId, UUID currentUserId, Pageable pageable) {
-        List<Comment> comments = commentRepository.findByPostIdOrderByCreatedAtDesc(postId, pageable).getContent();
-        List<CommentResponse> commentsResponse = new ArrayList<>();
-        for (Comment comment : comments) {
-            CommentResponse commentResponse = new CommentResponse(comment.getId(), comment.getUser().getUsername(),
-                    comment.getUser().getAvatar() != null
-                            ? fetchUrl + comment.getUser().getAvatar()
-                            : null,
-                    comment.getCreatedAt().toString(), comment.getContent(),
-                    currentUserId.equals(comment.getUser().getId()));
-            commentsResponse.add(commentResponse);
-        }
-        return commentsResponse;
-    }
-
-    public long getCommentsCount() {
-        return commentRepository.count();
-    }
-
-    public CommentResponse updateComment(UUID commentId, String content, UUID currentUserId) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
-        User user = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found"));
-
-        if (!comment.getUser().getId().equals(user.getId())) {
-            throw new AccessDeniedException("You cannot update another user's comment.");
+        public CommentResponse comment(User currentUser, UUID postId, String content) {
+                Post post = postRepository.findById(postId)
+                                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+                Comment comment = new Comment(currentUser, post, content);
+                commentRepository.save(comment);
+                CommentResponse commentResponse = new CommentResponse(comment.getId(), comment.getUser().getUsername(),
+                                comment.getUser().getAvatar() != null
+                                                ? fetchUrl + comment.getUser().getAvatar()
+                                                : null,
+                                comment.getCreatedAt().toString(), comment.getContent(),
+                                currentUser.getId().equals(comment.getUser().getId()));
+                if (!currentUser.getId().equals(post.getUser().getId())) {
+                        notificationService.createNotification(post, post.getUser(),
+                                        currentUser.getUsername() + " commented on your post",
+                                        comment.getContent(), NotificationType.COMMENT);
+                }
+                return commentResponse;
         }
 
-        comment.setContent(content);
-        commentRepository.save(comment);
+        public void deleteComment(UUID commentId, UUID currentUserId) {
+                Comment comment = commentRepository.findById(commentId)
+                                .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
+                User user = userRepository.findById(currentUserId)
+                                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+                if (!comment.getUser().getId().equals(user.getId())) {
+                        throw new AccessDeniedException("You cannot delete another user's comment.");
+                }
+                commentRepository.deleteById(commentId);
+        }
 
-        return new CommentResponse(
-                comment.getId(),
-                comment.getUser().getUsername(),
-                comment.getUser().getAvatar() != null
-                        ? fetchUrl + comment.getUser().getAvatar()
-                        : null,
-                comment.getCreatedAt().toString(),
-                comment.getContent(),
-                true);
-    }
+        public List<CommentResponse> getPostComments(UUID postId, UUID currentUserId, Pageable pageable) {
+                List<Comment> comments = commentRepository.findByPostIdOrderByCreatedAtDesc(postId, pageable)
+                                .getContent();
+                List<CommentResponse> commentsResponse = new ArrayList<>();
+                for (Comment comment : comments) {
+                        CommentResponse commentResponse = new CommentResponse(comment.getId(),
+                                        comment.getUser().getUsername(),
+                                        comment.getUser().getAvatar() != null
+                                                        ? fetchUrl + comment.getUser().getAvatar()
+                                                        : null,
+                                        comment.getCreatedAt().toString(), comment.getContent(),
+                                        currentUserId.equals(comment.getUser().getId()));
+                        commentsResponse.add(commentResponse);
+                }
+                return commentsResponse;
+        }
+
+        public long getCommentsCount() {
+                return commentRepository.count();
+        }
+
+        public CommentResponse updateComment(UUID commentId, String content, UUID currentUserId) {
+                Comment comment = commentRepository.findById(commentId)
+                                .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
+                User user = userRepository.findById(currentUserId)
+                                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+                if (!comment.getUser().getId().equals(user.getId())) {
+                        throw new AccessDeniedException("You cannot update another user's comment.");
+                }
+
+                comment.setContent(content);
+                commentRepository.save(comment);
+
+                return new CommentResponse(
+                                comment.getId(),
+                                comment.getUser().getUsername(),
+                                comment.getUser().getAvatar() != null
+                                                ? fetchUrl + comment.getUser().getAvatar()
+                                                : null,
+                                comment.getCreatedAt().toString(),
+                                comment.getContent(),
+                                true);
+        }
 }

@@ -49,6 +49,8 @@ public class CommentController {
                         @AuthenticationPrincipal User currentUser,
                         @RequestParam(defaultValue = "0") int page,
                         @RequestParam(defaultValue = "10") int size) {
+                System.out.println(size);
+                System.out.println(page);
                 List<CommentResponse> comments = commentService.getPostComments(postId, currentUser.getId(),
                                 PageRequest.of(page, size));
                 return ResponseEntity.ok(comments);
@@ -58,7 +60,8 @@ public class CommentController {
         public ResponseEntity<CommentResponse> updateComment(@PathVariable UUID commentId,
                         @Validated @RequestBody CommentRequest commentDto,
                         @AuthenticationPrincipal User currentUser) {
-                CommentResponse comment = commentService.updateComment(commentId, commentDto.content(), currentUser.getId());
+                CommentResponse comment = commentService.updateComment(commentId, commentDto.content(),
+                                currentUser.getId());
                 return ResponseEntity.ok(comment);
         }
 }

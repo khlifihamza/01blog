@@ -57,7 +57,7 @@ export class PostDetailComponent implements OnInit {
 
   page = 0;
   pageSize = 10;
-  hasMore = true;
+  hasMore = false;
   isLoadingMore = false;
 
   constructor(

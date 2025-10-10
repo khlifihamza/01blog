@@ -137,8 +137,7 @@ npm run build
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 👥 Authors
-
-- Your Name - Initial work
+- Khlifi hamza
 
 ## 🙏 Acknowledgments
 

@@ -41,7 +41,7 @@ export class HomeComponent implements OnInit {
   allPosts = signal<FeedPost[]>([]);
   page = 0;
   pageSize = 10;
-  hasMore = true;
+  hasMore = false;
   isLoadingMore = false;
 
   constructor(

@@ -1,19 +1,65 @@
 version: '3.9'
 
 services:
-  # PostgreSQL database service
   db:
     container_name: postgres-spring-boot   
-    image: postgres:16.2-alpine # Specifies the PostgreSQL image and version
-    restart: always # Ensures the container restarts automatically
+    image: postgres:16.2-alpine 
+    restart: always 
     environment:
-      POSTGRES_DB: DB01B # Sets the database name
-      POSTGRES_USER: hkhlifi # Sets the database user
-      POSTGRES_PASSWORD: DBFOR01B # Sets the database password
+      POSTGRES_DB: DB01B 
+      POSTGRES_USER: hkhlifi 
+      POSTGRES_PASSWORD: DBFOR01B 
     ports:
-      - "5332:5432" # Maps host port 5432 to container port 5432
+      - "5332:5432" 
     volumes:
-      - db_data:/var/lib/postgresql/data # Persists database data in a named volume
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hkhlifi -d DB01B"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    container_name: spring-boot-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/DB01B
+      SPRING_DATASOURCE_USERNAME: hkhlifi
+      SPRING_DATASOURCE_PASSWORD: DBFOR01B
+      FILE_UPLOAD_DIR: /app/upload
+      FILE_FETCH_URL: http://localhost:8080/api/post/file/
+    volumes:
+      - backend_uploads:/app/upload
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  frontend:
+    container_name: angular-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
 
 volumes:
-  db_data: # Defines the named volume for PostgreSQL data persistence
+  db_data:
+  backend_uploads:
+
+networks:
+  app-network:
+    driver: bridge
