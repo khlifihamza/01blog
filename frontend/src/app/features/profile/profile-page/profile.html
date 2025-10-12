@@ -84,7 +84,14 @@
       <!-- Featured Post -->
       <div class="featured-section">
         <h2 class="section-title">Stories</h2>
-        @for (post of userPosts(); track post.id) {
+        @if(userPosts().length === 0) {
+        <mat-card class="empty-state-card">
+          <div class="empty-state-content">
+            <h3 class="empty-title">No Stories Yet</h3>
+            <p class="empty-description">This user hasn't posted any stories yet.</p>
+          </div>
+        </mat-card>
+        } @for (post of userPosts(); track post.id) {
         <mat-card class="featured-card" (click)="openPost(post)">
           <div class="featured-content">
             <div class="featured-text">

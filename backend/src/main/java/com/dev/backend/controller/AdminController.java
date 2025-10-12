@@ -1,9 +1,9 @@
 package com.dev.backend.controller;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,17 +29,22 @@ import com.dev.backend.service.UserService;
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
-    @Autowired
-    private AdminService adminService;
 
-    @Autowired
-    private ReportService reportService;
+    private final AdminService adminService;
 
-    @Autowired
-    private UserService userService;
+    private final ReportService reportService;
 
-    @Autowired
-    private PostService postService;
+    private final UserService userService;
+
+    private final PostService postService;
+
+    public AdminController(AdminService adminService, ReportService reportService, UserService userService,
+            PostService postService) {
+        this.adminService = adminService;
+        this.reportService = reportService;
+        this.postService = postService;
+        this.userService = userService;
+    }
 
     @GetMapping("/get-insights")
     public ResponseEntity<InsightsResponse> getInsights() {
@@ -111,7 +116,7 @@ public class AdminController {
 
     @DeleteMapping("/delete-post/{postId}")
     public ResponseEntity<ApiResponse> deletePOst(@PathVariable UUID postId,
-            @AuthenticationPrincipal User currentUser) {
+            @AuthenticationPrincipal User currentUser) throws IOException {
         postService.deletePost(postId, currentUser.getId());
         return ResponseEntity.ok(new ApiResponse("User deleted successfully"));
     }

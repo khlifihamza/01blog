@@ -65,7 +65,7 @@
 .info-item label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -96,13 +96,6 @@
   gap: 16px;
 }
 
-.user-avatar {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
 .user-details h4 {
   margin: 0 0 4px 0;
   font-size: 16px;
@@ -112,7 +105,7 @@
 .user-details p {
   margin: 0 0 4px 0;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .report-info {
@@ -127,7 +120,7 @@
   display: block;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 8px;
@@ -168,7 +161,6 @@
   color: white !important;
 }
 
-/* Chip Styles */
 .type-post {
   background: #e3f2fd;
   color: #1565c0;

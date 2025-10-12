@@ -48,7 +48,3 @@ docker compose version || echo "⚠️ Docker Compose not found in PATH yet."
 
 echo ""
 echo "✅ All done! Run 'source ~/.zshrc' or restart your terminal to apply environment changes."
-
-# --------------------------------------------------------------------------------------------------
-docker compose up -d
-echo "✅ postgres runing"

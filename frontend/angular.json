@@ -75,7 +75,7 @@
               }
             ],
             "styles": [
-              "src/styles.css"
+              "src/global_styles.css"
             ]
           }
         }

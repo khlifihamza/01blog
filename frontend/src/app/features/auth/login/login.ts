@@ -26,7 +26,7 @@ import { ErrorService } from '../../../core/services/error.service';
     MatProgressSpinnerModule,
   ],
   templateUrl: './login.html',
-  styleUrls: ['./login.css'],
+  styleUrls: ['../auth.css'],
 })
 export class LoginComponent {
   loginForm: FormGroup;

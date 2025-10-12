@@ -3,43 +3,6 @@
   background: #fafafa;
 }
 
-.notifications-header {
-  background: white;
-  border-bottom: 1px solid #e0e0e0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.header-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.unread-badge {
-  background: var(--primary-color);
-  color: white;
-  font-size: 12px;
-  height: 24px;
-}
-
 .header-actions {
   display: flex;
   justify-content: space-between;
@@ -51,12 +14,6 @@
   max-width: 800px;
   margin: 0 auto;
   padding: 24px;
-}
-
-.notifications-tabs {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .notifications-list {
@@ -95,13 +52,6 @@
   flex-shrink: 0;
 }
 
-.notification-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
 .icon-like {
   background: #ffebee;
   color: #e91e63;
@@ -117,10 +67,6 @@
 .icon-post {
   background: #f3e5f5;
   color: #9c27b0;
-}
-.icon-system {
-  background: #f5f5f5;
-  color: #616161;
 }
 
 .notification-content {
@@ -145,14 +91,14 @@
 
 .notification-time {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   white-space: nowrap;
   margin-left: 12px;
 }
 
 .notification-message {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   margin: 0;
   line-height: 1.4;
   display: -webkit-box;
@@ -193,7 +139,7 @@
 .empty-state {
   text-align: center;
   padding: 64px 24px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .empty-state mat-icon {
@@ -230,10 +176,6 @@
 }
 
 @media (max-width: 768px) {
-  .header-content {
-    padding: 0 16px;
-  }
-
   .notifications-content {
     padding: 16px;
   }
@@ -243,11 +185,6 @@
   }
 
   .notification-icon {
-    width: 40px;
-    height: 40px;
-  }
-
-  .notification-avatar {
     width: 40px;
     height: 40px;
   }

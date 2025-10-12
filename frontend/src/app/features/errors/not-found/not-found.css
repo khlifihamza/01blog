@@ -2,7 +2,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 64px); /* Adjust based on your header height */
+  min-height: calc(100vh - 64px);
   background-color: var(--background);
 }
 
@@ -39,7 +39,7 @@ h2 {
 }
 
 p {
-  color: var(--text-secondary);
+  color: var(--text-primary);
   margin-bottom: 2rem;
 }
 

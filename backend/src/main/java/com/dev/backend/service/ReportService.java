@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,16 +18,22 @@ import com.dev.backend.repository.PostRepository;
 import com.dev.backend.repository.ReportRepository;
 import com.dev.backend.repository.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class ReportService {
-    @Autowired
-    private ReportRepository reportRepository;
+    private final ReportRepository reportRepository;
 
-    @Autowired
-    private PostRepository postRepository;
+    private final PostRepository postRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    public ReportService(ReportRepository reportRepository, PostRepository postRepository,
+            UserRepository userRepository) {
+        this.postRepository = postRepository;
+        this.reportRepository = reportRepository;
+        this.userRepository = userRepository;
+    }
 
     public void saveReport(ReportRequest reportDto, User reporterUser) {
         Report report = new Report();
@@ -44,7 +49,8 @@ public class ReportService {
             report.setReported_post(reportedPost);
         }
         if (reportDto.reportedUsername() != null) {
-            User reportedUser = userRepository.findByUsername(reportDto.reportedUsername()).orElseThrow();
+            User reportedUser = userRepository.findByUsername(reportDto.reportedUsername())
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
             if (reportedUser.getId().equals(reporterUser.getId())) {
                 throw new DataIntegrityViolationException("You cannot report yourself.");
             }
@@ -54,13 +60,17 @@ public class ReportService {
     }
 
     public void resolveReport(UUID reportId) {
-        Report report = reportRepository.findById(reportId).orElseThrow();
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new EntityNotFoundException("Report not found"));
+        ;
         report.setStatus(ReportStatus.RESOLVED);
         reportRepository.save(report);
     }
 
     public void dismissReport(UUID reportId) {
-        Report report = reportRepository.findById(reportId).orElseThrow();
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new EntityNotFoundException("Report not found"));
+        ;
         report.setStatus(ReportStatus.DISMISSED);
         reportRepository.save(report);
     }

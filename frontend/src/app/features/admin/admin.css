@@ -3,34 +3,6 @@
   background: #f5f5f5;
 }
 
-.admin-header {
-  background: white;
-  border-bottom: 1px solid #e0e0e0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.header-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
 .dashboard-content {
   max-width: 1400px;
   margin: 0 auto;
@@ -100,7 +72,7 @@
 
 .stat-info p {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   margin: 4px 0 0 0;
 }
 
@@ -162,7 +134,7 @@
 
 .user-email {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .post-title {
@@ -178,7 +150,7 @@
   flex-direction: column;
   gap: 2px;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 /* Chip Styles */
@@ -297,7 +269,7 @@
 
 .card-label {
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-size: 14px;
   min-width: 90px;
   flex-shrink: 0;

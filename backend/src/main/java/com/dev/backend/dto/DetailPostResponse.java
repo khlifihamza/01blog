@@ -12,6 +12,5 @@ public record DetailPostResponse(
         int likes,
         int comments,
         boolean isLiked,
-        boolean isBookmarked,
         boolean isAuthor) {
 }

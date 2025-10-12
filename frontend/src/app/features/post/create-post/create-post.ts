@@ -1,9 +1,4 @@
-import {
-  Component,
-  signal,
-  ViewChild,
-  ElementRef,
-} from '@angular/core';
+import { Component, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -41,7 +36,7 @@ import { ErrorService } from '../../../core/services/error.service';
     NavbarComponent,
   ],
   templateUrl: './create-post.html',
-  styleUrls: ['./create-post.css'],
+  styleUrls: ['../post.css'],
 })
 export class CreatePostComponent {
   @ViewChild('editorDiv') editorDiv!: ElementRef<HTMLDivElement>;
@@ -103,12 +98,14 @@ export class CreatePostComponent {
       const plainText = clipboardData.getData('text/plain');
 
       if (htmlContent) {
-        htmlContent = this.normalizeWhiteSpace(htmlContent);
+        htmlContent = this.getTextFromHtml(htmlContent);
       } else if (plainText) {
         htmlContent = `<span>${plainText}</span>`;
       } else {
         return;
       }
+      this.currentContent = htmlContent;
+      this.showValidationError = this.currentContent.length > 0 && this.currentContent.length < 100;
       this.insertHtmlAtCursor(htmlContent);
     }
   }
@@ -142,32 +139,10 @@ export class CreatePostComponent {
     reader.readAsDataURL(file);
   }
 
-  private normalizeWhiteSpace(html: string): string {
+  private getTextFromHtml(html: string): string {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
-    this.processElement(tempDiv);
     return tempDiv.innerText;
-  }
-
-  private processElement(element: HTMLElement): void {
-    Array.from(element.children).forEach((child) => {
-      if (child instanceof HTMLElement) {
-        child.style.whiteSpace = '';
-        if (child.hasAttribute('style')) {
-          const styleAttr = child.getAttribute('style') || '';
-          const cleanedStyle = styleAttr
-            .split(';')
-            .filter((style) => !style.trim().toLowerCase().startsWith('white-space'))
-            .join(';');
-          if (cleanedStyle) {
-            child.setAttribute('style', cleanedStyle);
-          } else {
-            child.removeAttribute('style');
-          }
-        }
-        this.processElement(child);
-      }
-    });
   }
 
   private insertHtmlAtCursor(html: string): void {
@@ -293,7 +268,6 @@ export class CreatePostComponent {
           const spanRect = tempSpan.getBoundingClientRect();
 
           calculatedTop = Math.floor(spanRect.top - editorRect.top + lineHeight / 2 - 20);
-          console.log(calculatedTop);
 
           const parent = tempSpan.parentNode;
           if (parent) {
@@ -443,6 +417,21 @@ export class CreatePostComponent {
 
     let range = selection.getRangeAt(0);
     const container = range.commonAncestorContainer as HTMLElement;
+
+    const editor = this.editorDiv.nativeElement;
+    let isInsideEditor = false;
+
+    if (container.nodeType === Node.ELEMENT_NODE) {
+      isInsideEditor = editor.contains(container) || editor === container;
+    } else if (container.parentElement) {
+      isInsideEditor =
+        editor.contains(container.parentElement) || editor === container.parentElement;
+    }
+
+    if (!isInsideEditor) {
+      this.errorService.showWarning('Cannot insert media outside the editor');
+      return;
+    }
 
     let mediaParent: HTMLElement | null = null;
 

@@ -35,7 +35,7 @@ import { ErrorService } from '../../core/services/error.service';
 export class NotificationsComponent {
   allNotifications = signal<Notification[]>([]);
   unreadCount = signal(0);
-  loading = false;
+  loading = signal(false);
   page = 0;
   pageSize = 10;
   hasMoreNotifications = true;
@@ -52,7 +52,7 @@ export class NotificationsComponent {
 
   @HostListener('window:scroll')
   onScroll() {
-    if (this.loading || !this.hasMoreNotifications) return;
+    if (this.loading() || !this.hasMoreNotifications) return;
 
     const scrollPosition = window.innerHeight + window.scrollY;
     const scrollThreshold = document.documentElement.scrollHeight - 300;
@@ -63,28 +63,28 @@ export class NotificationsComponent {
   }
 
   loadNotifications() {
-    this.loading = true;
+    this.loading.set(true);
     this.page = 0;
     this.hasMoreNotifications = true;
-    
+
     this.notificationService.getNotifications(this.page, this.pageSize).subscribe({
       next: (notifications) => {
         this.allNotifications.set(notifications);
         this.hasMoreNotifications = notifications.length >= this.pageSize;
         this.updateCounts();
-        this.loading = false;
+        this.loading.set(false);
       },
       error: (error) => {
         this.errorService.handleError(error);
-        this.loading = false;
+        this.loading.set(false);
       },
     });
   }
 
   loadMoreNotifications() {
-    if (this.loading || !this.hasMoreNotifications) return;
+    if (this.loading() || !this.hasMoreNotifications) return;
 
-    this.loading = true;
+    this.loading.set(true);
     this.page++;
 
     this.notificationService.getNotifications(this.page, this.pageSize).subscribe({
@@ -93,13 +93,13 @@ export class NotificationsComponent {
           this.hasMoreNotifications = false;
         }
         if (notifications.length > 0) {
-          this.allNotifications.update(current => [...current, ...notifications]);
+          this.allNotifications.update((current) => [...current, ...notifications]);
         }
-        this.loading = false;
+        this.loading.set(false);
       },
       error: (error) => {
         this.errorService.handleError(error);
-        this.loading = false;
+        this.loading.set(false);
         this.page--;
       },
     });
@@ -135,10 +135,9 @@ export class NotificationsComponent {
     return date.toLocaleDateString();
   }
 
-  handleNotificationClick(notification: Notification) {
+  handleNotificationClick(notification: Notification, event: Event) {
     if (!notification.isRead) {
-      notification.isRead = true;
-      this.updateCounts();
+      this.markAsRead(notification, event);
     }
     this.router.navigate([notification.link]);
   }
@@ -175,7 +174,7 @@ export class NotificationsComponent {
   markAllAsRead() {
     this.notificationService.markAllAsRead().subscribe({
       next: () => {
-        const updatedNotifications = this.allNotifications().map(n => ({...n, isRead: true}));
+        const updatedNotifications = this.allNotifications().map((n) => ({ ...n, isRead: true }));
         this.allNotifications.set(updatedNotifications);
         this.updateCounts();
       },

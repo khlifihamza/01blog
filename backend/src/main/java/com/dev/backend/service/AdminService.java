@@ -1,26 +1,29 @@
 package com.dev.backend.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.dto.InsightsResponse;
 
 @Service
 public class AdminService {
-    @Autowired
-    private ReportService reportService;
+    private final ReportService reportService;
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @Autowired
-    private PostService postService;
+    private final PostService postService;
 
-    @Autowired
-    private CommentService commentService;
+    private final CommentService commentService;
 
-    @Autowired
-    private LikeService likeService;
+    private final LikeService likeService;
+
+    public AdminService(ReportService reportService, UserService userService, PostService postService,
+            CommentService commentService, LikeService likeService) {
+        this.commentService = commentService;
+        this.likeService = likeService;
+        this.postService = postService;
+        this.reportService = reportService;
+        this.userService = userService;
+    }
 
     public InsightsResponse getInsights() {
         return new InsightsResponse(userService.getAllUsersCount(),

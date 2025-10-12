@@ -54,10 +54,11 @@ export class PostDetailComponent implements OnInit {
   commentText: string = '';
   editingCommentId: string | null = null;
   readTime = signal<number>(0);
+  postNotFound = signal(false);
 
   page = 0;
   pageSize = 10;
-  hasMore = true;
+  hasMore = false;
   isLoadingMore = false;
 
   constructor(
@@ -76,7 +77,6 @@ export class PostDetailComponent implements OnInit {
     let postId = this.route.snapshot.paramMap.get('id');
     if (postId != null) {
       this.loadPost(postId);
-      this.loadComments(postId);
     }
   }
 
@@ -91,12 +91,18 @@ export class PostDetailComponent implements OnInit {
           this.formatContent(this.post()!.content)
         );
         this.readTime.set(this.getReadTime(post.content));
+        this.loadComments(postId);
       },
-      error: (error) => this.errorService.handleError(error),
+      error: (error) => {
+        if (error.status === 404 || error.status === 422) {
+          this.postNotFound.set(true);
+        }
+      },
     });
   }
 
   loadComments(postId: string) {
+    if (this.postNotFound()) return;
     this.commentService.getComments(postId, this.page, this.pageSize).subscribe({
       next: (comments) => {
         this.Comments.set(comments);
@@ -234,7 +240,7 @@ export class PostDetailComponent implements OnInit {
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffMins < 60) {
-      return diffMins <= 1 ? 'Just now' : `${diffMins} minutes ago`;
+      return diffMins < 1 ? 'Just now' : `${diffMins} minutes ago`;
     }
 
     if (diffHours < 24) {
@@ -280,12 +286,6 @@ export class PostDetailComponent implements OnInit {
         },
         error: (error) => this.errorService.handleError(error),
       });
-    }
-  }
-
-  toggleBookmark() {
-    if (this.post()) {
-      this.post()!.isBookmarked = !this.post()!.isBookmarked;
     }
   }
 
@@ -341,6 +341,10 @@ export class PostDetailComponent implements OnInit {
 
   goBack() {
     this.location.back();
+  }
+
+  goHome() {
+    this.router.navigate(['/']);
   }
 
   editPost() {
