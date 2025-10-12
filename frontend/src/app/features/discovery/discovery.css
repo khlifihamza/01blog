@@ -3,36 +3,6 @@
   background: #fafafa;
 }
 
-.discover-header {
-  background: white;
-  border-bottom: 1px solid #e0e0e0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.header-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
 .search-section {
   background: white;
   border-bottom: 1px solid #e0e0e0;
@@ -257,18 +227,6 @@
   color: var(--primary-color);
 }
 
-.user-username {
-  font-size: 14px;
-  color: var(--text-primary);
-  margin: 0 0 4px 0;
-}
-
-.follow-btn {
-  border-radius: 20px;
-  font-weight: 500;
-  min-width: 100px;
-}
-
 .user-bio {
   font-size: 14px;
   line-height: 1.5;
@@ -338,9 +296,5 @@
   .user-header {
     flex-direction: column;
     text-align: center;
-  }
-
-  .follow-btn {
-    align-self: center;
   }
 }

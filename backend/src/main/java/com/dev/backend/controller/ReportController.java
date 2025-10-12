@@ -1,6 +1,5 @@
 package com.dev.backend.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -17,8 +16,11 @@ import com.dev.backend.service.ReportService;
 @RestController
 @RequestMapping("/api/report")
 public class ReportController {
-    @Autowired
-    private ReportService reportService;
+    private final ReportService reportService;
+
+    public ReportController(ReportService reportService) {
+        this.reportService = reportService;
+    }
 
     @PostMapping("/create")
     public ResponseEntity<ApiResponse> createReport(@Validated @RequestBody ReportRequest reportDto,

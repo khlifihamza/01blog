@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,25 +32,31 @@ import com.dev.backend.model.User;
 import com.dev.backend.model.UserStatus;
 import com.dev.backend.repository.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class UserService {
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private FollowService followService;
+    private final FollowService followService;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
 
     @Value("${file.fetchUrl}")
     private String fetchUrl;
+
+    public UserService(UserRepository userRepository, FollowService followService,
+            AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
+        this.authenticationManager = authenticationManager;
+        this.followService = followService;
+        this.passwordEncoder = passwordEncoder;
+        this.userRepository = userRepository;
+    }
 
     public User signup(RegisterRequest input) {
         if (userRepository.existsByUsername(input.username())) {
@@ -81,11 +87,13 @@ public class UserService {
         if (!userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username don't exists.");
         }
-        return userRepository.findByUsername(username).orElseThrow();
+        return userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
     public ProfileUserResponse getUserResponseByUsername(String username, UUID currentUserId) {
-        User user = userRepository.findByUsername(username).orElseThrow();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
         ProfileUserResponse userResponse = new ProfileUserResponse(user.getId(), user.getUsername(),
                 user.getAvatar() != null
                         ? fetchUrl + user.getAvatar()
@@ -98,7 +106,8 @@ public class UserService {
     }
 
     public ProfileEditResponse getEditUserResponseByUsername(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         ProfileEditResponse profileEditResponse = new ProfileEditResponse(user.getUsername(), user.getEmail(),
                 user.getAvatar() != null
                         ? fetchUrl + user.getAvatar()
@@ -130,7 +139,8 @@ public class UserService {
     }
 
     public void saveData(String username, ProfileEditResponse data) throws IOException {
-        User user = userRepository.findByUsername(username).orElseThrow();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (!user.getUsername().equals(data.username()) && userRepository.existsByUsername(data.username())) {
             if (data.avatar() != null) {
                 Path filePath = Paths.get(uploadDir + "/avatars" + data.avatar());
@@ -193,6 +203,7 @@ public class UserService {
                             : null,
                     user.getBio(),
                     user.getFollowers().size(), user.getPosts().size(),
+                    currentUserId.equals(user.getId()),
                     followService.isCurrentUserFollowUser(currentUserId, user.getId()));
             usersResponse.add(discoveryUserResponse);
         }
@@ -200,28 +211,31 @@ public class UserService {
     }
 
     public void banUser(String username) {
-        if (!userRepository.existsByUsername(username)) {
-            throw new IllegalArgumentException("Username don't exists.");
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (user.getRole().equals(Role.ADMIN)) {
+            throw new DataIntegrityViolationException("You cannot ban yourself.");
         }
-        User user = userRepository.findByUsername(username).orElseThrow();
         user.setStatus(UserStatus.BANNED);
         userRepository.save(user);
     }
 
     public void unbanUser(String username) {
-        if (!userRepository.existsByUsername(username)) {
-            throw new IllegalArgumentException("Username don't exists.");
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (user.getRole().equals(Role.ADMIN)) {
+            throw new DataIntegrityViolationException("You cannot unban yourself.");
         }
-        User user = userRepository.findByUsername(username).orElseThrow();
         user.setStatus(UserStatus.ACTIVE);
         userRepository.save(user);
     }
 
     public void deleteUser(String username) {
-        if (!userRepository.existsByUsername(username)) {
-            throw new IllegalArgumentException("Username don't exists.");
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (user.getRole().equals(Role.ADMIN)) {
+            throw new DataIntegrityViolationException("You cannot delete yourself.");
         }
-        User user = userRepository.findByUsername(username).orElseThrow();
         userRepository.delete(user);
     }
 
@@ -230,7 +244,7 @@ public class UserService {
     }
 
     public List<DiscoveryUserResponse> getTop9Profiles(UUID currentUserId) {
-        List<User> users = userRepository.findTop9ByOrderByFollowers();
+        List<User> users = userRepository.findTop9ByIdNotOrderByFollowersDesc(currentUserId);
         List<DiscoveryUserResponse> usersResponse = new ArrayList<>();
         for (User user : users) {
             DiscoveryUserResponse discoveryUserResponse = new DiscoveryUserResponse(user.getId(),
@@ -240,6 +254,7 @@ public class UserService {
                             : null,
                     user.getBio(),
                     user.getFollowers().size(), user.getPosts().size(),
+                    currentUserId.equals(user.getId()),
                     followService.isCurrentUserFollowUser(currentUserId, user.getId()));
             usersResponse.add(discoveryUserResponse);
         }

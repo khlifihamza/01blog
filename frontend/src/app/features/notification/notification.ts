@@ -35,7 +35,7 @@ import { ErrorService } from '../../core/services/error.service';
 export class NotificationsComponent {
   allNotifications = signal<Notification[]>([]);
   unreadCount = signal(0);
-  loading = false;
+  loading = signal(false);
   page = 0;
   pageSize = 10;
   hasMoreNotifications = true;
@@ -52,7 +52,7 @@ export class NotificationsComponent {
 
   @HostListener('window:scroll')
   onScroll() {
-    if (this.loading || !this.hasMoreNotifications) return;
+    if (this.loading() || !this.hasMoreNotifications) return;
 
     const scrollPosition = window.innerHeight + window.scrollY;
     const scrollThreshold = document.documentElement.scrollHeight - 300;
@@ -63,7 +63,7 @@ export class NotificationsComponent {
   }
 
   loadNotifications() {
-    this.loading = true;
+    this.loading.set(true);
     this.page = 0;
     this.hasMoreNotifications = true;
 
@@ -72,19 +72,19 @@ export class NotificationsComponent {
         this.allNotifications.set(notifications);
         this.hasMoreNotifications = notifications.length >= this.pageSize;
         this.updateCounts();
-        this.loading = false;
+        this.loading.set(false);
       },
       error: (error) => {
         this.errorService.handleError(error);
-        this.loading = false;
+        this.loading.set(false);
       },
     });
   }
 
   loadMoreNotifications() {
-    if (this.loading || !this.hasMoreNotifications) return;
+    if (this.loading() || !this.hasMoreNotifications) return;
 
-    this.loading = true;
+    this.loading.set(true);
     this.page++;
 
     this.notificationService.getNotifications(this.page, this.pageSize).subscribe({
@@ -95,11 +95,11 @@ export class NotificationsComponent {
         if (notifications.length > 0) {
           this.allNotifications.update((current) => [...current, ...notifications]);
         }
-        this.loading = false;
+        this.loading.set(false);
       },
       error: (error) => {
         this.errorService.handleError(error);
-        this.loading = false;
+        this.loading.set(false);
         this.page--;
       },
     });

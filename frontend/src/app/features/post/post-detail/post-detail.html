@@ -139,7 +139,7 @@
           placeholder="Share your thoughts..."
           rows="3"
         ></textarea>
-        <button mat-raised-button color="primary" (click)="addComment()">Post Comment</button>
+        <button mat-raised-button (click)="addComment()" class="comment-button">Post Comment</button>
       </div>
 
       <div class="comments-list">
@@ -205,7 +205,7 @@
       </div>
     </div>
   </div>
-  } @else{
+  } @if(postNotFound()){
   <div class="not-found-container">
     <div class="content">
       <mat-icon class="error-icon">error_outline</mat-icon>
@@ -213,7 +213,7 @@
       <h2>Post Not Found</h2>
       <p>Oops! The Post you're looking for doesn't exist.</p>
       <div class="actions">
-        <button mat-raised-button color="primary" routerLink="/">
+        <button mat-raised-button color="primary" (click)="goHome()">
           <mat-icon>home</mat-icon>
           Back to Home
         </button>

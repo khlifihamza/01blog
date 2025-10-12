@@ -96,6 +96,7 @@ export class DiscoveryComponent implements OnInit {
             next: (response) => {
               this.searchedUsers.set(response.discoveryUsers);
               this.searchedPosts.set(response.discoveryPosts);
+              this.updateSearchReadtime();
               this.hasMoreSearchResults =
                 response.discoveryPosts.length >= this.searchPageSize ||
                 response.discoveryUsers.length >= this.searchPageSize;
@@ -105,11 +106,20 @@ export class DiscoveryComponent implements OnInit {
       });
   }
 
+  updateSearchReadtime() {
+    this.searchedPosts().map((p) => (p.readTime = this.getReadTime(p.content)));
+  }
+
+  updateDiscoveryReadtime() {
+    this.suggestedPosts().map((p) => (p.readTime = this.getReadTime(p.content)));
+  }
+
   loadData() {
     this.discoveryService.getDiscoveryData().subscribe({
       next: (response) => {
         this.suggestedPosts.set(response.discoveryPosts);
         this.suggestedUsers.set(response.discoveryUsers);
+        this.updateDiscoveryReadtime();
       },
       error: (error) => this.errorService.handleError(error),
     });
@@ -146,6 +156,7 @@ export class DiscoveryComponent implements OnInit {
             ]);
           }
           this.isLoadingMoreSearchResults = false;
+          this.updateSearchReadtime();
         },
         error: (error) => {
           this.errorService.handleError(error);

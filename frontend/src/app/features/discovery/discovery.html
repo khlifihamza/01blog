@@ -61,7 +61,7 @@
 
               <div class="post-footer">
                 <div class="post-stats">
-                  <span class="read-time">{{ getReadTime(post.content) }} min</span>
+                  <span class="read-time">{{ post.readTime }} min</span>
                   <span class="likes">
                     <mat-icon>favorite_border</mat-icon>
                     {{ post.likes }}
@@ -97,12 +97,14 @@
                 <div class="user-info">
                   <h4 class="user-name" (click)="viewProfile(user)">{{ user.username }}</h4>
                 </div>
+                @if(!user.isOwner){
                 <app-follow
                   [username]="user.username"
                   [isFollowing]="user.isFollowing"
                   (followChange)="onFollowChange(user)"
                 >
                 </app-follow>
+                }
               </div>
 
               <p class="user-bio">{{ user.bio }}</p>
@@ -150,12 +152,14 @@
                 <div class="user-info">
                   <h4 class="user-name" (click)="viewProfile(user)">{{ user.username }}</h4>
                 </div>
+                @if(!user.isOwner){
                 <app-follow
                   [username]="user.username"
                   [isFollowing]="user.isFollowing"
                   (followChange)="onFollowChange(user)"
                 >
                 </app-follow>
+                }
               </div>
 
               <p class="user-bio">{{ user.bio }}</p>
@@ -208,7 +212,7 @@
 
               <div class="post-footer">
                 <div class="post-stats">
-                  <span class="read-time">{{ getReadTime(post.content) }} min</span>
+                  <span class="read-time">{{ post.readTime }} min</span>
                   <span class="likes">
                     <mat-icon>favorite_border</mat-icon>
                     {{ post.likes }}

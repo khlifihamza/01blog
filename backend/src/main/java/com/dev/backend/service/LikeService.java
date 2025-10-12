@@ -2,7 +2,6 @@ package com.dev.backend.service;
 
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -17,14 +16,18 @@ import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class LikeService {
-    @Autowired
-    private LikeRepository likeRepository;
+    private final LikeRepository likeRepository;
 
-    @Autowired
-    private PostRepository postRepository;
+    private final PostRepository postRepository;
 
-    @Autowired
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
+
+    public LikeService(LikeRepository likeRepository, PostRepository postRepository,
+            NotificationService notificationService) {
+        this.likeRepository = likeRepository;
+        this.notificationService = notificationService;
+        this.postRepository = postRepository;
+    }
 
     public void like(User currentUser, UUID postId) {
         Post post = postRepository.findById(postId)

@@ -29,6 +29,7 @@ export interface FeedPost {
   likes: number;
   comments: number;
   thumbnail: string;
+  readTime: number | 0;
 }
 
 export interface DetailPost {
@@ -48,7 +49,6 @@ export interface DetailPost {
   comments: number;
   thumbnail: string;
   isLiked: boolean;
-  isBookmarked: boolean;
   isAuthor: boolean;
 }
 
@@ -92,6 +92,7 @@ export interface DiscoveryPost {
   likes: number;
   comments: number;
   thumbnail: string;
+  readTime: number | 0;
 }
 export interface Comment {
   id: string;

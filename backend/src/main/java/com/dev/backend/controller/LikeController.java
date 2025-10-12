@@ -2,7 +2,6 @@ package com.dev.backend.controller;
 
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,8 +16,11 @@ import com.dev.backend.service.LikeService;
 @RestController
 @RequestMapping("/api")
 public class LikeController {
-    @Autowired
     private LikeService likeService;
+
+    public LikeController(LikeService likeService) {
+        this.likeService = likeService;
+    }
 
     @GetMapping("/like/{postId}")
     public ResponseEntity<ApiResponse> like(@PathVariable UUID postId, @AuthenticationPrincipal User currentUser) {

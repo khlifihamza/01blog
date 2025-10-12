@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -24,13 +24,13 @@ import { ErrorService } from '../../../core/services/error.service';
     MatProgressSpinnerModule,
   ],
   templateUrl: './register.html',
-  styleUrls: ['./register.css'],
+  styleUrls: ['../auth.css'],
 })
 export class RegisterComponent {
   registerForm: FormGroup;
   passwordVisible = false;
   confirmPasswordVisible = false;
-  loading = false;
+  loading = signal(false);
 
   constructor(
     private fb: FormBuilder,
@@ -79,16 +79,16 @@ export class RegisterComponent {
       confirmPassword: this.registerForm.value.confirmPassword,
     };
 
-    this.loading = true;
+    this.loading.set(true);
 
     this.authService.register(registrationRequest).subscribe({
       next: () => {
-        this.loading = false;
+        this.loading.set(false);
         this.errorService.showSuccess('Account created successfully!');
         this.navigateToLogin();
       },
       error: (error) => {
-        this.loading = false;
+        this.loading.set(false);
         this.errorService.handleError(error);
       },
     });

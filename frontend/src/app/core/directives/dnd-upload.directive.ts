@@ -6,12 +6,25 @@ import { Directive, signal, output } from '@angular/core';
     '(dragover)': 'onDragOver($event)',
     '(dragleave)': 'onDragLeave($event)',
     '(drop)': 'onDrop($event)',
-    '[class.dragover]': 'dragging()'
-  }
+    '[class.dragover]': 'dragging()',
+  },
 })
 export class DndUploadDirective {
   dragging = signal(false);
   filesDropped = output<File[]>();
+
+  private readonly acceptedTypes = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/svg+xml',
+    'video/mp4',
+    'video/webm',
+    'video/ogg',
+    'video/quicktime',
+  ];
 
   onDragOver(event: DragEvent): void {
     event.preventDefault();
@@ -30,9 +43,13 @@ export class DndUploadDirective {
     event.stopPropagation();
     this.dragging.set(false);
     if (!event.dataTransfer) return;
+
     const files = Array.from(event.dataTransfer.files || []);
-    if (files.length) {
-      this.filesDropped.emit(files);
+
+    const mediaFiles = files.filter((file) => this.acceptedTypes.includes(file.type));
+
+    if (mediaFiles.length) {
+      this.filesDropped.emit(mediaFiles);
     }
   }
 }

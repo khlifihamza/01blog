@@ -2,7 +2,6 @@ package com.dev.backend.service;
 
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -15,17 +14,21 @@ import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class FollowService {
-    @Autowired
-    private FollowRepository followRepository;
+    private final FollowRepository followRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
+
+    public FollowService(FollowRepository followRepository, UserRepository userRepository,
+            NotificationService notificationService) {
+        this.followRepository = followRepository;
+        this.notificationService = notificationService;
+        this.userRepository = userRepository;
+    }
 
     public void followUser(UUID followerId, String username) {
-        UUID userToFollowId = userRepository.findByUsername(username).orElseThrow().getId();
+        UUID userToFollowId = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
         if (followerId.equals(userToFollowId)) {
             throw new DataIntegrityViolationException("You cannot follow yourself.");
         }
@@ -51,7 +54,7 @@ public class FollowService {
     }
 
     public void unfollowUser(UUID unfollowerId, String username) {
-        UUID userToUnfollowId = userRepository.findByUsername(username).orElseThrow().getId();
+        UUID userToUnfollowId = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
         if (unfollowerId.equals(userToUnfollowId)) {
             throw new DataIntegrityViolationException("You cannot unfollow yourself.");
         }

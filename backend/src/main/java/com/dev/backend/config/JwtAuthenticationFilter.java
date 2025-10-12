@@ -1,12 +1,12 @@
 package com.dev.backend.config;
 
+import org.springframework.security.access.AccessDeniedException;
 import com.dev.backend.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,14 +22,19 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    @Autowired
-    private HandlerExceptionResolver handlerExceptionResolver;
 
-    @Autowired
-    private JwtService jwtService;
+    private final HandlerExceptionResolver handlerExceptionResolver;
 
-    @Autowired
-    private UserDetailsService userDetailsService;
+    private final JwtService jwtService;
+
+    private final UserDetailsService userDetailsService;
+
+    public JwtAuthenticationFilter(HandlerExceptionResolver handlerExceptionResolver, JwtService jwtService,
+            UserDetailsService userDetailsService) {
+        this.handlerExceptionResolver = handlerExceptionResolver;
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -51,6 +56,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (username != null && authentication == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+
+                if (!userDetails.isAccountNonLocked()) {
+                    SecurityContextHolder.clearContext();
+                    throw new AccessDeniedException("you're banned");
+                }
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

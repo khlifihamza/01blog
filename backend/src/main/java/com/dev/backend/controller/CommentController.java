@@ -3,7 +3,6 @@ package com.dev.backend.controller;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,8 +25,11 @@ import com.dev.backend.service.CommentService;
 @RestController
 @RequestMapping("/api/comment")
 public class CommentController {
-        @Autowired
-        private CommentService commentService;
+        private final CommentService commentService;
+
+        public CommentController(CommentService commentService) {
+                this.commentService = commentService;
+        }
 
         @PostMapping("/add")
         public ResponseEntity<CommentResponse> addComment(@Validated @RequestBody CommentRequest commentDto,

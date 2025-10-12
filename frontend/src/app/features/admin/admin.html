@@ -250,8 +250,7 @@
                       <mat-icon>visibility_off</mat-icon>
                       Ban User
                     </button>
-                    }
-                    @if(report.postId){
+                    } @if(report.postId){
                     <button mat-menu-item (click)="viewPost(report.postId)">
                       <mat-icon>visibility</mat-icon>
                       View Post
@@ -349,7 +348,7 @@
                       <mat-icon>account_circle</mat-icon>
                       View Profile
                     </button>
-                    @if(user.status === "ACTIVE"){
+                    @if(user.role !== "ADMIN"){ @if(user.status === "ACTIVE"){
                     <button mat-menu-item (click)="banUser(user.username)">
                       <mat-icon>person_off</mat-icon>
                       Ban User
@@ -362,8 +361,8 @@
                     }
                     <button mat-menu-item (click)="deleteUser(user)">
                       <mat-icon>delete</mat-icon>
-                      Delete User
-                    </button>
+                      Delete User</button
+                    >}
                   </mat-menu>
                 </td>
               </ng-container>
@@ -425,26 +424,30 @@
                     <mat-icon>account_circle</mat-icon>
                     Profile
                   </button>
-                  @if(user.status === "ACTIVE"){
-                  <button mat-button (click)="banUser(user.username)" color="warn">
-                    <mat-icon>person_off</mat-icon>
-                    Ban
-                  </button>
-                  }@else{
-                  <button mat-button (click)="unbanUser(user.username)" color="accent">
-                    <mat-icon>person</mat-icon>
-                    Unban
-                  </button>
-                  }
-                  <button mat-icon-button [matMenuTriggerFor]="mobileUserMenu">
+                  @if(user.role !== "ADMIN"){<button
+                    mat-icon-button
+                    [matMenuTriggerFor]="mobileUserMenu"
+                  >
                     <mat-icon>more_vert</mat-icon>
                   </button>
                   <mat-menu #mobileUserMenu="matMenu">
+                    @if(user.status === "ACTIVE"){
+                    <button mat-menu-item (click)="banUser(user.username)" color="warn">
+                      <mat-icon>person_off</mat-icon>
+                      Ban
+                    </button>
+                    }@else{
+                    <button mat-menu-item (click)="unbanUser(user.username)" color="accent">
+                      <mat-icon>person</mat-icon>
+                      Unban
+                    </button>
+                    }
                     <button mat-menu-item (click)="deleteUser(user)">
                       <mat-icon>delete</mat-icon>
                       Delete User
                     </button>
                   </mat-menu>
+                  }
                 </div>
               </mat-card-content>
             </mat-card>

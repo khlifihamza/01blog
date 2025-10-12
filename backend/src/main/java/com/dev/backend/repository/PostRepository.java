@@ -34,7 +34,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     Page<Post> findByTitleContainingIgnoreCase(String query, Pageable pageable);
 
-    List<Post> findTop9ByOrderByLikes();
+    List<Post> findTop9ByUserIdNotOrderByLikesDesc(UUID currentUserId);
 
     Page<Post> findAll(Pageable pageable);
 }

@@ -77,7 +77,6 @@ export class PostDetailComponent implements OnInit {
     let postId = this.route.snapshot.paramMap.get('id');
     if (postId != null) {
       this.loadPost(postId);
-      this.loadComments(postId);
     }
   }
 
@@ -92,9 +91,10 @@ export class PostDetailComponent implements OnInit {
           this.formatContent(this.post()!.content)
         );
         this.readTime.set(this.getReadTime(post.content));
+        this.loadComments(postId);
       },
       error: (error) => {
-        if (error.status === 422) {
+        if (error.status === 404 || error.status === 422) {
           this.postNotFound.set(true);
         }
       },
@@ -289,12 +289,6 @@ export class PostDetailComponent implements OnInit {
     }
   }
 
-  toggleBookmark() {
-    if (this.post()) {
-      this.post()!.isBookmarked = !this.post()!.isBookmarked;
-    }
-  }
-
   onFollowChange(isFollowing: boolean) {
     this.isFollowing.set(isFollowing);
     this.post()!.author.followers += this.isFollowing() ? 1 : -1;
@@ -347,6 +341,10 @@ export class PostDetailComponent implements OnInit {
 
   goBack() {
     this.location.back();
+  }
+
+  goHome() {
+    this.router.navigate(['/']);
   }
 
   editPost() {

@@ -8,7 +8,7 @@
     <div class="featured-section">
       <h2 class="section-title">Stories</h2>
       <!-- Empty State -->
-      @if(allPosts().length === 0 && !isLoading) {
+      @if(allPosts().length === 0 && !isLoading()) {
       <mat-card class="empty-state-card">
         <div class="empty-state-content">
           <mat-icon class="empty-icon">explore</mat-icon>
@@ -40,7 +40,7 @@
             <h1 class="featured-title">{{ post.title }}</h1>
 
             <div class="post-stats">
-              <span class="read-time">{{ getReadTime(post.content) }} min read</span>
+              <span class="read-time">{{ post.readTime }} min read</span>
               <span class="separator">•</span>
               <span class="likes">
                 <mat-icon>favorite_border</mat-icon>

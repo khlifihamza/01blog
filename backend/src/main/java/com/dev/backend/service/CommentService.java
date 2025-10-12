@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -23,20 +22,24 @@ import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class CommentService {
-        @Autowired
-        private CommentRepository commentRepository;
+        private final CommentRepository commentRepository;
 
-        @Autowired
-        private PostRepository postRepository;
+        private final PostRepository postRepository;
 
-        @Autowired
-        private NotificationService notificationService;
+        private final NotificationService notificationService;
 
-        @Autowired
-        private UserRepository userRepository;
+        private final UserRepository userRepository;
 
         @Value("${file.fetchUrl}")
         private String fetchUrl;
+
+        public CommentService(CommentRepository commentRepository, PostRepository postRepository,
+                        NotificationService notificationService, UserRepository userRepository) {
+                this.commentRepository = commentRepository;
+                this.notificationService = notificationService;
+                this.postRepository = postRepository;
+                this.userRepository = userRepository;
+        }
 
         public CommentResponse comment(User currentUser, UUID postId, String content) {
                 Post post = postRepository.findById(postId)
@@ -69,6 +72,8 @@ public class CommentService {
         }
 
         public List<CommentResponse> getPostComments(UUID postId, UUID currentUserId, Pageable pageable) {
+                postRepository.findById(postId)
+                                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
                 List<Comment> comments = commentRepository.findByPostIdOrderByCreatedAtDesc(postId, pageable)
                                 .getContent();
                 List<CommentResponse> commentsResponse = new ArrayList<>();

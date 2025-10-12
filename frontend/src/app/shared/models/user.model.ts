@@ -61,6 +61,7 @@ export interface DiscoveryUser {
   bio: string;
   followers: number;
   posts: number;
+  isOwner: boolean,
   isFollowing: boolean;
 }
 

@@ -1,6 +1,5 @@
 package com.dev.backend.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,8 +15,11 @@ import com.dev.backend.service.DiscoveryService;
 @RestController
 @RequestMapping("/api/discovery")
 public class DiscoveryController {
-        @Autowired
-        private DiscoveryService discoveryService;
+        private final DiscoveryService discoveryService;
+
+        public DiscoveryController(DiscoveryService discoveryService) {
+                this.discoveryService = discoveryService;
+        }
 
         @GetMapping("suggest")
         public ResponseEntity<DiscoveryResponse> getDiscoveryData(

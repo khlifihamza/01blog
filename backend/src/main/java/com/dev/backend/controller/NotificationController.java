@@ -3,7 +3,6 @@ package com.dev.backend.controller;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,8 +22,11 @@ import com.dev.backend.service.NotificationService;
 @RestController
 @RequestMapping("/api/notification")
 public class NotificationController {
-    @Autowired
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
+
+    public NotificationController(NotificationService notificationService) {
+        this.notificationService = notificationService;
+    }
 
     @PatchMapping("/seen/{id}")
     public ResponseEntity<ApiResponse> markAsRead(@PathVariable UUID id, @AuthenticationPrincipal User currentUser) {

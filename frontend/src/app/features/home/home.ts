@@ -37,7 +37,7 @@ import { ErrorService } from '../../core/services/error.service';
   styleUrl: './home.css',
 })
 export class HomeComponent implements OnInit {
-  isLoading = false;
+  isLoading = signal(false);
   allPosts = signal<FeedPost[]>([]);
   page = 0;
   pageSize = 10;
@@ -71,18 +71,23 @@ export class HomeComponent implements OnInit {
   }
 
   loadFeedPosts() {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.postService.getFeedPosts(this.page, this.pageSize).subscribe({
       next: (posts) => {
         this.allPosts.set(posts);
         this.hasMore = posts.length >= this.pageSize;
-        this.isLoading = false;
+        this.isLoading.set(false);
+        this.updateReadtime();
       },
       error: (error) => {
         this.errorService.handleError(error);
-        this.isLoading = false;
+        this.isLoading.set(false);
       },
     });
+  }
+
+  updateReadtime() {
+    this.allPosts().map((p) => (p.readTime = this.getReadTime(p.content)));
   }
 
   loadMorePosts() {
@@ -100,6 +105,7 @@ export class HomeComponent implements OnInit {
           this.allPosts.update((currentPosts) => [...currentPosts, ...posts]);
         }
         this.isLoadingMore = false;
+        this.updateReadtime();
       },
       error: (error) => {
         this.errorService.handleError(error);
