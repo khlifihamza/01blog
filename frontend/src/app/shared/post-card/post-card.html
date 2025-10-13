@@ -1,0 +1,35 @@
+<mat-card class="featured-card" (click)="onOpenPost()">
+  <div class="featured-content">
+    <div class="featured-text">
+      <div class="post-meta">
+        <img
+          [src]="avatar || 'default-avatar.png'"
+          [alt]="username"
+          class="author-avatar-small"
+        />
+        <span class="author-name">{{ username }}</span>
+        <span class="publish-date">{{ formatDate(post.createdAt) }}</span>
+      </div>
+
+      <h1 class="featured-title">{{ post.title }}</h1>
+
+      <div class="post-stats">
+        <span class="read-time">{{ readTime }} min read</span>
+        <span class="separator">•</span>
+        <span class="likes">
+          <mat-icon>favorite_border</mat-icon>
+          {{ post.likes }}
+        </span>
+        <span class="separator">•</span>
+        <span class="comments">
+          <mat-icon>comment</mat-icon>
+          {{ post.comments }}
+        </span>
+      </div>
+    </div>
+
+    <div class="featured-image">
+      <img [src]="post.thumbnail" [alt]="post.title" />
+    </div>
+  </div>
+</mat-card>

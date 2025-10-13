@@ -17,6 +17,7 @@ import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { calculReadTime } from '../../../shared/utils/readtime';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { ErrorService } from '../../../core/services/error.service';
+import { PostCardComponent } from '../../../shared/post-card/post-card';
 
 @Component({
   selector: 'app-profile',
@@ -31,6 +32,7 @@ import { ErrorService } from '../../../core/services/error.service';
     FollowComponent,
     NavbarComponent,
     MatProgressSpinner,
+    PostCardComponent,
   ],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
@@ -91,6 +93,7 @@ export class ProfileComponent {
       next: (posts) => {
         this.userPosts.set(posts);
         this.hasMore = posts.length >= this.pageSize;
+        this.updateReadtime();
       },
       error: (error) => this.errorService.handleError(error),
     });
@@ -111,6 +114,7 @@ export class ProfileComponent {
           this.userPosts.update((currentPosts) => [...currentPosts, ...posts]);
         }
         this.isLoadingMore = false;
+        this.updateReadtime();
       },
       error: (error) => {
         this.errorService.handleError(error);
@@ -118,6 +122,10 @@ export class ProfileComponent {
         this.page--;
       },
     });
+  }
+
+  updateReadtime() {
+    this.userPosts().map((p) => (p.readTime = this.getReadTime(p.content)));
   }
 
   formatDate(dateStr: string): string {

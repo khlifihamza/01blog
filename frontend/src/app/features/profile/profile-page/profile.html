@@ -92,41 +92,13 @@
           </div>
         </mat-card>
         } @for (post of userPosts(); track post.id) {
-        <mat-card class="featured-card" (click)="openPost(post)">
-          <div class="featured-content">
-            <div class="featured-text">
-              <div class="post-meta">
-                <img
-                  [src]="profile()!.avatar ? profile()!.avatar : 'default-avatar.png'"
-                  [alt]="profile()!.username"
-                  class="author-avatar-small"
-                />
-                <span class="author-name">{{ profile()!.username }}</span>
-                <span class="publish-date">{{ formatDate(post.createdAt) }}</span>
-              </div>
-
-              <h1 class="featured-title">{{ post.title }}</h1>
-
-              <div class="post-stats">
-                <span class="read-time">{{ getReadTime(post.content) }} min read</span>
-                <span class="separator">•</span>
-                <span class="likes">
-                  <mat-icon>favorite_border</mat-icon>
-                  {{ post.likes }}
-                </span>
-                <span class="separator">•</span>
-                <span class="comments">
-                  <mat-icon>comment</mat-icon>
-                  {{ post.comments }}
-                </span>
-              </div>
-            </div>
-
-            <div class="featured-image">
-              <img [src]="post.thumbnail" [alt]="post.title" />
-            </div>
-          </div>
-        </mat-card>
+        <app-post-card
+          [post]="post"
+          [username] ="profile()!.username"
+          [avatar] = "profile()!.avatar"
+          [readTime]="post.readTime"
+          (open)="openPost($event)"
+        ></app-post-card>
         }
         <!-- Loading Spinner -->
         @if(isLoadingMore) {

@@ -68,6 +68,7 @@ export interface ProfilePost {
   likes: number;
   comments: number;
   thumbnail: string;
+  readTime: number | 0;
 }
 
 export interface Post {
