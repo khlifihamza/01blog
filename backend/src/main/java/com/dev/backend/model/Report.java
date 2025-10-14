@@ -28,15 +28,15 @@ public class Report extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "reported_user")
-    private User reported_user;
+    private User reportedUser;
 
     @ManyToOne
     @JoinColumn(name = "reported_post")
-    private Post reported_post;
+    private Post reportedPost;
 
     @AssertTrue(message = "Either user or post must be set, but not both")
     private boolean isValidReference() {
-        return (reported_user != null && reported_post == null) || (reported_user == null && reported_post != null);
+        return (reportedUser != null && reportedPost == null) || (reportedUser == null && reportedPost != null);
     }
 
     public Report() {
@@ -54,12 +54,12 @@ public class Report extends BaseEntity {
         return reporter;
     }
 
-    public Post getReported_post() {
-        return reported_post;
+    public Post getReportedPost() {
+        return reportedPost;
     }
 
-    public User getReported_user() {
-        return reported_user;
+    public User getReportedUser() {
+        return reportedUser;
     }
 
     public ReportStatus getStatus() {
@@ -82,11 +82,11 @@ public class Report extends BaseEntity {
         this.reporter = reporter;
     }
 
-    public void setReported_post(Post reported_post) {
-        this.reported_post = reported_post;
+    public void setReportedPost(Post reportedPost) {
+        this.reportedPost = reportedPost;
     }
 
-    public void setReported_user(User reported_user) {
-        this.reported_user = reported_user;
+    public void setReportedUser(User reportedUser) {
+        this.reportedUser = reportedUser;
     }
 }

@@ -43,21 +43,34 @@ public class ReportService {
         report.setDetails(reportDto.details());
         report.setReporter(reporterUser);
         report.setStatus(ReportStatus.PENDING);
+
         if (reportDto.reportedPost() != null) {
             Post reportedPost = postRepository.getReferenceById(reportDto.reportedPost());
             if (reportedPost.getUser().getId().equals(reporterUser.getId())) {
                 throw new DataIntegrityViolationException("You cannot report your post.");
             }
-            report.setReported_post(reportedPost);
+
+            if (reportRepository.existsByReporterAndReportedPost(reporterUser, reportedPost)) {
+                throw new DataIntegrityViolationException("You have already reported this post.");
+            }
+
+            report.setReportedPost(reportedPost);
         }
+
         if (reportDto.reportedUsername() != null) {
             User reportedUser = userRepository.findByUsername(reportDto.reportedUsername())
                     .orElseThrow(() -> new EntityNotFoundException("User not found"));
             if (reportedUser.getId().equals(reporterUser.getId())) {
                 throw new DataIntegrityViolationException("You cannot report yourself.");
             }
-            report.setReported_user(reportedUser);
+
+            if (reportRepository.existsByReporterAndReportedUser(reporterUser, reportedUser)) {
+                throw new DataIntegrityViolationException("You have already reported this user.");
+            }
+
+            report.setReportedUser(reportedUser);
         }
+
         reportRepository.save(report);
     }
 
@@ -82,9 +95,9 @@ public class ReportService {
         List<ReportResponse> reportsResponses = new ArrayList<>();
         for (Report report : reports) {
             ReportResponse reportResponse = new ReportResponse(report.getId(),
-                    report.getReported_post() == null ? null : report.getReported_post().getId(),
-                    report.getReported_post() == null ? null : report.getReported_post().getTitle(),
-                    report.getReported_user() == null ? null : report.getReported_user().getUsername(),
+                    report.getReportedPost() == null ? null : report.getReportedPost().getId(),
+                    report.getReportedPost() == null ? null : report.getReportedPost().getTitle(),
+                    report.getReportedUser() == null ? null : report.getReportedUser().getUsername(),
                     report.getReporter().getUsername(), report.getReason(),
                     report.getDetails(), report.getStatus(), report.getCreatedAt().toString());
             reportsResponses.add(reportResponse);
