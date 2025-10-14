@@ -1,5 +1,6 @@
 package com.dev.backend.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,7 @@ import com.dev.backend.service.FollowService;
 public class FollowController {
     private final FollowService followService;
 
+    @Autowired
     public FollowController(FollowService followService) {
         this.followService = followService;
     }

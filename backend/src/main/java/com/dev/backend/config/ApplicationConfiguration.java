@@ -1,6 +1,8 @@
 package com.dev.backend.config;
 
 import com.dev.backend.repository.UserRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 public class ApplicationConfiguration {
     private final UserRepository userRepository;
 
+    @Autowired
     public ApplicationConfiguration(UserRepository userRepository) {
         this.userRepository = userRepository;
     }

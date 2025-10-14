@@ -49,7 +49,7 @@
             <div class="author-details">
               <div class="author-name" (click)="viewProfile()">{{ post()!.author.username }}</div>
               <div class="publish-info">
-                <span>{{ formatDate(post()!.publishedDate) }}</span>
+                <span>{{ post()!.publishedDate }}</span>
                 <span class="separator">•</span>
                 <span>{{ readTime() }} min read</span>
               </div>
@@ -155,7 +155,7 @@
             <div class="comment-header">
               <div>
                 <span class="comment-author" (click)="viewProfile()">{{ comment.username }}</span>
-                <span class="comment-date">{{ formatDate(comment.createAt) }}</span>
+                <span class="comment-date">{{ comment.createAt }}</span>
               </div>
               @if(comment.isOwner){
               <button mat-icon-button [matMenuTriggerFor]="commentMenu">

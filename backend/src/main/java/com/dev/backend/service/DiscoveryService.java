@@ -3,6 +3,7 @@ package com.dev.backend.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ public class DiscoveryService {
 
     private final PostService postService;
 
+    @Autowired
     public DiscoveryService(UserService userService, PostService postService) {
         this.postService = postService;
         this.userService = userService;

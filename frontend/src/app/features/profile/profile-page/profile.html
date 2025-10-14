@@ -73,7 +73,7 @@
         <div class="profile-details">
           <div class="detail-item">
             <mat-icon>calendar_today</mat-icon>
-            <span>Joined {{ formatDate(profile()!.joinDate) }}</span>
+            <span>Joined {{ profile()!.joinDate }}</span>
           </div>
         </div>
       </mat-card-content>
@@ -94,8 +94,8 @@
         } @for (post of userPosts(); track post.id) {
         <app-post-card
           [post]="post"
-          [username] ="profile()!.username"
-          [avatar] = "profile()!.avatar"
+          [username]="profile()!.username"
+          [avatar]="profile()!.avatar"
           [readTime]="post.readTime"
           (open)="openPost($event)"
         ></app-post-card>

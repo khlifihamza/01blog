@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ public class ReportService {
 
     private final UserRepository userRepository;
 
+    @Autowired
     public ReportService(ReportRepository reportRepository, PostRepository postRepository,
             UserRepository userRepository) {
         this.postRepository = postRepository;

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -59,6 +60,7 @@ public class PostService {
     @Value("${file.fetchUrl}")
     private String fetchUrl;
 
+    @Autowired
     public PostService(PostRepository postRepository, UserRepository userRepository,
             NotificationService notificationService, FollowService followService, LikeService likeService,
             HtmlSanitizerService htmlSanitizerService) {

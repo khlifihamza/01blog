@@ -2,6 +2,7 @@ package com.dev.backend.service;
 
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ public class FollowService {
 
     private final NotificationService notificationService;
 
+    @Autowired
     public FollowService(FollowRepository followRepository, UserRepository userRepository,
             NotificationService notificationService) {
         this.followRepository = followRepository;

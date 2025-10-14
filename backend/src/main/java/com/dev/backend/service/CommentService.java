@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -33,6 +34,7 @@ public class CommentService {
         @Value("${file.fetchUrl}")
         private String fetchUrl;
 
+        @Autowired
         public CommentService(CommentRepository commentRepository, PostRepository postRepository,
                         NotificationService notificationService, UserRepository userRepository) {
                 this.commentRepository = commentRepository;

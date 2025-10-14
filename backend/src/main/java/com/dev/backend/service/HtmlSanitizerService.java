@@ -4,13 +4,15 @@ import java.util.regex.Pattern;
 
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class HtmlSanitizerService {
 
     private final PolicyFactory policy;
-
+    
+    @Autowired
     public HtmlSanitizerService() {
         this.policy = new HtmlPolicyBuilder()
                 .allowElements("p", "br", "div", "span")

@@ -22,6 +22,7 @@ import { NavbarComponent } from '../../shared/navbar/navbar';
 import { calculReadTime } from '../../shared/utils/readtime';
 import { ErrorService } from '../../core/services/error.service';
 
+
 @Component({
   selector: 'app-discover',
   standalone: true,
@@ -95,7 +96,7 @@ export class DiscoveryComponent implements OnInit {
           .subscribe({
             next: (response) => {
               this.searchedUsers.set(response.discoveryUsers);
-              this.searchedPosts.set(response.discoveryPosts);
+              this.searchedPosts.set(this.formatPostsDate(response.discoveryPosts));
               this.updateSearchReadtime();
               this.hasMoreSearchResults =
                 response.discoveryPosts.length >= this.searchPageSize ||
@@ -117,7 +118,7 @@ export class DiscoveryComponent implements OnInit {
   loadData() {
     this.discoveryService.getDiscoveryData().subscribe({
       next: (response) => {
-        this.suggestedPosts.set(response.discoveryPosts);
+        this.suggestedPosts.set(this.formatPostsDate(response.discoveryPosts));
         this.suggestedUsers.set(response.discoveryUsers);
         this.updateDiscoveryReadtime();
       },
@@ -125,7 +126,14 @@ export class DiscoveryComponent implements OnInit {
     });
   }
 
-  onFilterChange() {}
+  formatPostsDate(posts: DiscoveryPost[]): DiscoveryPost[] {
+    return posts.map((p) => {
+      return {
+        ...p,
+        publishedDate: this.formatDate(p.publishedDate),
+      };
+    });
+  }
 
   loadMoreSearchResults() {
     if (this.isLoadingMoreSearchResults || !this.hasMoreSearchResults) return;
@@ -146,7 +154,7 @@ export class DiscoveryComponent implements OnInit {
           if (response.discoveryPosts.length > 0) {
             this.searchedPosts.update((currentPosts) => [
               ...currentPosts,
-              ...response.discoveryPosts,
+              ...this.formatPostsDate(response.discoveryPosts),
             ]);
           }
           if (response.discoveryUsers.length > 0) {

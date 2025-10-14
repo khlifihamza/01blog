@@ -32,13 +32,21 @@
         (click)="handleNotificationClick(notification, $event)"
       >
         <div class="notification-icon" [class]="'icon-' + notification.type">
-          <mat-icon>{{ getNotificationIcon(notification.type) }}</mat-icon>
+          @switch (notification.type) { @case ('like') {
+          <mat-icon>favorite</mat-icon>
+          } @case ('comment') {
+          <mat-icon>comment</mat-icon>
+          } @case ('follow') {
+          <mat-icon>person_add</mat-icon>
+          } @default {
+          <mat-icon>article</mat-icon>
+          } }
         </div>
 
         <div class="notification-content">
           <div class="notification-header">
             <h4 class="notification-title">{{ notification.title }}</h4>
-            <span class="notification-time">{{ formatTime(notification.createdAt) }}</span>
+            <span class="notification-time">{{ notification.createdAt }}</span>
           </div>
           <p class="notification-message">{{ notification.message }}</p>
         </div>
@@ -60,9 +68,7 @@
         <h3>No notifications yet</h3>
         <p>When you get notifications, they'll show up here</p>
       </div>
-      }
-
-      @if(loading()){
+      } @if(loading()){
       <div class="loading-spinner">
         <mat-spinner diameter="40"></mat-spinner>
       </div>

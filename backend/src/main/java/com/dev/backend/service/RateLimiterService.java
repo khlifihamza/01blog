@@ -2,6 +2,8 @@ package com.dev.backend.service;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.config.RateLimitConfig;
@@ -16,6 +18,7 @@ public class RateLimiterService {
     private final Map<String, Bucket> ipBucketCache = new ConcurrentHashMap<>();
     private final RateLimitConfig config;
 
+    @Autowired
     public RateLimiterService(RateLimitConfig config) {
         this.config = config;
     }

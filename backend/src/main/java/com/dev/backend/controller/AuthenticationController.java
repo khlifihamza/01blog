@@ -10,6 +10,7 @@ import com.dev.backend.service.UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -25,6 +26,7 @@ public class AuthenticationController {
 
     private final UserService authenticationService;
 
+    @Autowired
     public AuthenticationController(JwtService jwtService, UserService authenticationService) {
         this.jwtService = jwtService;
         this.authenticationService = authenticationService;

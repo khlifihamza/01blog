@@ -19,6 +19,8 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { ErrorService } from '../../../core/services/error.service';
 import { PostCardComponent } from '../../../shared/post-card/post-card';
 
+
+
 @Component({
   selector: 'app-profile',
   standalone: true,
@@ -81,6 +83,7 @@ export class ProfileComponent {
   loadProfile() {
     this.profileService.getProfileDetails(this.username).subscribe({
       next: (profile) => {
+        profile.joinDate = this.formatDate(profile.joinDate);
         this.profile.set(profile);
         this.isFollowing.set(profile.isFollowing);
       },

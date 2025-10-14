@@ -1,5 +1,6 @@
 package com.dev.backend.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,6 +18,7 @@ import com.dev.backend.service.DiscoveryService;
 public class DiscoveryController {
         private final DiscoveryService discoveryService;
 
+        @Autowired
         public DiscoveryController(DiscoveryService discoveryService) {
                 this.discoveryService = discoveryService;
         }

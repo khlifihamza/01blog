@@ -3,6 +3,7 @@ package com.dev.backend.controller;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,6 +28,7 @@ import com.dev.backend.service.CommentService;
 public class CommentController {
         private final CommentService commentService;
 
+        @Autowired
         public CommentController(CommentService commentService) {
                 this.commentService = commentService;
         }

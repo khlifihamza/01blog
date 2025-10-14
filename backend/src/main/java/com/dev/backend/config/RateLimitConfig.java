@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "rate.limit")
 public class RateLimitConfig {
-
     private boolean enabled = true;
     private long capacity = 100;
     private long tokens = 100;
