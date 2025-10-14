@@ -69,7 +69,7 @@ export class NotificationsComponent {
 
     this.notificationService.getNotifications(this.page, this.pageSize).subscribe({
       next: (notifications) => {
-        this.allNotifications.set(notifications);
+        this.allNotifications.set(this.formatNotificationsDate(notifications));
         this.hasMoreNotifications = notifications.length >= this.pageSize;
         this.updateCounts();
         this.loading.set(false);
@@ -93,7 +93,10 @@ export class NotificationsComponent {
           this.hasMoreNotifications = false;
         }
         if (notifications.length > 0) {
-          this.allNotifications.update((current) => [...current, ...notifications]);
+          this.allNotifications.update((current) => [
+            ...current,
+            ...this.formatNotificationsDate(notifications),
+          ]);
         }
         this.loading.set(false);
       },
@@ -105,19 +108,18 @@ export class NotificationsComponent {
     });
   }
 
+  formatNotificationsDate(notifications: Notification[]): Notification[] {
+    return notifications.map((n) => {
+      return {
+        ...n,
+        createdAt: this.formatTime(n.createdAt),
+      };
+    });
+  }
+
   updateCounts() {
     const count = this.allNotifications().filter((n) => !n.isRead).length;
     this.unreadCount.set(count);
-  }
-
-  getNotificationIcon(type: string): string {
-    const icons = {
-      like: 'favorite',
-      comment: 'comment',
-      follow: 'person_add',
-      post: 'article',
-    };
-    return icons[type as keyof typeof icons] || 'notifications';
   }
 
   formatTime(dateStr: string): string {

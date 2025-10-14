@@ -8,7 +8,7 @@ import {
   FormsModule,
 } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CreatePostPayload, MediaItem } from '../../../shared/models/post.model';
 import { MatMenuModule } from '@angular/material/menu';
 import { DndUploadDirective } from '../../../core/directives/dnd-upload.directive';
@@ -43,7 +43,7 @@ import { ErrorService } from '../../../core/services/error.service';
     NavbarComponent,
   ],
   templateUrl: './edit-post.html',
-  styleUrl: '../post.css',
+  styleUrls: ['../post.css', '../post-detail/post-detail.css'],
 })
 export class EditPostComponent {
   @ViewChild('editorDiv') editorDiv!: ElementRef<HTMLDivElement>;
@@ -68,6 +68,7 @@ export class EditPostComponent {
   showAddButton = signal(false);
   jump = false;
   safeContent: SafeHtml | null = null;
+  postNotFound = signal(false);
 
   constructor(
     private fb: FormBuilder,
@@ -75,7 +76,8 @@ export class EditPostComponent {
     private postService: PostService,
     private sanitizer: DomSanitizer,
     private errorService: ErrorService,
-    private location: Location
+    private location: Location,
+    private router: Router
   ) {
     this.editForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(100)]],
@@ -109,7 +111,11 @@ export class EditPostComponent {
           this.convertExistingMediaToMediaItems();
         }, 0);
       },
-      error: (error) => this.errorService.handleError(error),
+      error: (error) => {
+        if (error.status === 404 || error.status === 422) {
+          this.postNotFound.set(true);
+        }
+      },
     });
   }
 
@@ -409,6 +415,10 @@ export class EditPostComponent {
 
   goBack() {
     this.location.back();
+  }
+
+  goHome() {
+    this.router.navigate(['/']);
   }
 
   onThumbnailSelect(event: Event) {

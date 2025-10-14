@@ -126,7 +126,7 @@
 
               <ng-container matColumnDef="date">
                 <th mat-header-cell *matHeaderCellDef>Date</th>
-                <td mat-cell *matCellDef="let report">{{ formatDate(report.createdAt) }}</td>
+                <td mat-cell *matCellDef="let report">{{ report.createdAt }}</td>
               </ng-container>
 
               <ng-container matColumnDef="actions">
@@ -218,7 +218,7 @@
 
                 <div class="card-row">
                   <span class="card-label">Date:</span>
-                  <span class="card-value">{{ formatDate(report.createdAt) }}</span>
+                  <span class="card-value">{{ report.createdAt }}</span>
                 </div>
 
                 <div class="card-actions">
@@ -325,7 +325,7 @@
 
               <ng-container matColumnDef="joinDate">
                 <th mat-header-cell *matHeaderCellDef>Join Date</th>
-                <td mat-cell *matCellDef="let user">{{ formatDate(user.joinDate) }}</td>
+                <td mat-cell *matCellDef="let user">{{ user.joinDate }}</td>
               </ng-container>
 
               <ng-container matColumnDef="status">
@@ -409,7 +409,7 @@
 
                 <div class="card-row">
                   <span class="card-label">Joined:</span>
-                  <span class="card-value">{{ formatDate(user.joinDate) }}</span>
+                  <span class="card-value">{{ user.joinDate }}</span>
                 </div>
 
                 <div class="card-row">
@@ -505,7 +505,7 @@
 
               <ng-container matColumnDef="date">
                 <th mat-header-cell *matHeaderCellDef>Published</th>
-                <td mat-cell *matCellDef="let post">{{ formatDate(post.publishedDate) }}</td>
+                <td mat-cell *matCellDef="let post">{{ post.publishedDate }}</td>
               </ng-container>
 
               <ng-container matColumnDef="status">
@@ -585,7 +585,7 @@
 
                 <div class="card-row">
                   <span class="card-label">Published:</span>
-                  <span class="card-value">{{ formatDate(post.publishedDate) }}</span>
+                  <span class="card-value">{{ post.publishedDate }}</span>
                 </div>
 
                 <div class="card-row">

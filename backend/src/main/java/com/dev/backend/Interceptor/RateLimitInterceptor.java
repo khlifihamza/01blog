@@ -4,6 +4,8 @@ import io.github.bucket4j.Bucket;
 import io.github.bucket4j.ConsumptionProbe;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -16,6 +18,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     private final RateLimiterService rateLimiterService;
     private final RateLimitConfig config;
 
+    @Autowired
     public RateLimitInterceptor(RateLimiterService rateLimiterService,
             RateLimitConfig config) {
         this.rateLimiterService = rateLimiterService;

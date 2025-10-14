@@ -29,6 +29,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { NavbarComponent } from '../../shared/navbar/navbar';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 
+
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
@@ -114,18 +115,14 @@ export class AdminComponent implements OnInit {
         this.pendingReports.set(insights.pendingReports);
       },
     });
-    
-    this.breakpointObserver
-      .observe([Breakpoints.XSmall, Breakpoints.Small])
-      .subscribe(result => {
-        this.isMobile.set(result.matches);
-      });
 
-    this.breakpointObserver
-      .observe([Breakpoints.Tablet])
-      .subscribe(result => {
-        this.isTablet.set(result.matches);
-      });
+    this.breakpointObserver.observe([Breakpoints.XSmall, Breakpoints.Small]).subscribe((result) => {
+      this.isMobile.set(result.matches);
+    });
+
+    this.breakpointObserver.observe([Breakpoints.Tablet]).subscribe((result) => {
+      this.isTablet.set(result.matches);
+    });
   }
 
   ngOnInit() {
@@ -229,7 +226,7 @@ export class AdminComponent implements OnInit {
   loadReports() {
     this.adminService.getReports(this.reportsPage, this.reportsPageSize).subscribe({
       next: (reports) => {
-        this.reports.set(reports);
+        this.reports.set(this.formatReportsDate(reports));
         this.filterReports();
         this.hasMoreReports = reports.length >= this.reportsPageSize;
       },
@@ -240,7 +237,7 @@ export class AdminComponent implements OnInit {
   loadUsers() {
     this.adminService.getUsers(this.usersPage, this.usersPageSize).subscribe({
       next: (users) => {
-        this.users.set(users);
+        this.users.set(this.formatUsersDate(users));
         this.hasMoreUsers = users.length >= this.usersPageSize;
       },
       error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
@@ -250,7 +247,7 @@ export class AdminComponent implements OnInit {
   loadPosts() {
     this.adminService.getPosts(this.postsPage, this.postsPageSize).subscribe({
       next: (posts) => {
-        this.posts.set(posts);
+        this.posts.set(this.formatPostsDate(posts));
         this.filterPosts();
         this.hasMorePosts = posts.length >= this.postsPageSize;
       },
@@ -270,7 +267,10 @@ export class AdminComponent implements OnInit {
           this.hasMoreReports = false;
         }
         if (reports.length > 0) {
-          this.reports.update((currentReports) => [...currentReports, ...reports]);
+          this.reports.update((currentReports) => [
+            ...currentReports,
+            ...this.formatReportsDate(reports),
+          ]);
           this.filterReports();
         }
         this.isLoadingMoreReports.set(false);
@@ -295,7 +295,7 @@ export class AdminComponent implements OnInit {
           this.hasMoreUsers = false;
         }
         if (users.length > 0) {
-          this.users.update((currentUsers) => [...currentUsers, ...users]);
+          this.users.update((currentUsers) => [...currentUsers, ...this.formatUsersDate(users)]);
         }
         this.isLoadingMoreUsers.set(false);
       },
@@ -319,7 +319,7 @@ export class AdminComponent implements OnInit {
           this.hasMorePosts = false;
         }
         if (posts.length > 0) {
-          this.posts.update((currentPosts) => [...currentPosts, ...posts]);
+          this.posts.update((currentPosts) => [...currentPosts, ...this.formatPostsDate(posts)]);
         }
         this.isLoadingMorePosts.set(false);
       },
@@ -328,6 +328,33 @@ export class AdminComponent implements OnInit {
         this.isLoadingMorePosts.set(false);
         this.postsPage--;
       },
+    });
+  }
+
+  formatReportsDate(reports: Report[]): Report[] {
+    return reports.map((r) => {
+      return {
+        ...r,
+        createdAt: this.formatDate(r.createdAt),
+      };
+    });
+  }
+
+  formatPostsDate(posts: Post[]): Post[] {
+    return posts.map((p) => {
+      return {
+        ...p,
+        publishedDate: this.formatDate(p.publishedDate),
+      };
+    });
+  }
+
+  formatUsersDate(user: User[]): User[] {
+    return user.map((u) => {
+      return {
+        ...u,
+        joinDate: this.formatDate(u.joinDate),
+      };
     });
   }
 
@@ -368,7 +395,7 @@ export class AdminComponent implements OnInit {
             this.hasMoreUserSearchResults = false;
           }
           if (users.length > 0) {
-            this.users.update((currentUsers) => [...currentUsers, ...users]);
+            this.users.update((currentUsers) => [...currentUsers, ...this.formatUsersDate(users)]);
           }
           this.isLoadingMoreUserSearch.set(false);
         },
@@ -403,7 +430,7 @@ export class AdminComponent implements OnInit {
             this.hasMorePostSearchResults = false;
           }
           if (posts.length > 0) {
-            this.posts.update((currentPosts) => [...currentPosts, ...posts]);
+            this.posts.update((currentPosts) => [...currentPosts, ...this.formatPostsDate(posts)]);
           }
           this.isLoadingMorePostSearch.set(false);
         },

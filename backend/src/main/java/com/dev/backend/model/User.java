@@ -55,7 +55,7 @@ public class User extends BaseEntity implements UserDetails {
     @OneToMany(mappedBy = "recipient", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Notification> notifications = new ArrayList<>();
 
-    @OneToMany(mappedBy = "reported_user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "reportedUser", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Report> reports = new ArrayList<>();
 
     public User() {

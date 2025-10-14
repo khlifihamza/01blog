@@ -1,5 +1,6 @@
 package com.dev.backend.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.dto.InsightsResponse;
@@ -16,6 +17,7 @@ public class AdminService {
 
     private final LikeService likeService;
 
+    @Autowired
     public AdminService(ReportService reportService, UserService userService, PostService postService,
             CommentService commentService, LikeService likeService) {
         this.commentService = commentService;

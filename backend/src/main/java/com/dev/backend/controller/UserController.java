@@ -1,6 +1,8 @@
 package com.dev.backend.controller;
 
 import java.io.IOException;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,12 +30,13 @@ import com.dev.backend.service.UserService;
 public class UserController {
         private final UserService userService;
 
+        @Value("${file.upload-dir}")
+        private String uploadDir;
+
+        @Autowired
         public UserController(UserService userService) {
                 this.userService = userService;
         }
-
-        @Value("${file.upload-dir}")
-        private String uploadDir;
 
         @GetMapping("/{username}")
         public ResponseEntity<ProfileUserResponse> getProfileDetails(@PathVariable String username,

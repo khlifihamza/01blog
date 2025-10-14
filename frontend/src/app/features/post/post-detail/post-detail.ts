@@ -86,6 +86,7 @@ export class PostDetailComponent implements OnInit {
         this.isAuthor = post.isAuthor;
         this.isFollowing.set(post.author.isFollowed);
         this.isLiked.set(post.isLiked);
+        post.publishedDate = this.formatDate(post.publishedDate);
         this.post.set(post);
         this.safeContent = this.sanitizer.bypassSecurityTrustHtml(
           this.formatContent(this.post()!.content)
@@ -105,7 +106,7 @@ export class PostDetailComponent implements OnInit {
     if (this.postNotFound()) return;
     this.commentService.getComments(postId, this.page, this.pageSize).subscribe({
       next: (comments) => {
-        this.Comments.set(comments);
+        this.Comments.set(this.formatCommentsDate(comments));
         this.hasMore = comments.length === this.pageSize;
       },
       error: (error) => this.errorService.handleError(error),
@@ -134,7 +135,7 @@ export class PostDetailComponent implements OnInit {
     this.commentService.getComments(postId, this.page, this.pageSize).subscribe({
       next: (newComments) => {
         const currentComments = this.Comments() || [];
-        this.Comments.set([...currentComments, ...newComments]);
+        this.Comments.set([...currentComments, ...this.formatCommentsDate(newComments)]);
         this.hasMore = newComments.length === this.pageSize;
         this.isLoadingMore = false;
       },
@@ -143,6 +144,15 @@ export class PostDetailComponent implements OnInit {
         this.isLoadingMore = false;
         this.page--;
       },
+    });
+  }
+
+  formatCommentsDate(comments: Comment[]): Comment[] {
+    return comments.map((c) => {
+      return {
+        ...c,
+        createAt: this.formatDate(c.createAt),
+      };
     });
   }
 
@@ -187,6 +197,7 @@ export class PostDetailComponent implements OnInit {
 
     this.commentService.addComment(createCommentPayload).subscribe({
       next: (comment) => {
+        comment.createAt = this.formatDate(comment.createAt);
         const comments = this.Comments() || [];
         this.Comments.set([comment, ...comments]);
         this.newCommentText = '';

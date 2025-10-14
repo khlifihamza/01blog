@@ -2,6 +2,7 @@ package com.dev.backend.service;
 
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ public class LikeService {
 
     private final NotificationService notificationService;
 
+    @Autowired
     public LikeService(LikeRepository likeRepository, PostRepository postRepository,
             NotificationService notificationService) {
         this.likeRepository = likeRepository;

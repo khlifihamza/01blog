@@ -2,6 +2,7 @@ package com.dev.backend.controller;
 
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,7 @@ import com.dev.backend.service.LikeService;
 public class LikeController {
     private LikeService likeService;
 
+    @Autowired
     public LikeController(LikeService likeService) {
         this.likeService = likeService;
     }

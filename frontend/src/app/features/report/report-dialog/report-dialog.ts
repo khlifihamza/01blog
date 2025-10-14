@@ -84,7 +84,10 @@ export class ReportDialogComponent {
               this.dialogRef.close(reportData);
               this.errorService.showSuccess('Blog reported successful');
             },
-            error: (error) => this.errorService.handleError(error),
+            error: (error) => {
+              this.errorService.handleError(error);
+              this.dialogRef.close(reportData);
+            },
           });
         }
       });

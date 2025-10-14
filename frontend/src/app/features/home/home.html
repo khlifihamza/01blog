@@ -24,41 +24,13 @@
         </div>
       </mat-card>
       } @for (post of allPosts(); track post.id) {
-      <mat-card class="featured-card" (click)="openPost(post)">
-        <div class="featured-content">
-          <div class="featured-text">
-            <div class="post-meta">
-              <img
-                [src]="post.author.avatar ? post.author.avatar : 'default-avatar.png'"
-                [alt]="post.author.username"
-                class="author-avatar-small"
-              />
-              <span class="author-name">{{ post.author.username }}</span>
-              <span class="publish-date">{{ formatDate(post.createdAt) }}</span>
-            </div>
-
-            <h1 class="featured-title">{{ post.title }}</h1>
-
-            <div class="post-stats">
-              <span class="read-time">{{ post.readTime }} min read</span>
-              <span class="separator">•</span>
-              <span class="likes">
-                <mat-icon>favorite_border</mat-icon>
-                {{ post.likes }}
-              </span>
-              <span class="separator">•</span>
-              <span class="comments">
-                <mat-icon>comment</mat-icon>
-                {{ post.comments }}
-              </span>
-            </div>
-          </div>
-
-          <div class="featured-image">
-            <img [src]="post.thumbnail" [alt]="post.title" />
-          </div>
-        </div>
-      </mat-card>
+      <app-post-card
+        [post]="post"
+        [username]="post.author.username"
+        [avatar] = "post.author.avatar"
+        [readTime]="post.readTime"
+        (open)="openPost($event)"
+      ></app-post-card>
       }
 
       <!-- Loading Spinner -->
