@@ -204,9 +204,9 @@ Optional (for Docker deployment):
 
 1. Create a PostgreSQL database:
 ```sql
-CREATE DATABASE DB01B;
-CREATE USER hkhlifi WITH PASSWORD 'DBFOR01B';
-GRANT ALL PRIVILEGES ON DATABASE DB01B TO hkhlifi;
+CREATE DATABASE dbname;
+CREATE USER dbuser WITH PASSWORD 'dbpassword';
+GRANT ALL PRIVILEGES ON DATABASE dbname TO dbuser;
 ```
 
 2. The application uses Hibernate's `ddl-auto=update`, so tables will be created automatically on first run.
@@ -229,9 +229,9 @@ GRANT ALL PRIVILEGES ON DATABASE DB01B TO hkhlifi;
    
    Edit `backend/src/main/resources/application.properties` if needed:
    ```properties
-   spring.datasource.url=jdbc:postgresql://localhost:5332/DB01B
-   spring.datasource.username=hkhlifi
-   spring.datasource.password=DBFOR01B
+   spring.datasource.url=jdbc:postgresql://localhost:5332/dbname
+   spring.datasource.username=dbuser
+   spring.datasource.password=dbpassword
    ```
 
 3. **Navigate to backend directory**
@@ -281,7 +281,7 @@ GRANT ALL PRIVILEGES ON DATABASE DB01B TO hkhlifi;
 
 4. **Default Admin Credentials** (if seeded):
    - Email: `admin@01blog.com`
-   - Password: `Admin123!`
+   - Password: `01Blog123@`
 
 ---
 
