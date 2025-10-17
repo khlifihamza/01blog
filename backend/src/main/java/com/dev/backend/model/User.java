@@ -52,7 +52,7 @@ public class User extends BaseEntity implements UserDetails {
     @OneToMany(mappedBy = "following", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Follow> followers = new ArrayList<>();
 
-    @OneToMany(mappedBy = "recipient_id", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "recipient", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Notification> notifications = new ArrayList<>();
 
     @OneToMany(mappedBy = "reportedUser", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)

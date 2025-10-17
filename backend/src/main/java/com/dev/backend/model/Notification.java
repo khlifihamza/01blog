@@ -7,7 +7,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.AssertTrue;
 
 @Entity
 @Table(name = "notifications")
@@ -22,24 +21,23 @@ public class Notification extends BaseEntity {
     private String content;
 
     @ManyToOne
-    @JoinColumn(name = "recipient_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User recipient;
 
-    private User sender;
-
-    @ManyToOne
-    @JoinColumn(name = "post_id")
-    private Post post;
-
-    @AssertTrue(message = "Either user or post must be set, but not both")
-    private boolean isValidReference() {
-        return (sender != null && post == null) || (sender == null && post != null);
-    }
+    @Column(nullable = false)
+    private String link;
 
     @Column(nullable = false)
     private boolean seen;
 
     public Notification() {
+    }
+
+    public Notification(User recipient, String content, String link, boolean seen) {
+        this.content = content;
+        this.recipient = recipient;
+        this.link = link;
+        this.seen = seen;
     }
 
     public NotificationType getType() {
@@ -70,20 +68,12 @@ public class Notification extends BaseEntity {
         this.content = content;
     }
 
-    public Post getPost() {
-        return post;
+    public String getLink() {
+        return link;
     }
 
-    public void setPost(Post post) {
-        this.post = post;
-    }
-
-    public User getSender() {
-        return sender;
-    }
-
-    public void setSender(User sender) {
-        this.sender = sender;
+    public void setLink(String link) {
+        this.link = link;
     }
 
     public void setRecipient(User recipient) {

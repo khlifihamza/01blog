@@ -33,7 +33,7 @@ public class NotificationService {
         notification.setSeen(false);
         notification.setContent(message);
         notification.setTitle(title);
-        notification.setPost(post);
+        notification.setLink("/post/" + post.getId());
         notification.setType(type);
         notificationRepository.save(notification);
     }
@@ -44,7 +44,7 @@ public class NotificationService {
         notification.setSeen(false);
         notification.setContent(message);
         notification.setTitle(title);
-        notification.setSender(user);
+        notification.setLink("/profile/" + user.getUsername());
         notification.setType(NotificationType.FOLLOW);
         notificationRepository.save(notification);
     }
@@ -71,13 +71,11 @@ public class NotificationService {
                 .findByRecipientIdOrderByCreatedAtDesc(currentUserId, pageable).getContent();
         List<NotificationResponse> notificationsResponse = new ArrayList<>();
         for (Notification notification : notifications) {
-            String link = notification.getSender() != null ? "/profile/" + notification.getSender().getUsername()
-                    : "/post/" + notification.getPost().getId();
             NotificationResponse notificationResponse = new NotificationResponse(notification.getId(),
                     notification.getType().name().toLowerCase(),
                     notification.getTitle(), notification.getContent(),
                     notification.getCreatedAt().toString(),
-                    notification.getSeen(), link);
+                    notification.getSeen(), notification.getLink());
             notificationsResponse.add(notificationResponse);
         }
         return notificationsResponse;

@@ -46,9 +46,6 @@ public class Post extends BaseEntity {
     @OneToMany(mappedBy = "reportedPost", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Report> reports = new ArrayList<>();
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
-    private List<Notification> notifications = new ArrayList<>();
-
     public Post() {
     }
 

@@ -7,10 +7,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.model.Follow;
-import com.dev.backend.model.Notification;
 import com.dev.backend.model.User;
 import com.dev.backend.repository.FollowRepository;
-import com.dev.backend.repository.NotificationRepository;
 import com.dev.backend.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -74,10 +72,10 @@ public class FollowService {
             throw new EntityNotFoundException("Follow status not exist");
         }
 
-        Follow followRow = followRepository.findByFollowerIdAndFollowingId(unfollowerId, userToUnfollowId);
-
-
-        followRepository.delete(followRow);
+        if (followRepository.existsByFollowerIdAndFollowingId(unfollowerId, userToUnfollowId)) {
+            Follow followRow = followRepository.findByFollowerIdAndFollowingId(unfollowerId, userToUnfollowId);
+            followRepository.delete(followRow);
+        }
     }
 
     public boolean isCurrentUserFollowUser(UUID followerId, UUID followingId) {
