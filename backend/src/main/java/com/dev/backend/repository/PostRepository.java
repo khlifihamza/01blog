@@ -11,10 +11,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.dev.backend.model.Post;
+import com.dev.backend.model.PostStatus;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, UUID> {
-    Page<Post> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
+    Page<Post> findByUserIdAndStatusOrderByCreatedAtDesc(UUID userId, PostStatus status, Pageable pageable);
 
     @Query("""
                 SELECT p
@@ -34,7 +35,9 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     Page<Post> findByTitleContainingIgnoreCase(String query, Pageable pageable);
 
-    List<Post> findTop9ByUserIdNotOrderByLikesDesc(UUID currentUserId);
+    Page<Post> findByTitleAndStatusContainingIgnoreCase(String query, PostStatus status, Pageable pageable);
+
+    List<Post> findTop9ByUserIdNotAndStatusOrderByLikesDesc(UUID currentUserId, PostStatus status);
 
     Page<Post> findAll(Pageable pageable);
 }

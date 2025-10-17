@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.dev.backend.model.User;
+import com.dev.backend.model.UserStatus;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID> {
@@ -23,7 +24,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Page<User> findByUsernameContainingIgnoreCase(String query, Pageable pageable);
 
-    List<User> findTop9ByIdNotOrderByFollowersDesc(UUID currentUserId);
+    Page<User> findByUsernameAndStatusContainingIgnoreCase(String query, UserStatus status, Pageable pageable);
+
+    List<User> findTop9ByIdNotAndStatusOrderByFollowersDesc(UUID currentUserId, UserStatus status);
 
     Page<User> findAll(Pageable pageable);
 }

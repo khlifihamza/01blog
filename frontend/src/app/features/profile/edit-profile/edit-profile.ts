@@ -37,7 +37,7 @@ import { ErrorService } from '../../../core/services/error.service';
   templateUrl: './edit-profile.html',
   styleUrl: './edit-profile.css',
 })
-export class EditProfileComponent{
+export class EditProfileComponent {
   currentProfile = signal<EditUserProfile | null>(null);
   profileForm: FormGroup;
   isLoading = signal(false);
@@ -112,7 +112,7 @@ export class EditProfileComponent{
               next: () => {
                 this.isLoading.set(false);
                 this.errorService.showSuccess('Profile updated successfully!');
-                this.router.navigate(['/profile']);
+                this.router.navigate([`/profile/${this.currentProfile()?.username}`]);
               },
               error: (error) => {
                 this.errorService.handleError(error);
@@ -129,11 +129,7 @@ export class EditProfileComponent{
               error: (error) => this.errorService.handleError(error),
             });
           } else {
-            const avatar =
-              this.newAvatarPreview() === 'default-avatar.png'
-                ? null
-                : this.currentProfile()!.avatar;
-            updateData(avatar);
+            updateData(null);
           }
         }
       });

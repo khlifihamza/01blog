@@ -159,7 +159,9 @@ public class UserService {
         }
         user.setUsername(data.username());
         user.setEmail(data.email());
-        user.setAvatar(data.avatar());
+        if (data.avatar() != null) {
+            user.setAvatar(data.avatar());
+        }
         user.setBio(data.bio());
         userRepository.save(user);
     }
@@ -195,7 +197,8 @@ public class UserService {
     }
 
     public List<DiscoveryUserResponse> getSearchedDiscoveryUsers(UUID currentUserId, String query, Pageable pageable) {
-        List<User> users = userRepository.findByUsernameContainingIgnoreCase(query, pageable).getContent();
+        List<User> users = userRepository
+                .findByUsernameAndStatusContainingIgnoreCase(query, UserStatus.ACTIVE, pageable).getContent();
         List<DiscoveryUserResponse> usersResponse = new ArrayList<>();
         for (User user : users) {
             DiscoveryUserResponse discoveryUserResponse = new DiscoveryUserResponse(user.getId(),
@@ -246,7 +249,8 @@ public class UserService {
     }
 
     public List<DiscoveryUserResponse> getTop9Profiles(UUID currentUserId) {
-        List<User> users = userRepository.findTop9ByIdNotOrderByFollowersDesc(currentUserId);
+        List<User> users = userRepository.findTop9ByIdNotAndStatusOrderByFollowersDesc(currentUserId,
+                UserStatus.ACTIVE);
         List<DiscoveryUserResponse> usersResponse = new ArrayList<>();
         for (User user : users) {
             DiscoveryUserResponse discoveryUserResponse = new DiscoveryUserResponse(user.getId(),

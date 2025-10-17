@@ -7,8 +7,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.model.Follow;
+import com.dev.backend.model.Notification;
 import com.dev.backend.model.User;
 import com.dev.backend.repository.FollowRepository;
+import com.dev.backend.repository.NotificationRepository;
 import com.dev.backend.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -30,7 +32,8 @@ public class FollowService {
     }
 
     public void followUser(UUID followerId, String username) {
-        UUID userToFollowId = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
+        UUID userToFollowId = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
         if (followerId.equals(userToFollowId)) {
             throw new DataIntegrityViolationException("You cannot follow yourself.");
         }
@@ -56,7 +59,8 @@ public class FollowService {
     }
 
     public void unfollowUser(UUID unfollowerId, String username) {
-        UUID userToUnfollowId = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
+        UUID userToUnfollowId = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
         if (unfollowerId.equals(userToUnfollowId)) {
             throw new DataIntegrityViolationException("You cannot unfollow yourself.");
         }
@@ -70,10 +74,10 @@ public class FollowService {
             throw new EntityNotFoundException("Follow status not exist");
         }
 
-        if (followRepository.existsByFollowerIdAndFollowingId(unfollowerId, userToUnfollowId)) {
-            Follow followRow = followRepository.findByFollowerIdAndFollowingId(unfollowerId, userToUnfollowId);
-            followRepository.delete(followRow);
-        }
+        Follow followRow = followRepository.findByFollowerIdAndFollowingId(unfollowerId, userToUnfollowId);
+
+
+        followRepository.delete(followRow);
     }
 
     public boolean isCurrentUserFollowUser(UUID followerId, UUID followingId) {

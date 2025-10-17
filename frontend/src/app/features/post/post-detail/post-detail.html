@@ -25,11 +25,12 @@
                 <mat-icon>delete</mat-icon>
                 <span>Delete Post</span>
               </button>
-              }
+              }@else{
               <button mat-menu-item (click)="reportPost()">
                 <mat-icon>flag</mat-icon>
                 <span>Report</span>
               </button>
+              }
               <button mat-menu-item (click)="copyLink()">
                 <mat-icon>link</mat-icon>
                 <span>Copy Link</span>
@@ -139,7 +140,9 @@
           placeholder="Share your thoughts..."
           rows="3"
         ></textarea>
-        <button mat-raised-button (click)="addComment()" class="comment-button">Post Comment</button>
+        <button mat-raised-button (click)="addComment()" class="comment-button">
+          Post Comment
+        </button>
       </div>
 
       <div class="comments-list">

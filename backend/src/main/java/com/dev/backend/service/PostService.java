@@ -200,7 +200,9 @@ public class PostService {
     public List<ProfilePostResponse> getProfilePosts(String username, UUID currentUserId, Pageable pageable) {
         UUID userId = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
-        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable).getContent();
+        List<Post> posts = postRepository
+                .findByUserIdAndStatusOrderByCreatedAtDesc(userId, PostStatus.PUBLISHED, pageable)
+                .getContent();
         List<ProfilePostResponse> postsResponse = new ArrayList<>();
         for (Post post : posts) {
             if (post.getStatus() == PostStatus.HIDDEN && !userId.equals(currentUserId)) {
@@ -247,7 +249,8 @@ public class PostService {
     }
 
     public List<DiscoveryPostResponse> getSearchedDiscoveryPosts(String query, Pageable pageable) {
-        List<Post> posts = postRepository.findByTitleContainingIgnoreCase(query, pageable).getContent();
+        List<Post> posts = postRepository
+                .findByTitleAndStatusContainingIgnoreCase(query, PostStatus.PUBLISHED, pageable).getContent();
         List<DiscoveryPostResponse> postsResponse = new ArrayList<>();
         for (Post post : posts) {
             DiscoveryPostResponse discoveryPostResponse = new DiscoveryPostResponse(post.getId(),
@@ -267,7 +270,8 @@ public class PostService {
     }
 
     public List<DiscoveryPostResponse> getTop9Posts(UUID currentUserId) {
-        List<Post> posts = postRepository.findTop9ByUserIdNotOrderByLikesDesc(currentUserId);
+        List<Post> posts = postRepository.findTop9ByUserIdNotAndStatusOrderByLikesDesc(currentUserId,
+                PostStatus.PUBLISHED);
         List<DiscoveryPostResponse> postsResponse = new ArrayList<>();
         for (Post post : posts) {
             DiscoveryPostResponse discoveryPostResponse = new DiscoveryPostResponse(post.getId(),
