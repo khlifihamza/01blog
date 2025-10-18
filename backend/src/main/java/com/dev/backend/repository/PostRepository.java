@@ -1,5 +1,6 @@
 package com.dev.backend.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,9 +30,13 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
                        )
                 )
                 AND p.status = 'PUBLISHED'
+                AND (p.createdAt < :lastCreatedAt)
                 ORDER BY p.createdAt DESC
+                LIMIT 10
             """)
-    Page<Post> findFeedPosts(@Param("userId") UUID userId, Pageable pageable);
+    List<Post> findFeedPosts(
+            @Param("userId") UUID userId,
+            @Param("lastCreatedAt") LocalDateTime lastCreatedAt);
 
     Page<Post> findByTitleContainingIgnoreCase(String query, Pageable pageable);
 

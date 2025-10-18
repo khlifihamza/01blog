@@ -1,11 +1,13 @@
 package com.dev.backend.controller;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -45,9 +47,8 @@ public class PostController {
     @GetMapping("/feed")
     public ResponseEntity<List<FeedPostResponse>> getFeedPosts(
             @AuthenticationPrincipal User currentUser,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        List<FeedPostResponse> posts = postService.getFeedPosts(currentUser.getId(), PageRequest.of(page, size));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt) {
+        List<FeedPostResponse> posts = postService.getFeedPosts(currentUser.getId(), lastCreatedAt);
         return ResponseEntity.ok(posts);
     }
 

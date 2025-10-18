@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   DetailPost,
@@ -43,8 +43,12 @@ export class PostService {
     return this.http.get<any>(`${this.url}/profile/${username}?page=${page}&size=${size}`);
   }
 
-  getFeedPosts(page: number = 0, size: number = 10): Observable<FeedPost[]> {
-    return this.http.get<any>(`${this.url}/feed?page=${page}&size=${size}`);
+  getFeedPosts(lastCreatedAt?: string): Observable<FeedPost[]> {
+    let params = new HttpParams();
+    if (lastCreatedAt) {
+      params = params.set('lastCreatedAt', lastCreatedAt);
+    }
+    return this.http.get<any>(`${this.url}/feed`, { params });
   }
 
   uploadFiles(files: FormData): Observable<UploadResponse> {

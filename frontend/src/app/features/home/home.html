@@ -6,7 +6,7 @@
   <div class="main-content">
     <!-- Featured Post -->
     <div class="featured-section">
-      <h2 class="section-title">Stories</h2>
+      <h2 class="section-title">Stories {{print()}}</h2>
       <!-- Empty State -->
       @if(allPosts().length === 0 && !isLoading()) {
       <mat-card class="empty-state-card">

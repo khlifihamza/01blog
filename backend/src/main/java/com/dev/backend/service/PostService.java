@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -151,8 +152,11 @@ public class PostService {
         postRepository.save(post);
     }
 
-    public List<FeedPostResponse> getFeedPosts(UUID userId, Pageable pageable) {
-        List<Post> posts = postRepository.findFeedPosts(userId, pageable).getContent();
+    public List<FeedPostResponse> getFeedPosts(UUID userId, LocalDateTime lastCreatedAt) {
+        if (lastCreatedAt == null) {
+            lastCreatedAt = LocalDateTime.now();
+        }
+        List<Post> posts = postRepository.findFeedPosts(userId, lastCreatedAt);
         List<FeedPostResponse> feedPostsResponses = new ArrayList<>();
         for (Post post : posts) {
             Author author = new Author(post.getUser().getUsername(),

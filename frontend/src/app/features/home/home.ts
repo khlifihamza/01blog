@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, HostListener } from '@angular/core';
+import { Component, OnInit, signal, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -17,10 +17,10 @@ import { calculReadTime } from '../../shared/utils/readtime';
 import { ErrorService } from '../../core/services/error.service';
 import { PostCardComponent } from '../../shared/post-card/post-card';
 
-
 @Component({
   selector: 'app-feed',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
@@ -42,10 +42,9 @@ import { PostCardComponent } from '../../shared/post-card/post-card';
 export class HomeComponent implements OnInit {
   isLoading = signal(false);
   allPosts = signal<FeedPost[]>([]);
-  page = 0;
-  pageSize = 10;
-  hasMore = false;
-  isLoadingMore = false;
+
+  hasMore = signal(false);
+  isLoadingMore = signal(false);
 
   constructor(
     private router: Router,
@@ -59,7 +58,7 @@ export class HomeComponent implements OnInit {
 
   @HostListener('window:scroll')
   onScroll() {
-    if (this.isLoadingMore || !this.hasMore) return;
+    if (this.isLoadingMore() || !this.hasMore()) return;
 
     const scrollPosition = window.innerHeight + window.scrollY;
     const scrollThreshold = document.documentElement.scrollHeight - 200;
@@ -69,16 +68,20 @@ export class HomeComponent implements OnInit {
     }
   }
 
+  print() {
+    console.log('cal ================>');
+  }
+  
   getReadTime(htmlString: string): number {
     return calculReadTime(htmlString);
   }
 
   loadFeedPosts() {
     this.isLoading.set(true);
-    this.postService.getFeedPosts(this.page, this.pageSize).subscribe({
+    this.postService.getFeedPosts().subscribe({
       next: (posts) => {
         this.allPosts.set(posts);
-        this.hasMore = posts.length >= this.pageSize;
+        this.hasMore.set(posts.length === 10);
         this.isLoading.set(false);
         this.updateReadtime();
       },
@@ -94,26 +97,23 @@ export class HomeComponent implements OnInit {
   }
 
   loadMorePosts() {
-    if (this.isLoadingMore || !this.hasMore) return;
+    if (this.isLoadingMore() || !this.hasMore()) return;
 
-    this.isLoadingMore = true;
-    this.page++;
+    this.isLoadingMore.set(true);
 
-    this.postService.getFeedPosts(this.page, this.pageSize).subscribe({
-      next: (posts) => {
-        if (posts.length < this.pageSize) {
-          this.hasMore = false;
-        }
-        if (posts.length > 0) {
-          this.allPosts.update((currentPosts) => [...currentPosts, ...posts]);
-        }
-        this.isLoadingMore = false;
+    const lastPost = this.allPosts()[this.allPosts().length - 1];
+    if (!lastPost) return;
+
+    this.postService.getFeedPosts(lastPost.createdAt).subscribe({
+      next: (newPosts) => {
+        this.allPosts.update((currentPosts) => [...this.allPosts(), ...newPosts]);
+        this.hasMore.set(newPosts.length === 10);
+        this.isLoadingMore.set(false);
         this.updateReadtime();
       },
       error: (error) => {
         this.errorService.handleError(error);
-        this.isLoadingMore = false;
-        this.page--;
+        this.isLoadingMore.set(false);
       },
     });
   }
