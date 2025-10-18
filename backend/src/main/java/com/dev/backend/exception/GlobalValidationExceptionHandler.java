@@ -55,7 +55,7 @@ public class GlobalValidationExceptionHandler {
                                 LocalDateTime.now(),
                                 HttpStatus.BAD_REQUEST.value(),
                                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                                "Invalid username or password",
+                                ex.getMessage(),
                                 request.getDescription(false).replace("uri=", ""));
 
                 return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -103,14 +103,15 @@ public class GlobalValidationExceptionHandler {
         }
 
         @ExceptionHandler(UnsupportedJwtException.class)
-        public ResponseEntity<ErrorResponse> handleUnsupportedJwtException(UnsupportedJwtException ex, WebRequest request){
-               ErrorResponse errorResponse = new ErrorResponse(
+        public ResponseEntity<ErrorResponse> handleUnsupportedJwtException(UnsupportedJwtException ex,
+                        WebRequest request) {
+                ErrorResponse errorResponse = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.UNAUTHORIZED.value(),
                                 HttpStatus.UNAUTHORIZED.getReasonPhrase(),
                                 "Invalid or unsupported jwt format.",
                                 request.getDescription(false).replace("uri=", ""));
-                return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED); 
+                return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
         }
 
         @ExceptionHandler(SignatureException.class)

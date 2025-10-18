@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -49,6 +50,18 @@ public class UserService {
 
     @Value("${file.fetchUrl}")
     private String fetchUrl;
+
+    private static final List<String> ACCEPTED_TYPES = List.of(
+            MediaType.IMAGE_JPEG_VALUE,
+            "image/jpg",
+            MediaType.IMAGE_PNG_VALUE,
+            "image/gif",
+            "image/webp",
+            "image/svg+xml",
+            "video/mp4",
+            "video/webm",
+            "video/ogg",
+            "video/quicktime");
 
     @Autowired
     public UserService(UserRepository userRepository, FollowService followService,
@@ -117,7 +130,7 @@ public class UserService {
         return profileEditResponse;
     }
 
-    public String uploadAvatar(MultipartFile avatar) throws IOException {
+    private String uploadAvatar(MultipartFile avatar) throws IOException {
         String avatarId = "";
         String avatarName = avatar.getOriginalFilename();
         String avatarExtension = (avatarName != null && avatarName.contains("."))
@@ -128,6 +141,18 @@ public class UserService {
         Files.createDirectories(path.getParent());
         Files.copy(avatar.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
         return avatarId;
+    }
+
+    private void deleteOldAvatar(String filename) throws IOException {
+        if (filename == null)
+            return;
+        Path avatarPath = Paths.get(uploadDir + "/images").resolve(filename).normalize();
+
+        if (avatarPath == null || !Files.exists(avatarPath)) {
+            return;
+        }
+
+        Files.delete(avatarPath);
     }
 
     public FeedUser getFeedUser(User currentUser) {
@@ -149,12 +174,21 @@ public class UserService {
         if (!user.getEmail().equals(email) && userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already exists.");
         }
+
         user.setUsername(username);
         user.setEmail(email);
         if (avatar != null) {
+            String contentType = avatar.getContentType();
+
+            if (contentType == null || !ACCEPTED_TYPES.contains(contentType)) {
+                throw new IllegalArgumentException("Unsupported file type: " + contentType);
+            }
+            
+            deleteOldAvatar(user.getAvatar());
             user.setAvatar(uploadAvatar(avatar));
         }
-        if (defaultAvatar != null && defaultAvatar.equals("default-avatar.png")) {
+        if (defaultAvatar != null) {
+            deleteOldAvatar(user.getAvatar());
             user.setAvatar(null);
         }
         user.setBio(bio);
