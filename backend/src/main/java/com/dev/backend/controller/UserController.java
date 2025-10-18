@@ -52,8 +52,9 @@ public class UserController {
                         @RequestParam("email") String email,
                         @RequestParam(name = "bio", required = false) String bio,
                         @RequestParam(name = "avatar", required = false) MultipartFile avatar,
+                        @RequestParam(name = "defaultAvatar", required = false) String defaultAvatar,
                         @AuthenticationPrincipal User currentUser) throws IOException {
-                userService.saveData(currentUser.getUsername(), username, email, bio, avatar);
+                userService.saveData(currentUser.getUsername(), username, email, bio, avatar, defaultAvatar);
                 return ResponseEntity.ok(new ApiResponse("Profile data updated successfully"));
         }
 

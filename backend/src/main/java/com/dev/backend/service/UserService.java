@@ -138,7 +138,8 @@ public class UserService {
                         : null);
     }
 
-    public void saveData(String currentUsername, String username, String email, String bio, MultipartFile avatar)
+    public void saveData(String currentUsername, String username, String email, String bio, MultipartFile avatar,
+            String defaultAvatar)
             throws IOException {
         User user = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -152,6 +153,9 @@ public class UserService {
         user.setEmail(email);
         if (avatar != null) {
             user.setAvatar(uploadAvatar(avatar));
+        }
+        if (defaultAvatar != null && defaultAvatar.equals("default-avatar.png")) {
+            user.setAvatar(null);
         }
         user.setBio(bio);
         userRepository.save(user);

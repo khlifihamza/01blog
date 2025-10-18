@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, ElementRef, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -38,6 +38,7 @@ import { ErrorService } from '../../../core/services/error.service';
   styleUrl: './edit-profile.css',
 })
 export class EditProfileComponent {
+  @ViewChild('avatarInput') avatarInput!: ElementRef<HTMLInputElement>;
   currentProfile = signal<EditUserProfileResponse | null>(null);
   profileForm: FormGroup;
   isLoading = signal(false);
@@ -87,6 +88,16 @@ export class EditProfileComponent {
     }
   }
 
+  deleteAvatar(event: Event): void {
+    event.stopPropagation();
+    this.profileForm.patchValue({ avatar: null });
+    this.newAvatarPreview.set('default-avatar.png');
+    this.newAvatarFile = null;
+    if (this.avatarInput?.nativeElement) {
+      this.avatarInput.nativeElement.value = '';
+    }
+  }
+
   saveProfile() {
     if (this.profileForm.valid) {
       this.isLoading.set(true);
@@ -113,6 +124,9 @@ export class EditProfileComponent {
           formData.append('bio', this.profileForm.value.bio);
           if (this.newAvatarFile) {
             formData.append('avatar', this.newAvatarFile);
+          }
+          if (this.newAvatarPreview() === 'default-avatar.png'){
+            formData.append('defaultAvatar', this.newAvatarPreview()!);
           }
           this.profileService.EditProfileDetails(formData).subscribe({
             next: () => {
