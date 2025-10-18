@@ -12,7 +12,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { Router } from '@angular/router';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { ProfileService } from '../../../core/services/profile.service';
-import { EditUserProfile } from '../../../shared/models/user.model';
+import { EditUserProfileResponse } from '../../../shared/models/user.model';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog';
 import { ConfirmDialogData } from '../../../shared/models/confirm-dialog.model';
 import { MatDialog } from '@angular/material/dialog';
@@ -38,7 +38,7 @@ import { ErrorService } from '../../../core/services/error.service';
   styleUrl: './edit-profile.css',
 })
 export class EditProfileComponent {
-  currentProfile = signal<EditUserProfile | null>(null);
+  currentProfile = signal<EditUserProfileResponse | null>(null);
   profileForm: FormGroup;
   isLoading = signal(false);
   newAvatarFile: File | null = null;
@@ -103,34 +103,28 @@ export class EditProfileComponent {
       dialogRef.afterClosed().subscribe((result) => {
         if (result) {
           this.isLoading.set(true);
-          const updateData = (avatar: string | null) => {
-            const profileData: EditUserProfile = {
-              ...this.profileForm.value,
-              avatar: avatar,
-            };
-            this.profileService.EditProfileDetails(profileData).subscribe({
-              next: () => {
-                this.isLoading.set(false);
-                this.errorService.showSuccess('Profile updated successfully!');
-                this.router.navigate([`/profile/${this.currentProfile()?.username}`]);
-              },
-              error: (error) => {
-                this.errorService.handleError(error);
-                this.isLoading.set(false);
-              },
-            });
-          };
-
           if (this.newAvatarFile) {
             const formData = new FormData();
             formData.append('avatar', this.newAvatarFile);
-            this.profileService.uploadAvatar(formData).subscribe({
-              next: (response) => updateData(response.avatar.toString()),
-              error: (error) => this.errorService.handleError(error),
-            });
-          } else {
-            updateData(null);
           }
+          const formData = new FormData();
+          formData.append('username', this.profileForm.value.username);
+          formData.append('email', this.profileForm.value.email);
+          formData.append('bio', this.profileForm.value.bio);
+          if (this.newAvatarFile) {
+            formData.append('avatar', this.newAvatarFile);
+          }
+          this.profileService.EditProfileDetails(formData).subscribe({
+            next: () => {
+              this.isLoading.set(false);
+              this.errorService.showSuccess('Profile updated successfully!');
+              this.router.navigate([`/profile/${this.currentProfile()?.username}`]);
+            },
+            error: (error) => {
+              this.errorService.handleError(error);
+              this.isLoading.set(false);
+            },
+          });
         }
       });
     }

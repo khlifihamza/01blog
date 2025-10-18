@@ -20,7 +20,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.dev.backend.dto.AvatarResponse;
 import com.dev.backend.dto.DiscoveryUserResponse;
 import com.dev.backend.dto.FeedUser;
 import com.dev.backend.dto.LoginRequest;
@@ -118,18 +117,17 @@ public class UserService {
         return profileEditResponse;
     }
 
-    public AvatarResponse uploadAvatar(MultipartFile avatar) throws IOException {
-        String thumbnailId = "";
-        String thumbnailName = avatar.getOriginalFilename();
-        String thumbnailExtension = (thumbnailName != null && thumbnailName.contains("."))
-                ? thumbnailName.substring(thumbnailName.lastIndexOf("."))
+    public String uploadAvatar(MultipartFile avatar) throws IOException {
+        String avatarId = "";
+        String avatarName = avatar.getOriginalFilename();
+        String avatarExtension = (avatarName != null && avatarName.contains("."))
+                ? avatarName.substring(avatarName.lastIndexOf("."))
                 : "";
-        thumbnailId = UUID.randomUUID() + thumbnailExtension;
-        Path path = Paths.get(uploadDir + "/images", thumbnailId);
+        avatarId = UUID.randomUUID() + avatarExtension;
+        Path path = Paths.get(uploadDir + "/images", avatarId);
         Files.createDirectories(path.getParent());
         Files.copy(avatar.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-        AvatarResponse response = new AvatarResponse(thumbnailId);
-        return response;
+        return avatarId;
     }
 
     public FeedUser getFeedUser(User currentUser) {
@@ -140,29 +138,22 @@ public class UserService {
                         : null);
     }
 
-    public void saveData(String username, ProfileEditResponse data) throws IOException {
-        User user = userRepository.findByUsername(username)
+    public void saveData(String currentUsername, String username, String email, String bio, MultipartFile avatar)
+            throws IOException {
+        User user = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        if (!user.getUsername().equals(data.username()) && userRepository.existsByUsername(data.username())) {
-            if (data.avatar() != null) {
-                Path filePath = Paths.get(uploadDir + "/avatars" + data.avatar());
-                Files.delete(filePath);
-            }
+        if (!user.getUsername().equals(username) && userRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username already exists.");
         }
-        if (!user.getEmail().equals(data.email()) && userRepository.existsByEmail(data.email())) {
-            if (data.avatar() != null) {
-                Path filePath = Paths.get(uploadDir + "/avatars" + data.avatar());
-                Files.delete(filePath);
-            }
+        if (!user.getEmail().equals(email) && userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already exists.");
         }
-        user.setUsername(data.username());
-        user.setEmail(data.email());
-        if (data.avatar() != null) {
-            user.setAvatar(data.avatar());
+        user.setUsername(username);
+        user.setEmail(email);
+        if (avatar != null) {
+            user.setAvatar(uploadAvatar(avatar));
         }
-        user.setBio(data.bio());
+        user.setBio(bio);
         userRepository.save(user);
     }
 

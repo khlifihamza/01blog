@@ -3,8 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   ApiResponse,
-  AvatarResponse,
-  EditUserProfile,
+  EditUserProfileResponse,
   FeedUser,
   UserProfile,
 } from '../../shared/models/user.model';
@@ -21,19 +20,15 @@ export class ProfileService {
     return this.http.get<UserProfile>(`${this.url}/${username}`);
   }
 
-  getEditProfileDetails(): Observable<EditUserProfile> {
-    return this.http.get<EditUserProfile>(`${this.url}/edit-data`);
+  getEditProfileDetails(): Observable<EditUserProfileResponse> {
+    return this.http.get<EditUserProfileResponse>(`${this.url}/edit-data`);
   }
 
-  EditProfileDetails(data: EditUserProfile): Observable<ApiResponse> {
+  EditProfileDetails(data: FormData): Observable<ApiResponse> {
     return this.http.patch<ApiResponse>(`${this.url}/save-data`, data);
   }
 
   getUserInfo(): Observable<FeedUser> {
     return this.http.get<FeedUser>(`${this.url}/me`);
-  }
-
-  uploadAvatar(avatar: FormData): Observable<AvatarResponse> {
-    return this.http.post<AvatarResponse>(`${this.url}/upload`, avatar);
   }
 }
