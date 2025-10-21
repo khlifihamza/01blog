@@ -1,10 +1,11 @@
 package com.dev.backend.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -56,10 +57,9 @@ public class NotificationController {
 
     @GetMapping("/get")
     public ResponseEntity<List<NotificationResponse>> getNotifications(@AuthenticationPrincipal User currentUser,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt) {
         List<NotificationResponse> notifications = notificationService
-                .getNotifications(currentUser.getId(), PageRequest.of(page, size));
+                .getNotifications(currentUser.getId(), lastCreatedAt);
         return ResponseEntity.ok(notifications);
     }
 

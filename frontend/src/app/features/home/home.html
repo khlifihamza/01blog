@@ -6,7 +6,7 @@
   <div class="main-content">
     <!-- Featured Post -->
     <div class="featured-section">
-      <h2 class="section-title">Stories {{print()}}</h2>
+      <h2 class="section-title">Stories</h2>
       <!-- Empty State -->
       @if(allPosts().length === 0 && !isLoading()) {
       <mat-card class="empty-state-card">
@@ -34,7 +34,7 @@
       }
 
       <!-- Loading Spinner -->
-      @if(isLoadingMore) {
+      @if(isLoadingMore()) {
       <div class="loading-container" style="display: flex; justify-content: center; padding: 20px">
         <mat-spinner diameter="40"></mat-spinner>
       </div>

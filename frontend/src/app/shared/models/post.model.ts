@@ -79,6 +79,7 @@ export interface Post {
   likes: number;
   comments: number;
   status: 'PUBLISHED' | 'HIDDEN';
+  formatedPublishedDate: string;
 }
 
 export interface DiscoveryPost {
@@ -100,6 +101,7 @@ export interface Comment {
   username: string;
   avatar: string | null;
   createAt: string;
+  formatedCreatedAt: string;
   content: string;
   isOwner: boolean;
 }

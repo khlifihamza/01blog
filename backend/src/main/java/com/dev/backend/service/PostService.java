@@ -201,17 +201,15 @@ public class PostService {
         return editpost;
     }
 
-    public List<ProfilePostResponse> getProfilePosts(String username, UUID currentUserId, Pageable pageable) {
+    public List<ProfilePostResponse> getProfilePosts(String username, LocalDateTime lastCreatedAt) {
+        lastCreatedAt = (lastCreatedAt == null) ? LocalDateTime.now() : lastCreatedAt;
         UUID userId = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
         List<Post> posts = postRepository
-                .findByUserIdAndStatusOrderByCreatedAtDesc(userId, PostStatus.PUBLISHED, pageable)
-                .getContent();
+                .findTop10ByUserIdAndStatusAndCreatedAtLessThanOrderByCreatedAtDesc(userId, PostStatus.PUBLISHED,
+                        lastCreatedAt);
         List<ProfilePostResponse> postsResponse = new ArrayList<>();
         for (Post post : posts) {
-            if (post.getStatus() == PostStatus.HIDDEN && !userId.equals(currentUserId)) {
-                continue;
-            }
             ProfilePostResponse postResponse = new ProfilePostResponse(post.getId(), post.getTitle(), post.getContent(),
                     post.getCreatedAt().toString(), post.getLikes().size(), post.getComments().size(),
                     fetchUrl + post.getThumbnail());
@@ -224,8 +222,9 @@ public class PostService {
         return postRepository.findAll();
     }
 
-    public List<AdminPostResponse> getAllPosts(Pageable pageable) {
-        List<Post> posts = postRepository.findAll(pageable).getContent();
+    public List<AdminPostResponse> getAllPosts(LocalDateTime lastCreatedAt) {
+        lastCreatedAt = (lastCreatedAt == null) ? LocalDateTime.now() : lastCreatedAt;
+        List<Post> posts = postRepository.findTop10ByCreatedAtLessThanOrderByCreatedAtDesc(lastCreatedAt);
         List<AdminPostResponse> postsResponse = new ArrayList<>();
         for (Post post : posts) {
             AdminPostResponse postResponse = new AdminPostResponse(post.getId(), post.getTitle(),
@@ -240,8 +239,10 @@ public class PostService {
         return postRepository.count();
     }
 
-    public List<AdminPostResponse> getSearchedPosts(String query, Pageable pageable) {
-        List<Post> posts = postRepository.findByTitleContainingIgnoreCase(query, pageable).getContent();
+    public List<AdminPostResponse> getSearchedPosts(String query, LocalDateTime lastCreatedAt) {
+        lastCreatedAt = (lastCreatedAt == null) ? LocalDateTime.now() : lastCreatedAt;
+        List<Post> posts = postRepository
+                .findTop10ByCreatedAtLessThanAndTitleContainingIgnoreCaseOrderByCreatedAtDesc(lastCreatedAt, query);
         List<AdminPostResponse> postsResponse = new ArrayList<>();
         for (Post post : posts) {
             AdminPostResponse postResponse = new AdminPostResponse(post.getId(), post.getTitle(),
@@ -254,7 +255,7 @@ public class PostService {
 
     public List<DiscoveryPostResponse> getSearchedDiscoveryPosts(String query, Pageable pageable) {
         List<Post> posts = postRepository
-                .findByTitleAndStatusContainingIgnoreCase(query, PostStatus.PUBLISHED, pageable).getContent();
+                .findByStatusAndTitleContainingIgnoreCase(PostStatus.PUBLISHED, query, pageable).getContent();
         List<DiscoveryPostResponse> postsResponse = new ArrayList<>();
         for (Post post : posts) {
             DiscoveryPostResponse discoveryPostResponse = new DiscoveryPostResponse(post.getId(),

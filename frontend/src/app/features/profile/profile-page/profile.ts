@@ -19,8 +19,6 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { ErrorService } from '../../../core/services/error.service';
 import { PostCardComponent } from '../../../shared/post-card/post-card';
 
-
-
 @Component({
   selector: 'app-profile',
   standalone: true,
@@ -45,10 +43,8 @@ export class ProfileComponent {
   userPosts = signal<ProfilePost[]>([]);
   username = '';
 
-  page = 0;
-  pageSize = 10;
-  hasMore = false;
-  isLoadingMore = false;
+  hasMore = signal(false);
+  isLoadingMore = signal(false);
 
   constructor(
     private router: Router,
@@ -60,17 +56,19 @@ export class ProfileComponent {
   ) {}
 
   ngOnInit() {
-    let username = this.route.snapshot.paramMap.get('username');
-    if (username != null) {
-      this.username = username;
-    }
-    this.loadProfile();
-    this.loadUserPosts();
+    this.route.params.subscribe(() => {
+      let username = this.route.snapshot.paramMap.get('username');
+      if (username != null) {
+        this.username = username;
+      }
+      this.loadProfile();
+      this.loadUserPosts();
+    });
   }
 
   @HostListener('window:scroll')
   onScroll() {
-    if (this.isLoadingMore || !this.hasMore) return;
+    if (this.isLoadingMore() || !this.hasMore()) return;
 
     const scrollPosition = window.innerHeight + window.scrollY;
     const scrollThreshold = document.documentElement.scrollHeight - 200;
@@ -92,10 +90,10 @@ export class ProfileComponent {
   }
 
   loadUserPosts() {
-    this.postService.getProfilePosts(this.username, this.page, this.pageSize).subscribe({
+    this.postService.getProfilePosts(this.username, '').subscribe({
       next: (posts) => {
         this.userPosts.set(posts);
-        this.hasMore = posts.length >= this.pageSize;
+        this.hasMore.set(posts.length >= 10);
         this.updateReadtime();
       },
       error: (error) => this.errorService.handleError(error),
@@ -103,26 +101,22 @@ export class ProfileComponent {
   }
 
   loadMorePosts() {
-    if (this.isLoadingMore || !this.hasMore) return;
+    if (this.isLoadingMore() || !this.hasMore()) return;
 
-    this.isLoadingMore = true;
-    this.page++;
+    this.isLoadingMore.set(true);
 
-    this.postService.getProfilePosts(this.username, this.page, this.pageSize).subscribe({
-      next: (posts) => {
-        if (posts.length < this.pageSize) {
-          this.hasMore = false;
-        }
-        if (posts.length > 0) {
-          this.userPosts.update((currentPosts) => [...currentPosts, ...posts]);
-        }
-        this.isLoadingMore = false;
+    const lastPost = this.userPosts()[this.userPosts().length - 1];
+    if (!lastPost) return;
+
+    this.postService.getProfilePosts(this.username, lastPost.createdAt).subscribe({
+      next: (newPosts) => {
+        this.userPosts.update((currentPosts) => [...currentPosts, ...newPosts]);
+        this.isLoadingMore.set(false);
         this.updateReadtime();
       },
       error: (error) => {
         this.errorService.handleError(error);
-        this.isLoadingMore = false;
-        this.page--;
+        this.isLoadingMore.set(false);
       },
     });
   }

@@ -1,5 +1,6 @@
 package com.dev.backend.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,11 +23,12 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByEmail(String email);
 
-    Page<User> findByUsernameContainingIgnoreCase(String query, Pageable pageable);
+    List<User> findTop10ByUsernameContainingIgnoreCaseAndCreatedAtLessThanOrderByCreatedAtDesc(String query,
+            LocalDateTime lastCreatedAt);
 
-    Page<User> findByUsernameAndStatusContainingIgnoreCase(String query, UserStatus status, Pageable pageable);
+    Page<User> findByStatusAndUsernameContainingIgnoreCase(UserStatus status, String query, Pageable pageable);
 
     List<User> findTop9ByIdNotAndStatusOrderByFollowersDesc(UUID currentUserId, UserStatus status);
 
-    Page<User> findAll(Pageable pageable);
+    List<User> findTop10ByCreatedAtLessThanOrderByCreatedAtDesc(LocalDateTime lastCreatedAt);
 }

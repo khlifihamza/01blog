@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,10 +53,8 @@ public class PostController {
 
     @GetMapping("/profile/{username}")
     public ResponseEntity<List<ProfilePostResponse>> getUserPosts(@PathVariable String username,
-            @AuthenticationPrincipal User currentUser, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        List<ProfilePostResponse> posts = postService.getProfilePosts(username, currentUser.getId(),
-                PageRequest.of(page, size));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt) {
+        List<ProfilePostResponse> posts = postService.getProfilePosts(username, lastCreatedAt);
         return ResponseEntity.ok(posts);
     }
 

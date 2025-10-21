@@ -25,7 +25,7 @@
       </mat-menu>
     </div>
     <div class="notifications-list">
-      @for (notification of allNotifications(); track notification.id) {
+      @for (notification of notifications(); track notification.id) {
       <div
         class="notification-item"
         [class.unread]="!notification.isRead"
@@ -46,7 +46,7 @@
         <div class="notification-content">
           <div class="notification-header">
             <h4 class="notification-title">{{ notification.title }}</h4>
-            <span class="notification-time">{{ notification.createdAt }}</span>
+            <span class="notification-time">{{ notification.formatedCreatedAt }}</span>
           </div>
           <p class="notification-message">{{ notification.message }}</p>
         </div>
@@ -62,7 +62,7 @@
           </button>
         </div>
       </div>
-      } @if(allNotifications().length === 0){
+      } @if(notifications().length === 0){
       <div class="empty-state">
         <mat-icon>notifications_none</mat-icon>
         <h3>No notifications yet</h3>

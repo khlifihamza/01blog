@@ -1,11 +1,11 @@
 package com.dev.backend.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -66,9 +66,10 @@ public class NotificationService {
         }
     }
 
-    public List<NotificationResponse> getNotifications(UUID currentUserId, Pageable pageable) {
+    public List<NotificationResponse> getNotifications(UUID currentUserId, LocalDateTime lastCreatedAt) {
+        lastCreatedAt = (lastCreatedAt == null) ? LocalDateTime.now() : lastCreatedAt;
         List<Notification> notifications = notificationRepository
-                .findByRecipientIdOrderByCreatedAtDesc(currentUserId, pageable).getContent();
+                .findTop10ByRecipientIdAndCreatedAtLessThanOrderByCreatedAtDesc(currentUserId, lastCreatedAt);
         List<NotificationResponse> notificationsResponse = new ArrayList<>();
         for (Notification notification : notifications) {
             NotificationResponse notificationResponse = new NotificationResponse(notification.getId(),

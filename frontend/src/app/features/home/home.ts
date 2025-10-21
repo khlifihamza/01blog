@@ -67,10 +67,6 @@ export class HomeComponent implements OnInit {
       this.loadMorePosts();
     }
   }
-
-  print() {
-    console.log('cal ================>');
-  }
   
   getReadTime(htmlString: string): number {
     return calculReadTime(htmlString);
@@ -106,7 +102,7 @@ export class HomeComponent implements OnInit {
 
     this.postService.getFeedPosts(lastPost.createdAt).subscribe({
       next: (newPosts) => {
-        this.allPosts.update((currentPosts) => [...this.allPosts(), ...newPosts]);
+        this.allPosts.update((currentPosts) => [...currentPosts, ...newPosts]);
         this.hasMore.set(newPosts.length === 10);
         this.isLoadingMore.set(false);
         this.updateReadtime();

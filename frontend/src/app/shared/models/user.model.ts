@@ -52,6 +52,7 @@ export interface User {
   joinDate: string;
   postsCount: number;
   status: 'ACTIVE' | 'BANNED';
+  formatedJoinDate: string;
 }
 
 export interface DiscoveryUser {

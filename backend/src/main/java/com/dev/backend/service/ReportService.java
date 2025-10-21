@@ -1,12 +1,12 @@
 package com.dev.backend.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.dto.ReportRequest;
@@ -90,8 +90,11 @@ public class ReportService {
         reportRepository.save(report);
     }
 
-    public List<ReportResponse> getReports(Pageable pageable) {
-        List<Report> reports = reportRepository.findAll(pageable).getContent();
+    public List<ReportResponse> getReports(ReportStatus status, LocalDateTime lastCreatedAt) {
+        lastCreatedAt = (lastCreatedAt == null) ? LocalDateTime.now() : lastCreatedAt;
+        List<Report> reports = (status == null)
+                ? reportRepository.findTop10ByCreatedAtLessThanOrderByCreatedAtDesc(lastCreatedAt)
+                : reportRepository.findTop10ByStatusAndCreatedAtLessThanOrderByCreatedAtDesc(status, lastCreatedAt);
         List<ReportResponse> reportsResponses = new ArrayList<>();
         for (Report report : reports) {
             ReportResponse reportResponse = new ReportResponse(report.getId(),

@@ -1,12 +1,12 @@
 package com.dev.backend.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -73,11 +73,12 @@ public class CommentService {
                 commentRepository.deleteById(commentId);
         }
 
-        public List<CommentResponse> getPostComments(UUID postId, UUID currentUserId, Pageable pageable) {
+        public List<CommentResponse> getPostComments(UUID postId, UUID currentUserId, LocalDateTime lastCreatedAt) {
+                lastCreatedAt = (lastCreatedAt == null) ? LocalDateTime.now() : lastCreatedAt;
                 postRepository.findById(postId)
                                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-                List<Comment> comments = commentRepository.findByPostIdOrderByCreatedAtDesc(postId, pageable)
-                                .getContent();
+                List<Comment> comments = commentRepository
+                                .findTop10ByPostIdAndCreatedAtLessThanOrderByCreatedAtDesc(postId, lastCreatedAt);
                 List<CommentResponse> commentsResponse = new ArrayList<>();
                 for (Comment comment : comments) {
                         CommentResponse commentResponse = new CommentResponse(comment.getId(),

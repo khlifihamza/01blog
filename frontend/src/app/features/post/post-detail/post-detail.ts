@@ -47,19 +47,17 @@ export class PostDetailComponent implements OnInit {
   post = signal<DetailPost | null>(null);
   isFollowing = signal(false);
   isLiked = signal(false);
-  isAuthor = true;
+  isAuthor = signal(false);
   safeContent: SafeHtml | null = null;
-  Comments = signal<Comment[] | null>(null);
+  Comments = signal<Comment[]>([]);
   newCommentText: string = '';
   commentText: string = '';
   editingCommentId: string | null = null;
   readTime = signal<number>(0);
   postNotFound = signal(false);
 
-  page = 0;
-  pageSize = 10;
-  hasMore = false;
-  isLoadingMore = false;
+  hasMore = signal(false);
+  isLoadingMore = signal(false);
 
   constructor(
     private route: ActivatedRoute,
@@ -83,7 +81,7 @@ export class PostDetailComponent implements OnInit {
   loadPost(postId: string) {
     this.postService.getPost(postId).subscribe({
       next: (post) => {
-        this.isAuthor = post.isAuthor;
+        this.isAuthor.set(post.isAuthor);
         this.isFollowing.set(post.author.isFollowed);
         this.isLiked.set(post.isLiked);
         post.publishedDate = this.formatDate(post.publishedDate);
@@ -104,10 +102,10 @@ export class PostDetailComponent implements OnInit {
 
   loadComments(postId: string) {
     if (this.postNotFound()) return;
-    this.commentService.getComments(postId, this.page, this.pageSize).subscribe({
+    this.commentService.getComments(postId, '').subscribe({
       next: (comments) => {
         this.Comments.set(this.formatCommentsDate(comments));
-        this.hasMore = comments.length === this.pageSize;
+        this.hasMore.set(comments.length === 10);
       },
       error: (error) => this.errorService.handleError(error),
     });
@@ -115,7 +113,7 @@ export class PostDetailComponent implements OnInit {
 
   @HostListener('window:scroll')
   onScroll() {
-    if (this.isLoadingMore || !this.hasMore) return;
+    if (this.isLoadingMore() || !this.hasMore()) return;
 
     const scrollPosition = window.innerHeight + window.scrollY;
     const documentHeight = document.documentElement.scrollHeight;
@@ -127,22 +125,22 @@ export class PostDetailComponent implements OnInit {
 
   loadMoreComments() {
     const postId = this.route.snapshot.paramMap.get('id');
-    if (!postId || this.isLoadingMore || !this.hasMore) return;
+    if (!postId || this.isLoadingMore() || !this.hasMore()) return;
 
-    this.isLoadingMore = true;
-    this.page++;
+    this.isLoadingMore.set(true);
 
-    this.commentService.getComments(postId, this.page, this.pageSize).subscribe({
+    const lastComment = this.Comments()[this.Comments().length - 1];
+    if (!lastComment) return;
+
+    this.commentService.getComments(postId, lastComment.createAt).subscribe({
       next: (newComments) => {
-        const currentComments = this.Comments() || [];
-        this.Comments.set([...currentComments, ...this.formatCommentsDate(newComments)]);
-        this.hasMore = newComments.length === this.pageSize;
-        this.isLoadingMore = false;
+        this.Comments.set([...this.Comments(), ...this.formatCommentsDate(newComments)]);
+        this.hasMore.set(newComments.length === 10);
+        this.isLoadingMore.set(false);
       },
       error: (error) => {
         this.errorService.handleError(error);
-        this.isLoadingMore = false;
-        this.page--;
+        this.isLoadingMore.set(false);
       },
     });
   }
@@ -151,7 +149,7 @@ export class PostDetailComponent implements OnInit {
     return comments.map((c) => {
       return {
         ...c,
-        createAt: this.formatDate(c.createAt),
+        formatedCreatedAt: this.formatDate(c.createAt),
       };
     });
   }

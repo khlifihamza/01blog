@@ -15,6 +15,7 @@ export interface Report {
   details: string;
   status: 'PENDING' | 'RESOLVED' | 'DISMISSED';
   createdAt: string;
+  formatedCreatedAt: string;
 }
 
 export interface ReportData {

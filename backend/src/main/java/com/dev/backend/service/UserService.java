@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -183,7 +184,7 @@ public class UserService {
             if (contentType == null || !ACCEPTED_TYPES.contains(contentType)) {
                 throw new IllegalArgumentException("Unsupported file type: " + contentType);
             }
-            
+
             deleteOldAvatar(user.getAvatar());
             user.setAvatar(uploadAvatar(avatar));
         }
@@ -199,8 +200,9 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public List<UserResponse> getAllUsers(Pageable pageable) {
-        List<User> users = userRepository.findAll(pageable).getContent();
+    public List<UserResponse> getAllUsers(LocalDateTime lastCreatedAt) {
+        lastCreatedAt = (lastCreatedAt == null) ? LocalDateTime.now() : lastCreatedAt;
+        List<User> users = userRepository.findTop10ByCreatedAtLessThanOrderByCreatedAtDesc(lastCreatedAt);
         List<UserResponse> usersResponse = new ArrayList<>();
         for (User user : users) {
             UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail(),
@@ -212,8 +214,10 @@ public class UserService {
         return usersResponse;
     }
 
-    public List<UserResponse> getSearchedUsers(String query, Pageable pageable) {
-        List<User> users = userRepository.findByUsernameContainingIgnoreCase(query, pageable).getContent();
+    public List<UserResponse> getSearchedUsers(String query, LocalDateTime lastCreatedAt) {
+        lastCreatedAt = (lastCreatedAt == null) ? LocalDateTime.now() : lastCreatedAt;
+        List<User> users = userRepository
+                .findTop10ByUsernameContainingIgnoreCaseAndCreatedAtLessThanOrderByCreatedAtDesc(query, lastCreatedAt);
         List<UserResponse> usersResponse = new ArrayList<>();
         for (User user : users) {
             UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail(),
@@ -227,7 +231,7 @@ public class UserService {
 
     public List<DiscoveryUserResponse> getSearchedDiscoveryUsers(UUID currentUserId, String query, Pageable pageable) {
         List<User> users = userRepository
-                .findByUsernameAndStatusContainingIgnoreCase(query, UserStatus.ACTIVE, pageable).getContent();
+                .findByStatusAndUsernameContainingIgnoreCase(UserStatus.ACTIVE, query, pageable).getContent();
         List<DiscoveryUserResponse> usersResponse = new ArrayList<>();
         for (User user : users) {
             DiscoveryUserResponse discoveryUserResponse = new DiscoveryUserResponse(user.getId(),

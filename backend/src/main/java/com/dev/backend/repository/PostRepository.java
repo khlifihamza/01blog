@@ -16,7 +16,7 @@ import com.dev.backend.model.PostStatus;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, UUID> {
-    Page<Post> findByUserIdAndStatusOrderByCreatedAtDesc(UUID userId, PostStatus status, Pageable pageable);
+    List<Post> findTop10ByUserIdAndStatusAndCreatedAtLessThanOrderByCreatedAtDesc(UUID userId, PostStatus status, LocalDateTime lastCreatedAt);
 
     @Query("""
                 SELECT p
@@ -38,11 +38,12 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
             @Param("userId") UUID userId,
             @Param("lastCreatedAt") LocalDateTime lastCreatedAt);
 
-    Page<Post> findByTitleContainingIgnoreCase(String query, Pageable pageable);
+    List<Post> findTop10ByCreatedAtLessThanAndTitleContainingIgnoreCaseOrderByCreatedAtDesc(LocalDateTime lastCreatedAt,
+            String query);
 
-    Page<Post> findByTitleAndStatusContainingIgnoreCase(String query, PostStatus status, Pageable pageable);
+    Page<Post> findByStatusAndTitleContainingIgnoreCase(PostStatus status, String query, Pageable pageable);
 
     List<Post> findTop9ByUserIdNotAndStatusOrderByLikesDesc(UUID currentUserId, PostStatus status);
 
-    Page<Post> findAll(Pageable pageable);
+    List<Post> findTop10ByCreatedAtLessThanOrderByCreatedAtDesc(LocalDateTime lastCreatedAt);
 }

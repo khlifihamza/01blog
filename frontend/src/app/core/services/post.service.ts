@@ -35,12 +35,8 @@ export class PostService {
     return this.http.get<any>(`${this.url}/edit/${id}`);
   }
 
-  getProfilePosts(
-    username: string,
-    page: number = 0,
-    size: number = 10
-  ): Observable<ProfilePost[]> {
-    return this.http.get<any>(`${this.url}/profile/${username}?page=${page}&size=${size}`);
+  getProfilePosts(username: string, lastCreatedAt: string): Observable<ProfilePost[]> {
+    return this.http.get<any>(`${this.url}/profile/${username}?lastCreatedAt=${lastCreatedAt}`);
   }
 
   getFeedPosts(lastCreatedAt?: string): Observable<FeedPost[]> {
