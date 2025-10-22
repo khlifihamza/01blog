@@ -96,7 +96,8 @@ public class PostService {
         postRepository.save(post);
         List<Follow> followers = user.getFollowers();
         for (Follow follow : followers) {
-            notificationService.createNotification(post, follow.getFollower(), "New post from " + user.getUsername(),
+            notificationService.createNotification(post, null, null, null, follow.getFollower(),
+                    "New post from " + user.getUsername(),
                     user.getUsername() + " published: \"" + post.getTitle() + "\"", NotificationType.POST);
         }
         return post;
@@ -134,8 +135,15 @@ public class PostService {
         if (!post.getUser().getId().equals(user.getId()) && !user.getRole().equals(Role.ADMIN)) {
             throw new AccessDeniedException("You cannot delete another user's post.");
         }
+        List<Follow> followers = user.getFollowers();
+        for (Follow follow : followers) {
+            if (notificationService.existsByPostAndRecipient(id, follow.getFollower().getId())) {
+                notificationService.deletePostNotification(id, follow.getFollower().getId());
+            }
+        }
         deleteMedia(post.getThumbnail(), post.getFiles());
         postRepository.deleteById(id);
+
     }
 
     public void hidePost(UUID id) {

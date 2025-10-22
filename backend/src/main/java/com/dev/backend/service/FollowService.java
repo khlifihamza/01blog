@@ -7,6 +7,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.model.Follow;
+import com.dev.backend.model.NotificationType;
 import com.dev.backend.model.User;
 import com.dev.backend.repository.FollowRepository;
 import com.dev.backend.repository.UserRepository;
@@ -48,9 +49,11 @@ public class FollowService {
         if (!followRepository.existsByFollowerIdAndFollowingId(followerId, userToFollowId)) {
             Follow follow = new Follow(follower, following);
 
-            notificationService.createNotificationForFollow(follower, following,
-                    follower.getUsername() + " started following you",
-                    "You have a new follower! Check out their profile.");
+            if (!notificationService.existsBysenderAndRecipient(followerId, userToFollowId)) {
+                notificationService.createNotification(null, follower, null, null, following,
+                        follower.getUsername() + " started following you",
+                        "You have a new follower! Check out their profile.", NotificationType.FOLLOW);
+            }
 
             followRepository.save(follow);
         }
@@ -74,6 +77,11 @@ public class FollowService {
 
         if (followRepository.existsByFollowerIdAndFollowingId(unfollowerId, userToUnfollowId)) {
             Follow followRow = followRepository.findByFollowerIdAndFollowingId(unfollowerId, userToUnfollowId);
+
+            if (notificationService.existsBysenderAndRecipient(unfollowerId, userToUnfollowId)) {
+                notificationService.deleteFollowNotification(unfollowerId, userToUnfollowId);
+            }
+
             followRepository.delete(followRow);
         }
     }

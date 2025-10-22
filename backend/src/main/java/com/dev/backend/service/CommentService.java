@@ -55,7 +55,7 @@ public class CommentService {
                                 comment.getCreatedAt().toString(), comment.getContent(),
                                 currentUser.getId().equals(comment.getUser().getId()));
                 if (!currentUser.getId().equals(post.getUser().getId())) {
-                        notificationService.createNotification(post, post.getUser(),
+                        notificationService.createNotification(null, null, comment, null, post.getUser(),
                                         currentUser.getUsername() + " commented on your post",
                                         comment.getContent(), NotificationType.COMMENT);
                 }
@@ -70,6 +70,13 @@ public class CommentService {
                 if (!comment.getUser().getId().equals(user.getId())) {
                         throw new AccessDeniedException("You cannot delete another user's comment.");
                 }
+
+                if (notificationService.existsByCommentAndRecipient(comment.getId(),
+                                comment.getPost().getUser().getId())) {
+                        notificationService.deleteCommentNotification(comment.getId(),
+                                        comment.getPost().getUser().getId());
+                }
+
                 commentRepository.deleteById(commentId);
         }
 

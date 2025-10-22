@@ -37,13 +37,15 @@ public class LikeService {
         if (likeRepository.existsByUserIdAndPostId(currentUser.getId(), post.getId())) {
             throw new DataIntegrityViolationException("you already liked this post");
         }
-        if (!currentUser.getId().equals(post.getUser().getId())) {
-            notificationService.createNotification(post, post.getUser(),
+        Like like = new Like(currentUser, post);
+        likeRepository.save(like);
+        if (!currentUser.getId().equals(post.getUser().getId())
+                && !notificationService.existsByPostAndRecipient(postId, post.getUser().getId())) {
+
+            notificationService.createNotification(null, null, null, like, post.getUser(),
                     currentUser.getUsername() + " liked your post",
                     "Your post \"" + post.getTitle() + "\" received a new like", NotificationType.LIKE);
         }
-        Like like = new Like(currentUser, post);
-        likeRepository.save(like);
     }
 
     public void dislike(User currentUser, UUID postId) {
@@ -53,6 +55,11 @@ public class LikeService {
             throw new DataIntegrityViolationException("you already disliked this post");
         }
         Like like = likeRepository.findByUserAndPost(currentUser, post);
+
+        if (notificationService.existsByLikeAndRecipient(like.getId(), post.getUser().getId())) {
+            notificationService.deleteLikeNotification(like.getId(), post.getUser().getId());
+        }
+
         likeRepository.delete(like);
     }
 

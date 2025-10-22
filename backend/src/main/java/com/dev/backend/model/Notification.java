@@ -20,24 +20,30 @@ public class Notification extends BaseEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User recipient;
-
-    @Column(nullable = false)
-    private String link;
-
     @Column(nullable = false)
     private boolean seen;
 
-    public Notification() {
-    }
+    @ManyToOne
+    @JoinColumn(name = "recipient_id", nullable = false)
+    private User recipient;
 
-    public Notification(User recipient, String content, String link, boolean seen) {
-        this.content = content;
-        this.recipient = recipient;
-        this.link = link;
-        this.seen = seen;
+    @ManyToOne
+    @JoinColumn(name = "sender_id")
+    private User sender;
+
+    @ManyToOne
+    @JoinColumn(name = "post_id")
+    private Post post;
+
+    @ManyToOne
+    @JoinColumn(name = "comment_id")
+    private Comment comment;
+
+    @ManyToOne
+    @JoinColumn(name = "like_id")
+    private Like like;
+
+    public Notification() {
     }
 
     public NotificationType getType() {
@@ -68,14 +74,6 @@ public class Notification extends BaseEntity {
         this.content = content;
     }
 
-    public String getLink() {
-        return link;
-    }
-
-    public void setLink(String link) {
-        this.link = link;
-    }
-
     public void setRecipient(User recipient) {
         this.recipient = recipient;
     }
@@ -86,5 +84,37 @@ public class Notification extends BaseEntity {
 
     public boolean getSeen() {
         return seen;
+    }
+
+    public Post getPost() {
+        return post;
+    }
+
+    public void setPost(Post post) {
+        this.post = post;
+    }
+
+    public User getSender() {
+        return sender;
+    }
+
+    public void setSender(User sender) {
+        this.sender = sender;
+    }
+
+    public Comment getComment() {
+        return comment;
+    }
+
+    public void setComment(Comment comment) {
+        this.comment = comment;
+    }
+
+    public Like getLike() {
+        return like;
+    }
+
+    public void setLike(Like like) {
+        this.like = like;
     }
 }

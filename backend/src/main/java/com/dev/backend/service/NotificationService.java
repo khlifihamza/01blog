@@ -10,6 +10,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.dto.NotificationResponse;
+import com.dev.backend.model.Comment;
+import com.dev.backend.model.Like;
 import com.dev.backend.model.Notification;
 import com.dev.backend.model.NotificationType;
 import com.dev.backend.model.Post;
@@ -27,26 +29,35 @@ public class NotificationService {
         this.notificationRepository = notificationRepository;
     }
 
-    public void createNotification(Post post, User recipient, String title, String message, NotificationType type) {
+    public void createNotification(Post post, User sender, Comment comment, Like like, User recipient, String title,
+            String message, NotificationType type) {
         Notification notification = new Notification();
         notification.setRecipient(recipient);
         notification.setSeen(false);
         notification.setContent(message);
         notification.setTitle(title);
-        notification.setLink("/post/" + post.getId());
+        notification.setPost(post);
+        notification.setSender(sender);
+        notification.setComment(comment);
+        notification.setLike(like);
         notification.setType(type);
         notificationRepository.save(notification);
     }
 
-    public void createNotificationForFollow(User user, User recipient, String title, String message) {
-        Notification notification = new Notification();
-        notification.setRecipient(recipient);
-        notification.setSeen(false);
-        notification.setContent(message);
-        notification.setTitle(title);
-        notification.setLink("/profile/" + user.getUsername());
-        notification.setType(NotificationType.FOLLOW);
-        notificationRepository.save(notification);
+    public boolean existsBysenderAndRecipient(UUID senderId, UUID recipientId) {
+        return notificationRepository.existsBySenderIdAndRecipientId(senderId, recipientId);
+    }
+
+    public boolean existsByPostAndRecipient(UUID postId, UUID recipientId) {
+        return notificationRepository.existsByPostIdAndRecipientId(postId, recipientId);
+    }
+
+    public boolean existsByLikeAndRecipient(UUID likeId, UUID recipientId) {
+        return notificationRepository.existsByLikeIdAndRecipientId(likeId, recipientId);
+    }
+
+    public boolean existsByCommentAndRecipient(UUID commentId, UUID recipientId) {
+        return notificationRepository.existsByCommentIdAndRecipientId(commentId, recipientId);
     }
 
     public void markAsRead(UUID notificationId, UUID currentUserId) {
@@ -76,10 +87,30 @@ public class NotificationService {
                     notification.getType().name().toLowerCase(),
                     notification.getTitle(), notification.getContent(),
                     notification.getCreatedAt().toString(),
-                    notification.getSeen(), notification.getLink());
+                    notification.getSeen(), createLink(notification));
             notificationsResponse.add(notificationResponse);
         }
         return notificationsResponse;
+    }
+
+    public void deleteFollowNotification(UUID senderId, UUID recipientId) {
+        Notification notification = notificationRepository.findBySenderIdAndRecipientId(senderId, recipientId);
+        notificationRepository.delete(notification);
+    }
+
+    public void deletePostNotification(UUID postId, UUID recipientId) {
+        Notification notification = notificationRepository.findByPostIdAndRecipientId(postId, recipientId);
+        notificationRepository.delete(notification);
+    }
+
+    public void deleteLikeNotification(UUID likeId, UUID recipientId) {
+        Notification notification = notificationRepository.findByLikeIdAndRecipientId(likeId, recipientId);
+        notificationRepository.delete(notification);
+    }
+
+    public void deleteCommentNotification(UUID commentId, UUID recipientId) {
+        Notification notification = notificationRepository.findByCommentIdAndRecipientId(commentId, recipientId);
+        notificationRepository.delete(notification);
     }
 
     public void deleteNotification(UUID id, UUID currentUserId) {
@@ -100,5 +131,24 @@ public class NotificationService {
 
     public long countUnread(UUID currentUserID) {
         return notificationRepository.countByRecipientIdAndSeenFalse(currentUserID);
+    }
+
+    private String createLink(Notification notification) {
+        String res = "";
+        switch (notification.getType().name()) {
+            case "LIKE":
+                res = "/post/" + notification.getLike().getPost().getId().toString();
+                break;
+            case "COMMENT":
+                res = "/post/" + notification.getComment().getPost().getId().toString();
+                break;
+            case "FOLLOW":
+                res = "/profile/" + notification.getSender().getUsername();
+                break;
+            default:
+                res = "/post/" + notification.getPost().getId().toString();
+                break;
+        }
+        return res;
     }
 }
