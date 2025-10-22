@@ -231,7 +231,7 @@ public class UserService {
 
     public List<DiscoveryUserResponse> getSearchedDiscoveryUsers(UUID currentUserId, String query, Pageable pageable) {
         List<User> users = userRepository
-                .findByStatusAndUsernameContainingIgnoreCase(UserStatus.ACTIVE, query, pageable).getContent();
+                .findByUsernameContainingIgnoreCase(query, pageable).getContent();
         List<DiscoveryUserResponse> usersResponse = new ArrayList<>();
         for (User user : users) {
             DiscoveryUserResponse discoveryUserResponse = new DiscoveryUserResponse(user.getId(),
@@ -282,8 +282,7 @@ public class UserService {
     }
 
     public List<DiscoveryUserResponse> getTop9Profiles(UUID currentUserId) {
-        List<User> users = userRepository.findTop9ByIdNotAndStatusOrderByFollowersDesc(currentUserId,
-                UserStatus.ACTIVE);
+        List<User> users = userRepository.findTop9RecommendedUsers(currentUserId);
         List<DiscoveryUserResponse> usersResponse = new ArrayList<>();
         for (User user : users) {
             DiscoveryUserResponse discoveryUserResponse = new DiscoveryUserResponse(user.getId(),

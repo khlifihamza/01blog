@@ -43,7 +43,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     Page<Post> findByStatusAndTitleContainingIgnoreCase(PostStatus status, String query, Pageable pageable);
 
-    List<Post> findTop9ByUserIdNotAndStatusOrderByLikesDesc(UUID currentUserId, PostStatus status);
+    List<Post> findTop9ByUserIdNotAndStatusOrderByLikes(UUID currentUserId, PostStatus status);
 
     List<Post> findTop10ByCreatedAtLessThanOrderByCreatedAtDesc(LocalDateTime lastCreatedAt);
 }

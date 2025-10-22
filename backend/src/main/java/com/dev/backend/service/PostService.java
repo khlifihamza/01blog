@@ -275,7 +275,7 @@ public class PostService {
     }
 
     public List<DiscoveryPostResponse> getTop9Posts(UUID currentUserId) {
-        List<Post> posts = postRepository.findTop9ByUserIdNotAndStatusOrderByLikesDesc(currentUserId,
+        List<Post> posts = postRepository.findTop9ByUserIdNotAndStatusOrderByLikes(currentUserId,
                 PostStatus.PUBLISHED);
         List<DiscoveryPostResponse> postsResponse = new ArrayList<>();
         for (Post post : posts) {

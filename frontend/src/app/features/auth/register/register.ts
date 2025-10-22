@@ -1,5 +1,11 @@
 import { Component, signal } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+  FormControlOptions,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -40,12 +46,15 @@ export class RegisterComponent {
   ) {
     this.registerForm = this.fb.group(
       {
-        username: ['', [Validators.required, Validators.minLength(3)]],
+        username: [
+          '',
+          [Validators.required, Validators.minLength(3), Validators.pattern(/^[a-zA-Z0-9\-]+$/)],
+        ],
         email: ['', [Validators.required, Validators.email]],
         password: ['', [Validators.required, Validators.minLength(8)]],
         confirmPassword: ['', [Validators.required, Validators.minLength(8)]],
       },
-      { validators: this.passwordMatchValidator }
+      { validators: this.passwordMatchValidator } as FormControlOptions
     );
   }
 
