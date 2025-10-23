@@ -48,12 +48,9 @@ public class FollowService {
 
         if (!followRepository.existsByFollowerIdAndFollowingId(followerId, userToFollowId)) {
             Follow follow = new Follow(follower, following);
-
-            if (!notificationService.existsBysenderAndRecipient(followerId, userToFollowId)) {
-                notificationService.createNotification(null, follower, null, null, following,
-                        follower.getUsername() + " started following you",
-                        "You have a new follower! Check out their profile.", NotificationType.FOLLOW);
-            }
+            notificationService.createNotification(null, follower, null, null, following,
+                    follower.getUsername() + " started following you",
+                    "You have a new follower! Check out their profile.", NotificationType.FOLLOW);
 
             followRepository.save(follow);
         }

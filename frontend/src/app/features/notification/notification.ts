@@ -13,6 +13,9 @@ import { Notification } from '../../shared/models/notification.model';
 import { NotificationService } from '../../core/services/notification.service';
 import { NavbarComponent } from '../../shared/navbar/navbar';
 import { ErrorService } from '../../core/services/error.service';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog';
+import { ConfirmDialogData } from '../../shared/models/confirm-dialog.model';
 
 @Component({
   selector: 'app-notifications',
@@ -41,7 +44,8 @@ export class NotificationsComponent {
   constructor(
     private router: Router,
     private notificationService: NotificationService,
-    private errorService: ErrorService
+    private errorService: ErrorService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -114,6 +118,7 @@ export class NotificationsComponent {
   updateCounts() {
     const count = this.notifications().filter((n) => !n.isRead).length;
     this.unreadCount.set(count);
+    this.notificationService.updateUnreadCount(count);
   }
 
   formatTime(dateStr: string): string {
@@ -143,7 +148,7 @@ export class NotificationsComponent {
     if (!notification.isRead) {
       this.notificationService.markAsRead(notification.id).subscribe({
         next: () => {
-          notification.isRead = !notification.isRead;
+          notification.isRead = true;
           this.updateCounts();
         },
         error: (error) => this.errorService.handleError(error),
@@ -153,13 +158,18 @@ export class NotificationsComponent {
 
   deleteNotification(notification: Notification, event: Event) {
     event.stopPropagation();
+    const wasUnread = !notification.isRead;
     const index = this.notifications().findIndex((n) => n.id === notification.id);
+    
     if (index > -1) {
       this.notificationService.delete(notification.id).subscribe({
         next: () => {
           const currentNotifications = this.notifications();
           currentNotifications.splice(index, 1);
           this.notifications.set([...currentNotifications]);
+          if (wasUnread) {
+            this.notificationService.decrementCount();
+          }
           this.updateCounts();
         },
         error: (error) => this.errorService.handleError(error),
@@ -179,14 +189,26 @@ export class NotificationsComponent {
   }
 
   clearAll() {
-    if (confirm('Are you sure you want to clear all notifications?')) {
-      this.notificationService.deleteAll().subscribe({
-        next: () => {
-          this.notifications.set([]);
-          this.updateCounts();
-        },
-        error: (error) => this.errorService.handleError(error),
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: <ConfirmDialogData>{
+        title: 'Delete All Notifications',
+        message: 'Are you sure you want to delete All notifications?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.notificationService.deleteAll().subscribe({
+          next: () => {
+            this.notifications.set([]);
+            this.updateCounts();
+          },
+          error: (error) => this.errorService.handleError(error),
+        });
+      }
+    });
   }
 }
