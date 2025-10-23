@@ -372,6 +372,9 @@ public class PostService {
 
         Files.delete(pathThumbnail);
 
+        if (files.equals(""))
+            return;
+
         String[] fileNames = files.split(", ");
 
         for (String file : fileNames) {
