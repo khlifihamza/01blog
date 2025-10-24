@@ -3,7 +3,6 @@ package com.dev.backend.controller;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,9 +24,6 @@ import com.dev.backend.service.UserService;
 @RequestMapping("/api/profile")
 public class UserController {
         private final UserService userService;
-
-        @Value("${file.upload-dir}")
-        private String uploadDir;
 
         @Autowired
         public UserController(UserService userService) {

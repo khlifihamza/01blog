@@ -46,4 +46,6 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     List<Post> findTop9ByUserIdNotAndStatusOrderByLikes(UUID currentUserId, PostStatus status);
 
     List<Post> findTop10ByCreatedAtLessThanOrderByCreatedAtDesc(LocalDateTime lastCreatedAt);
+
+    long countByUserIdAndStatus(UUID currentUserId, PostStatus status);
 }

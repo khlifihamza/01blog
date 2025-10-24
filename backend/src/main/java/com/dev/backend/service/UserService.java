@@ -29,9 +29,11 @@ import com.dev.backend.dto.ProfileEditResponse;
 import com.dev.backend.dto.ProfileUserResponse;
 import com.dev.backend.dto.RegisterRequest;
 import com.dev.backend.dto.UserResponse;
+import com.dev.backend.model.PostStatus;
 import com.dev.backend.model.Role;
 import com.dev.backend.model.User;
 import com.dev.backend.model.UserStatus;
+import com.dev.backend.repository.PostRepository;
 import com.dev.backend.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -41,6 +43,8 @@ public class UserService {
     private final UserRepository userRepository;
 
     private final FollowService followService;
+
+    private final PostRepository postRepository;
 
     private final AuthenticationManager authenticationManager;
 
@@ -66,11 +70,13 @@ public class UserService {
 
     @Autowired
     public UserService(UserRepository userRepository, FollowService followService,
-            AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
+            AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder,
+            PostRepository postRepository) {
         this.authenticationManager = authenticationManager;
         this.followService = followService;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
+        this.postRepository = postRepository;
     }
 
     public User signup(RegisterRequest input) {
@@ -114,7 +120,7 @@ public class UserService {
                         ? fetchUrl + user.getAvatar()
                         : null,
                 user.getBio(), user.getCreatedAt().toString(), user.getFollowers().size(),
-                user.getFollowing().size(), user.getPosts().size(),
+                user.getFollowing().size(), postRepository.countByUserIdAndStatus(currentUserId, PostStatus.PUBLISHED),
                 user.getId().equals(currentUserId),
                 followService.isCurrentUserFollowUser(currentUserId, user.getId()));
         return userResponse;

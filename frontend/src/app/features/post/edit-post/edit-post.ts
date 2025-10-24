@@ -43,7 +43,7 @@ import { ErrorService } from '../../../core/services/error.service';
     NavbarComponent,
   ],
   templateUrl: './edit-post.html',
-  styleUrls: ['../post.css', '../post-detail/post-detail.css'],
+  styleUrls: ['../post.css'],
 })
 export class EditPostComponent {
   @ViewChild('editorDiv') editorDiv!: ElementRef<HTMLDivElement>;
