@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 public class HtmlSanitizerService {
 
     private final PolicyFactory policy;
-    
+
     @Autowired
     public HtmlSanitizerService() {
         this.policy = new HtmlPolicyBuilder()
@@ -24,7 +24,6 @@ public class HtmlSanitizerService {
                 .allowElements("img")
                 .allowStandardUrlProtocols()
                 .allowAttributes("src")
-                .matching(Pattern.compile("^(https?://[^/]+/api/post/file/.*)$"))
                 .onElements("img")
                 .allowAttributes("alt", "title")
                 .onElements("img")
@@ -35,7 +34,6 @@ public class HtmlSanitizerService {
                 .allowElements("video")
                 .allowStandardUrlProtocols()
                 .allowAttributes("src")
-                .matching(Pattern.compile("^(https?://[^/]+/api/post/file/.*)$"))
                 .onElements("video")
                 .allowAttributes("controls", "preload")
                 .onElements("video")
@@ -52,7 +50,6 @@ public class HtmlSanitizerService {
                 .onElements("a")
 
                 .allowAttributes("class")
-                .matching(Pattern.compile("^(media-element|delete-btn|mat-.*)$"))
                 .globally()
 
                 .allowAttributes("data-media-id")

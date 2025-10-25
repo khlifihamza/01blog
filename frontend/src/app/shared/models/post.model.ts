@@ -1,20 +1,9 @@
-export interface CreatePostPayload {
-  title: string;
-  content: string;
-  thumbnail: string;
-  files?: String[];
-}
 export interface MediaItem {
   id: string;
   position: number;
   file: File;
   preview: string;
   type: string;
-}
-
-export interface UploadResponse {
-  thumbnail: string;
-  fileNames: string[];
 }
 
 export interface FeedPost {

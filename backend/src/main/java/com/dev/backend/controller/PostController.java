@@ -10,13 +10,11 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,9 +24,7 @@ import com.dev.backend.dto.ApiResponse;
 import com.dev.backend.dto.DetailPostResponse;
 import com.dev.backend.dto.EditPostResponse;
 import com.dev.backend.dto.FeedPostResponse;
-import com.dev.backend.dto.PostRequest;
 import com.dev.backend.dto.ProfilePostResponse;
-import com.dev.backend.dto.UploadResponse;
 import com.dev.backend.exception.SafeHtmlException;
 import com.dev.backend.model.User;
 import com.dev.backend.service.PostService;
@@ -59,18 +55,13 @@ public class PostController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createPost(@Validated @RequestBody PostRequest postDto,
-            @AuthenticationPrincipal User currentUser) throws SafeHtmlException {
-        postService.savePost(postDto, currentUser.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
-
-    @PostMapping("/upload")
-    public ResponseEntity<UploadResponse> upload(
+    public ResponseEntity<?> createPost(@RequestParam("title") String title,
+            @RequestParam("content") String content,
             @RequestParam(name = "files", required = false) List<MultipartFile> files,
-            @RequestParam("thumbnail") MultipartFile thumbnail) throws IOException {
-        UploadResponse response = postService.upload(thumbnail, files);
-        return ResponseEntity.ok(response);
+            @RequestParam("thumbnail") MultipartFile thumbnail,
+            @AuthenticationPrincipal User currentUser) throws SafeHtmlException, IOException {
+        postService.savePost(title, content, thumbnail, files, currentUser.getId());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/{id}")
@@ -94,10 +85,19 @@ public class PostController {
     }
 
     @PatchMapping("/update/{id}")
-    public ResponseEntity<ApiResponse> updatePost(@PathVariable UUID id, @Validated @RequestBody PostRequest postDto,
-            @AuthenticationPrincipal User currentUser) throws SafeHtmlException {
-        postService.updatePost(id, postDto, currentUser.getId());
-        return ResponseEntity.ok(new ApiResponse("Blog updated successful"));
+    public ResponseEntity<ApiResponse> updatePost(
+            @PathVariable UUID id,
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            @RequestParam(value = "thumbnail", required = false) MultipartFile thumbnail,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
+            @RequestParam(value = "oldThumbnail", required = false) String oldThumbnail,
+            @RequestParam(value = "oldFileNames", required = false) List<String> oldFileNames,
+            @AuthenticationPrincipal User currentUser) throws SafeHtmlException, IOException {
+
+        postService.updatePost(id, title, content, thumbnail, files, oldThumbnail, oldFileNames,
+                currentUser.getId());
+        return ResponseEntity.ok(new ApiResponse("Blog updated successfully"));
     }
 
     @DeleteMapping("/delete/{id}")

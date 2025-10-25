@@ -1,4 +1,4 @@
-import { Component, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef, SecurityContext } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,13 +9,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PostService } from '../../../core/services/post.service';
-import { CreatePostPayload, MediaItem, UploadResponse } from '../../../shared/models/post.model';
+import { MediaItem } from '../../../shared/models/post.model';
 import { DndUploadDirective } from '../../../core/directives/dnd-upload.directive';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
-import { addLinkTosrc } from '../../../shared/utils/fromathtml';
 import { ErrorService } from '../../../core/services/error.service';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-create-post',
@@ -63,7 +63,8 @@ export class CreatePostComponent {
     private fb: FormBuilder,
     private postService: PostService,
     private errorService: ErrorService,
-    private location: Location
+    private location: Location,
+    private sanitizer: DomSanitizer
   ) {
     this.blogForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(100)]],
@@ -93,20 +94,17 @@ export class CreatePostComponent {
         }
       }
     }
+
     if (!imageProcessed) {
-      let htmlContent = clipboardData.getData('text/html');
       const plainText = clipboardData.getData('text/plain');
 
-      if (htmlContent) {
-        htmlContent = this.getTextFromHtml(htmlContent);
-      } else if (plainText) {
-        htmlContent = `<span>${plainText}</span>`;
-      } else {
+      if (!plainText) {
         return;
       }
-      this.currentContent = htmlContent;
+
+      this.currentContent = plainText;
       this.showValidationError = this.currentContent.length > 0 && this.currentContent.length < 100;
-      this.insertHtmlAtCursor(htmlContent);
+      this.insertHtmlAtCursor(plainText);
     }
   }
 
@@ -139,12 +137,6 @@ export class CreatePostComponent {
     reader.readAsDataURL(file);
   }
 
-  private getTextFromHtml(html: string): string {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-    return tempDiv.innerText;
-  }
-
   private insertHtmlAtCursor(html: string): void {
     const selection = window.getSelection();
     if (!selection || !selection.rangeCount) return;
@@ -169,7 +161,7 @@ export class CreatePostComponent {
     range.deleteContents();
 
     const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
+    tempDiv.innerText = html;
 
     const fragment = document.createDocumentFragment();
     let lastNode: Node | null = null;
@@ -517,29 +509,11 @@ export class CreatePostComponent {
   publishPost() {
     if (this.isContentValid()) {
       this.isLoading.set(true);
-      const createPost = (res: UploadResponse) => {
-        let htmlString = this.editorDiv.nativeElement.innerHTML;
-
-        let content = addLinkTosrc(htmlString, res.fileNames);
-
-        const createPostPayload: CreatePostPayload = {
-          title: this.blogForm.value.title,
-          content: content,
-          thumbnail: res.thumbnail,
-          files: res.fileNames,
-        };
-
-        this.postService.createPost(createPostPayload).subscribe({
-          next: () => {
-            this.isLoading.set(false);
-            this.errorService.showSuccess('Blog created successfully');
-            this.goBack();
-          },
-          error: (error) => this.errorService.handleError(error),
-        });
-      };
+      let content = this.editorDiv.nativeElement.innerHTML;
 
       const formData = new FormData();
+      formData.append('title', this.blogForm.value.title);
+      formData.append('content', content);
       if (this.thumbnailFile) formData.append('thumbnail', this.thumbnailFile);
 
       const orderedFiles = this.getOrderedMediaFiles();
@@ -547,9 +521,16 @@ export class CreatePostComponent {
         orderedFiles.forEach((file) => formData.append('files', file));
       }
 
-      this.postService.uploadFiles(formData).subscribe({
-        next: (response) => createPost(response),
-        error: (error) => this.errorService.handleError(error),
+      this.postService.createPost(formData).subscribe({
+        next: () => {
+          this.isLoading.set(false);
+          this.errorService.showSuccess('Blog created successfully');
+          this.goBack();
+        },
+        error: (error) => {
+          this.errorService.handleError(error);
+          this.isLoading.set(false);
+        },
       });
     }
   }

@@ -3,8 +3,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   DetailPost,
-  CreatePostPayload,
-  UploadResponse,
   EditPost,
   ProfilePost,
   FeedPost,
@@ -19,11 +17,11 @@ export class PostService {
 
   constructor(private http: HttpClient) {}
 
-  createPost(payload: CreatePostPayload): Observable<any> {
+  createPost(payload: FormData): Observable<any> {
     return this.http.post<any>(`${this.url}/create`, payload);
   }
 
-  updatePost(payload: CreatePostPayload, id: string): Observable<any> {
+  updatePost(payload: FormData, id: string): Observable<any> {
     return this.http.patch<any>(`${this.url}/update/${id}`, payload);
   }
 
@@ -45,10 +43,6 @@ export class PostService {
       params = params.set('lastCreatedAt', lastCreatedAt);
     }
     return this.http.get<any>(`${this.url}/feed`, { params });
-  }
-
-  uploadFiles(files: FormData): Observable<UploadResponse> {
-    return this.http.post<any>(`${this.url}/upload`, files);
   }
 
   deletePost(id: string): Observable<ApiResponse> {

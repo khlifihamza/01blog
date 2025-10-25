@@ -9,7 +9,7 @@ import {
 } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CreatePostPayload, MediaItem } from '../../../shared/models/post.model';
+import { MediaItem } from '../../../shared/models/post.model';
 import { MatMenuModule } from '@angular/material/menu';
 import { DndUploadDirective } from '../../../core/directives/dnd-upload.directive';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -21,7 +21,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { PostService } from '../../../core/services/post.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
-import { addLinkTosrc } from '../../../shared/utils/fromathtml';
 import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
@@ -43,7 +42,7 @@ import { ErrorService } from '../../../core/services/error.service';
     NavbarComponent,
   ],
   templateUrl: './edit-post.html',
-  styleUrls: ['../post.css'],
+  styleUrl: '../post.css',
 })
 export class EditPostComponent {
   @ViewChild('editorDiv') editorDiv!: ElementRef<HTMLDivElement>;
@@ -140,19 +139,15 @@ export class EditPostComponent {
       }
     }
     if (!imageProcessed) {
-      let htmlContent = clipboardData.getData('text/html');
       const plainText = clipboardData.getData('text/plain');
 
-      if (htmlContent) {
-        htmlContent = this.getTextFromHtml(htmlContent);
-      } else if (plainText) {
-        htmlContent = `<span>${plainText}</span>`;
-      } else {
+      if (!plainText) {
         return;
       }
-      this.currentContent = htmlContent;
+
+      this.currentContent = plainText;
       this.showValidationError = this.currentContent.length > 0 && this.currentContent.length < 100;
-      this.insertHtmlAtCursor(htmlContent);
+      this.insertHtmlAtCursor(plainText);
     }
   }
 
@@ -185,12 +180,6 @@ export class EditPostComponent {
     reader.readAsDataURL(file);
   }
 
-  private getTextFromHtml(html: string): string {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-    return tempDiv.innerText;
-  }
-
   private insertHtmlAtCursor(html: string): void {
     const selection = window.getSelection();
     if (!selection || !selection.rangeCount) return;
@@ -215,7 +204,7 @@ export class EditPostComponent {
     range.deleteContents();
 
     const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
+    tempDiv.innerText = html;
 
     const fragment = document.createDocumentFragment();
     let lastNode: Node | null = null;
@@ -335,81 +324,37 @@ export class EditPostComponent {
   updatePost() {
     if (this.editForm.valid) {
       this.isLoading.set(true);
-      const updatePost = () => {
-        let htmlString = this.editorDiv.nativeElement.innerHTML;
+      let content = this.editorDiv.nativeElement.innerHTML;
 
-        let content = addLinkTosrc(htmlString, this.oldFileNames);
+      const formData = new FormData();
+      formData.append('title', this.editForm.value.title);
+      formData.append('content', content);
 
-        const updatePostPayload: CreatePostPayload = {
-          title: this.editForm.value.title,
-          content: content,
-          thumbnail: this.oldThumbnail!,
-          files: this.oldFileNames,
-        };
-        this.postService.updatePost(updatePostPayload, this.postId).subscribe({
-          next: (response) => {
-            this.isLoading.set(false);
-            this.errorService.showSuccess('Post updated successfully');
-            this.goBack();
-          },
-          error: (error) => this.errorService.handleError(error),
-        });
-      };
-
-      if (!this.thumbnailFile) {
-        const charIndex = this.oldThumbnail?.lastIndexOf('/');
-        const fileName = this.oldThumbnail?.slice(charIndex! + 1);
-        this.postService.getOldThumbnail(fileName!).subscribe({
-          next: (blob) => {
-            this.thumbnailFile = new File([blob], this.oldThumbnail!, { type: blob.type });
-            this.uploadAndUpdate(updatePost);
-          },
-          error: (err) => this.errorService.handleError(err),
-        });
-      } else {
-        this.uploadAndUpdate(updatePost);
+      if (this.thumbnailFile) {
+        formData.append('thumbnail', this.thumbnailFile);
+      } else if (this.oldThumbnail) {
+        formData.append('oldThumbnail', this.oldThumbnail);
       }
-    }
-  }
 
-  private uploadAndUpdate(updatePost: () => void) {
-    const formData = new FormData();
-    const { newFiles, allFileNames } = this.getOrderedMediaFiles();
+      const { newFiles, allFileNames } = this.getOrderedMediaFiles();
 
-    if (this.thumbnailFile) {
-      formData.append('thumbnail', this.thumbnailFile);
-    }
+      if (newFiles.length > 0) {
+        newFiles.forEach((file) => formData.append('files', file));
+      }
 
-    if (newFiles.length > 0) {
-      newFiles.forEach((file) => formData.append('files', file));
-    }
+      allFileNames.forEach((fileName) => formData.append('oldFileNames', fileName));
 
-    if (formData.has('thumbnail') || formData.has('files')) {
-      this.postService.uploadFiles(formData).subscribe({
-        next: (response) => {
-          if (this.thumbnailFile) {
-            this.oldThumbnail = response.thumbnail;
-          }
-          if (newFiles.length > 0) {
-            const newFileNames = response.fileNames;
-            let newFileIndex = 0;
-
-            this.oldFileNames = allFileNames.map((fileName) => {
-              if (fileName.startsWith('new_file_')) {
-                return newFileNames[newFileIndex++];
-              }
-              return fileName;
-            });
-          } else {
-            this.oldFileNames = allFileNames;
-          }
-          updatePost();
+      this.postService.updatePost(formData, this.postId).subscribe({
+        next: () => {
+          this.isLoading.set(false);
+          this.errorService.showSuccess('Post updated successfully');
+          this.goBack();
         },
-        error: (error) => this.errorService.handleError(error),
+        error: (error) => {
+          this.errorService.handleError(error);
+          this.isLoading.set(false);
+        },
       });
-    } else {
-      this.oldFileNames = allFileNames;
-      updatePost();
     }
   }
 
