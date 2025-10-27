@@ -1,10 +1,10 @@
 import { Component, signal } from '@angular/core';
 import {
-  FormBuilder,
   FormGroup,
   Validators,
   ReactiveFormsModule,
   FormControlOptions,
+  FormControl,
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -39,20 +39,28 @@ export class RegisterComponent {
   loading = signal(false);
 
   constructor(
-    private fb: FormBuilder,
     private router: Router,
     private authService: AuthService,
     private errorService: ErrorService
   ) {
-    this.registerForm = this.fb.group(
+    this.registerForm = new FormGroup(
       {
-        username: [
-          '',
-          [Validators.required, Validators.minLength(3), Validators.pattern(/^[a-zA-Z0-9\-]+$/)],
-        ],
-        email: ['', [Validators.required, Validators.email]],
-        password: ['', [Validators.required, Validators.minLength(8)]],
-        confirmPassword: ['', [Validators.required, Validators.minLength(8)]],
+        username: new FormControl('', {
+          validators: [
+            Validators.required,
+            Validators.minLength(3),
+            Validators.pattern(/^[a-zA-Z0-9\-]+$/),
+          ],
+        }),
+        email: new FormControl('', {
+          validators: [Validators.required, Validators.email],
+        }),
+        password: new FormControl('', {
+          validators: [Validators.required, Validators.minLength(8)],
+        }),
+        confirmPassword: new FormControl('', {
+          validators: [Validators.required, Validators.minLength(8)],
+        }),
       },
       { validators: this.passwordMatchValidator } as FormControlOptions
     );

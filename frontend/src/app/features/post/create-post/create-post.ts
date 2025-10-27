@@ -1,13 +1,13 @@
 import { Component, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormGroup, Validators } from '@angular/forms';
 import { PostService } from '../../../core/services/post.service';
 import { MediaItem } from '../../../shared/models/post.model';
 import { DndUploadDirective } from '../../../core/directives/dnd-upload.directive';
@@ -22,7 +22,6 @@ import { ErrorService } from '../../../core/services/error.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    FormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
@@ -59,15 +58,20 @@ export class CreatePostComponent {
   private currentContent = '';
 
   constructor(
-    private fb: FormBuilder,
     private postService: PostService,
     private errorService: ErrorService,
     private location: Location
   ) {
-    this.blogForm = this.fb.group({
-      title: ['', [Validators.required, Validators.maxLength(100)]],
-      content: ['', [Validators.required, Validators.minLength(100)]],
-      thumbnail: ['', [Validators.required]],
+    this.blogForm = new FormGroup({
+      title: new FormControl('', {
+        validators: [Validators.required, Validators.minLength(5), Validators.maxLength(200)],
+      }),
+      content: new FormControl('', {
+        validators: [Validators.required, Validators.minLength(100), Validators.maxLength(50000)],
+      }),
+      thumbnail: new FormControl('', {
+        validators: [Validators.required],
+      }),
     });
   }
 
@@ -100,8 +104,10 @@ export class CreatePostComponent {
         return;
       }
 
-      this.currentContent = plainText;
-      this.showValidationError = this.currentContent.length > 0 && this.currentContent.length < 100;
+      this.currentContent += plainText;
+      this.showValidationError =
+        (this.currentContent.length > 0 && this.currentContent.length < 100) ||
+        this.currentContent.length > 50000;
       this.insertHtmlAtCursor(plainText);
     }
   }
@@ -185,7 +191,9 @@ export class CreatePostComponent {
 
     this.blogForm.patchValue({ content: this.currentContent });
 
-    this.showValidationError = this.currentContent.length > 0 && this.currentContent.length < 100;
+    this.showValidationError =
+      (this.currentContent.length > 0 && this.currentContent.length < 100) ||
+      this.currentContent.length > 50000;
 
     this.updateMediaPositions();
 
@@ -501,7 +509,11 @@ export class CreatePostComponent {
   }
 
   isContentValid(): boolean {
-    return this.thumbnailFile != null && this.currentContent.length >= 100;
+    return (
+      this.thumbnailFile != null &&
+      this.currentContent.length >= 100 &&
+      this.currentContent.length <= 50000
+    );
   }
 
   publishPost() {

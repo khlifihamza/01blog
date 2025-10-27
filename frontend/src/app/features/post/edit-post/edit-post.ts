@@ -1,11 +1,12 @@
 import { Component, ElementRef, signal, ViewChild } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import {
-  FormBuilder,
   FormGroup,
   Validators,
   ReactiveFormsModule,
-  FormsModule,
+  FormControl,
+  AbstractControl,
+  ValidationErrors,
 } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -29,7 +30,6 @@ import { ErrorService } from '../../../core/services/error.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    FormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
@@ -70,7 +70,6 @@ export class EditPostComponent {
   postNotFound = signal(false);
 
   constructor(
-    private fb: FormBuilder,
     private route: ActivatedRoute,
     private postService: PostService,
     private sanitizer: DomSanitizer,
@@ -78,10 +77,16 @@ export class EditPostComponent {
     private location: Location,
     private router: Router
   ) {
-    this.editForm = this.fb.group({
-      title: ['', [Validators.required, Validators.maxLength(100)]],
-      content: ['', [Validators.required, Validators.minLength(100)]],
-      thumbnail: ['', [this.thumbnailValidator.bind(this)]],
+    this.editForm = new FormGroup({
+      title: new FormControl('', {
+        validators: [Validators.required, Validators.minLength(5), Validators.maxLength(200)],
+      }),
+      content: new FormControl('', {
+        validators: [Validators.required, Validators.minLength(100), Validators.maxLength(50000)],
+      }),
+      thumbnail: new FormControl('', {
+        validators: [this.thumbnailValidator.bind(this)],
+      }),
     });
   }
 
@@ -145,8 +150,10 @@ export class EditPostComponent {
         return;
       }
 
-      this.currentContent = plainText;
-      this.showValidationError = this.currentContent.length > 0 && this.currentContent.length < 100;
+      this.currentContent += plainText;
+      this.showValidationError =
+        (this.currentContent.length > 0 && this.currentContent.length < 100) ||
+        this.currentContent.length > 50000;
       this.insertHtmlAtCursor(plainText);
     }
   }
@@ -390,7 +397,9 @@ export class EditPostComponent {
 
     this.editForm.patchValue({ content: this.currentContent });
 
-    this.showValidationError = this.currentContent.length > 0 && this.currentContent.length < 100;
+    this.showValidationError =
+      (this.currentContent.length > 0 && this.currentContent.length < 100) ||
+      this.currentContent.length > 50000;
 
     this.updateMediaPositions();
 
@@ -684,7 +693,7 @@ export class EditPostComponent {
     return this.thumbnailPreview() != null && this.currentContent.length >= 100;
   }
 
-  private thumbnailValidator(control: any) {
+  thumbnailValidator = (control: AbstractControl): ValidationErrors | null => {
     if (this.existingThumbnail) {
       return null;
     }

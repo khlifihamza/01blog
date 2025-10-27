@@ -30,6 +30,7 @@ import com.dev.backend.dto.FeedPostResponse;
 import com.dev.backend.dto.ProfilePostResponse;
 import com.dev.backend.dto.UploadResponse;
 import com.dev.backend.dto.UserDto;
+import com.dev.backend.exception.InvalidPostDataException;
 import com.dev.backend.exception.SafeHtmlException;
 import com.dev.backend.model.Follow;
 import com.dev.backend.model.NotificationType;
@@ -76,6 +77,22 @@ public class PostService {
 
     public Post savePost(String title, String content, MultipartFile thumbnail, List<MultipartFile> files, UUID userId)
             throws SafeHtmlException, IOException {
+        String error = "";
+        if (title.length() < 5 || title.length() > 200) {
+            error += "Title should have between 5 and 200 characters";
+        }
+        if (content.length() < 100 || content.length() > 50000) {
+            error = !error.equals("") ? error += ", " : error;
+            error += "Content should have between 100 and 50000 characters";
+        }
+        if (thumbnail == null) {
+            error = !error.equals("") ? error += ", " : error;
+            error += "Thumbnai is required";
+        }
+
+        if (!error.isEmpty()) {
+            throw new InvalidPostDataException(error);
+        }
 
         UploadResponse uploadResponse = upload(thumbnail, files);
 

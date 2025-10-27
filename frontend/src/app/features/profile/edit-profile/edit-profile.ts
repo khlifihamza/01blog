@@ -1,6 +1,6 @@
 import { Component, ElementRef, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -46,16 +46,21 @@ export class EditProfileComponent {
   newAvatarPreview = signal<string | null | undefined>(null);
 
   constructor(
-    private fb: FormBuilder,
     private router: Router,
     private errorService: ErrorService,
     private profileService: ProfileService,
     private dialog: MatDialog
   ) {
-    this.profileForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      username: ['', Validators.required],
-      bio: ['', Validators.maxLength(500)],
+    this.profileForm = new FormGroup({
+      email: new FormControl('', {
+        validators: [Validators.required, Validators.email],
+      }),
+      username: new FormControl('', {
+        validators: [Validators.required, Validators.minLength(3)],
+      }),
+      bio: new FormControl('', {
+        validators: [Validators.maxLength(50)],
+      }),
     });
   }
 
@@ -85,8 +90,8 @@ export class EditProfileComponent {
         this.newAvatarPreview.set(e.target?.result as string);
       };
       reader.readAsDataURL(file);
-    }else if (!file.type.startsWith('image/')){
-      this.errorService.showWarning("Unsupported File type")
+    } else if (!file.type.startsWith('image/')) {
+      this.errorService.showWarning('Unsupported File type');
     }
   }
 

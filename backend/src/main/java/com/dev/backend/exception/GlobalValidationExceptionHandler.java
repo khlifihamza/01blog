@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -41,6 +42,36 @@ public class GlobalValidationExceptionHandler {
                                 HttpStatus.BAD_REQUEST.value(),
                                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
                                 validationErrors,
+                                request.getDescription(false).replace("uri=", ""));
+
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        @ExceptionHandler(MissingServletRequestPartException.class)
+        public ResponseEntity<ErrorResponse> handleMissingServletRequestPartException(
+                        MissingServletRequestPartException ex,
+                        WebRequest request) {
+
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                ex.getMessage(),
+                                request.getDescription(false).replace("uri=", ""));
+
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        @ExceptionHandler(InvalidPostDataException.class)
+        public ResponseEntity<ErrorResponse> handleInvalidPostDataException(
+                        InvalidPostDataException ex,
+                        WebRequest request) {
+
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                ex.getMessage(),
                                 request.getDescription(false).replace("uri=", ""));
 
                 return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -238,7 +269,7 @@ public class GlobalValidationExceptionHandler {
         public ResponseEntity<ErrorResponse> handleException(
                         Exception ex,
                         WebRequest request) {
-
+                System.out.println(ex.getClass());
                 ErrorResponse errorResponse = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
