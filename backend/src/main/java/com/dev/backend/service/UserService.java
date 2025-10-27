@@ -29,6 +29,7 @@ import com.dev.backend.dto.ProfileEditResponse;
 import com.dev.backend.dto.ProfileUserResponse;
 import com.dev.backend.dto.RegisterRequest;
 import com.dev.backend.dto.UserResponse;
+import com.dev.backend.model.Post;
 import com.dev.backend.model.PostStatus;
 import com.dev.backend.model.Role;
 import com.dev.backend.model.User;
@@ -45,6 +46,8 @@ public class UserService {
     private final FollowService followService;
 
     private final PostRepository postRepository;
+
+    private final PostService postService;
 
     private final AuthenticationManager authenticationManager;
 
@@ -71,12 +74,13 @@ public class UserService {
     @Autowired
     public UserService(UserRepository userRepository, FollowService followService,
             AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder,
-            PostRepository postRepository) {
+            PostRepository postRepository, PostService postService) {
         this.authenticationManager = authenticationManager;
         this.followService = followService;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.postRepository = postRepository;
+        this.postService = postService;
     }
 
     public User signup(RegisterRequest input) {
@@ -150,7 +154,7 @@ public class UserService {
         return avatarId;
     }
 
-    private void deleteOldAvatar(String filename) throws IOException {
+    private void deleteAvatar(String filename) throws IOException {
         if (filename == null)
             return;
         Path avatarPath = Paths.get(uploadDir + "/images").resolve(filename).normalize();
@@ -191,11 +195,11 @@ public class UserService {
                 throw new IllegalArgumentException("Unsupported file type: " + contentType);
             }
 
-            deleteOldAvatar(user.getAvatar());
+            deleteAvatar(user.getAvatar());
             user.setAvatar(uploadAvatar(avatar));
         }
         if (defaultAvatar != null) {
-            deleteOldAvatar(user.getAvatar());
+            deleteAvatar(user.getAvatar());
             user.setAvatar(null);
         }
         user.setBio(bio);
@@ -274,11 +278,15 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public void deleteUser(String username) {
+    public void deleteUser(String username) throws IOException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (user.getRole().equals(Role.ADMIN)) {
-            throw new DataIntegrityViolationException("You cannot delete yourself.");
+            throw new DataIntegrityViolationException("You dont have permession to do this action.");
+        }
+        deleteAvatar(user.getAvatar());
+        for (Post post : user.getPosts()) {
+            postService.deleteMedia(post.getThumbnail(), post.getFiles());
         }
         userRepository.delete(user);
     }

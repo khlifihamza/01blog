@@ -1,4 +1,4 @@
-import { Component, signal, ViewChild, ElementRef, SecurityContext } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -15,7 +15,6 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { ErrorService } from '../../../core/services/error.service';
-import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-create-post',
@@ -63,8 +62,7 @@ export class CreatePostComponent {
     private fb: FormBuilder,
     private postService: PostService,
     private errorService: ErrorService,
-    private location: Location,
-    private sanitizer: DomSanitizer
+    private location: Location
   ) {
     this.blogForm = this.fb.group({
       title: ['', [Validators.required, Validators.maxLength(100)]],

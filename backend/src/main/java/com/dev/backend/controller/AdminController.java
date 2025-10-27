@@ -97,7 +97,7 @@ public class AdminController {
     }
 
     @DeleteMapping("/delete-user/{username}")
-    public ResponseEntity<ApiResponse> deleteUser(@PathVariable String username) {
+    public ResponseEntity<ApiResponse> deleteUser(@PathVariable String username) throws IOException {
         userService.deleteUser(username);
         return ResponseEntity.ok(new ApiResponse("User deleted successfully"));
     }

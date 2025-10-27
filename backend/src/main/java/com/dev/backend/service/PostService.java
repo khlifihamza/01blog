@@ -400,7 +400,7 @@ public class PostService {
                 .body(fileBytes);
     }
 
-    private void deleteMedia(String thumbnail, String files) throws IOException {
+    public void deleteMedia(String thumbnail, String files) throws IOException {
         if (thumbnail != null) {
             Path pathThumbnail = Paths.get(uploadDir + "/images").resolve(thumbnail).normalize();
 
