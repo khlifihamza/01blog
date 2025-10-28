@@ -1,18 +1,17 @@
-import { Component, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
-import { ReactiveFormsModule, FormControl } from '@angular/forms';
+import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
-import { FormGroup, Validators } from '@angular/forms';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatToolbarModule } from '@angular/material/toolbar';
 import { PostService } from '../../../core/services/post.service';
 import { MediaItem } from '../../../shared/models/post.model';
 import { DndUploadDirective } from '../../../core/directives/dnd-upload.directive';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { ErrorService } from '../../../core/services/error.service';
 
@@ -36,7 +35,7 @@ import { ErrorService } from '../../../core/services/error.service';
   templateUrl: './create-post.html',
   styleUrls: ['../post.css'],
 })
-export class CreatePostComponent {
+export class CreatePostComponent implements OnDestroy {
   @ViewChild('editorDiv') editorDiv!: ElementRef<HTMLDivElement>;
   @ViewChild('addButton') addButton!: ElementRef<HTMLButtonElement>;
   @ViewChild('imageInput') imageInput!: ElementRef<HTMLInputElement>;
@@ -56,6 +55,8 @@ export class CreatePostComponent {
     'Share your journey, insights, and experiences with the 01Student community...';
   showValidationError = false;
   private currentContent = '';
+
+  private objectUrls = new Map<string, string>();
 
   constructor(
     private postService: PostService,
@@ -99,10 +100,7 @@ export class CreatePostComponent {
 
     if (!imageProcessed) {
       const plainText = clipboardData.getData('text/plain');
-
-      if (!plainText) {
-        return;
-      }
+      if (!plainText) return;
 
       this.currentContent += plainText;
       this.showValidationError =
@@ -113,200 +111,24 @@ export class CreatePostComponent {
   }
 
   private handleImagePaste(file: File): void {
-    const reader = new FileReader();
+    const objectUrl = URL.createObjectURL(file);
+    const mediaId = this.generateMediaId();
 
-    reader.onload = (e: ProgressEvent<FileReader>) => {
-      if (e.target && e.target.result) {
-        const imgSrc = e.target.result as string;
-        const mediaId = this.generateMediaId();
+    this.insertMedia('image', objectUrl, file.name, mediaId);
+    this.objectUrls.set(mediaId, objectUrl);
 
-        this.insertMedia('image', imgSrc, file.name, mediaId);
-
-        const type = 'image';
-        this.mediaFiles.update((arr) => [
-          ...arr,
-          {
-            id: mediaId,
-            file,
-            preview: String(reader.result),
-            type,
-            position: 0,
-          },
-        ]);
-
-        this.updateMediaPositions();
-      }
-    };
-
-    reader.readAsDataURL(file);
-  }
-
-  private insertHtmlAtCursor(html: string): void {
-    const selection = window.getSelection();
-    if (!selection || !selection.rangeCount) return;
-
-    const range = selection.getRangeAt(0);
-    const container = range.commonAncestorContainer as HTMLElement;
-
-    const mediaParent =
-      container.nodeType === Node.ELEMENT_NODE
-        ? (container as HTMLElement).closest('.media-element')
-        : container.parentElement?.closest('.media-element');
-
-    if (mediaParent) {
-      const afterMediaRange = document.createRange();
-      afterMediaRange.setStartAfter(mediaParent);
-      afterMediaRange.collapse(true);
-
-      selection.removeAllRanges();
-      selection.addRange(afterMediaRange);
-    }
-
-    range.deleteContents();
-
-    const tempDiv = document.createElement('div');
-    tempDiv.innerText = html;
-
-    const fragment = document.createDocumentFragment();
-    let lastNode: Node | null = null;
-
-    while (tempDiv.firstChild) {
-      lastNode = fragment.appendChild(tempDiv.firstChild);
-    }
-
-    range.insertNode(fragment);
-
-    if (lastNode) {
-      range.setStartAfter(lastNode);
-      range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
-  }
-
-  onContentChange(event: Event) {
-    const target = event.target as HTMLDivElement;
-    this.currentContent = target.innerText || '';
-    this.isContentEmpty = this.currentContent.trim().length === 0;
-
-    this.blogForm.patchValue({ content: this.currentContent });
-
-    this.showValidationError =
-      (this.currentContent.length > 0 && this.currentContent.length < 100) ||
-      this.currentContent.length > 50000;
+    this.mediaFiles.update((arr) => [
+      ...arr,
+      {
+        id: mediaId,
+        file,
+        preview: objectUrl,
+        type: 'image',
+        position: 0,
+      },
+    ]);
 
     this.updateMediaPositions();
-
-    this.updateCursorPosition();
-  }
-
-  private updateMediaPositions() {
-    const mediaElements = this.editorDiv.nativeElement.querySelectorAll('.media-element');
-    const updatedMediaFiles: MediaItem[] = [];
-
-    mediaElements.forEach((element, index) => {
-      const mediaId = element.getAttribute('data-media-id');
-      if (mediaId) {
-        const mediaItem = this.mediaFiles().find((item) => item.id === mediaId);
-        if (mediaItem) {
-          updatedMediaFiles.push({
-            ...mediaItem,
-            position: index,
-          });
-        }
-      }
-    });
-
-    updatedMediaFiles.sort((a, b) => a.position - b.position);
-    this.mediaFiles.set(updatedMediaFiles);
-  }
-
-  private getOrderedMediaFiles(): File[] {
-    return this.mediaFiles()
-      .sort((a, b) => a.position - b.position)
-      .map((item) => item.file);
-  }
-
-  updateCursorPosition() {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) {
-      return;
-    }
-
-    const range = selection.getRangeAt(0);
-    const editor = this.editorDiv.nativeElement;
-    const editorRect = editor.getBoundingClientRect();
-
-    const editorHeight = editor.clientHeight;
-
-    const buttonHeight = 32;
-
-    const minTop = 16.5;
-    const maxTop = editorHeight - buttonHeight;
-
-    const rangeRect = range.getBoundingClientRect();
-
-    let calculatedTop = 0;
-
-    if (rangeRect.height > 0 && rangeRect.width > 0) {
-      calculatedTop = Math.floor(rangeRect.top - editorRect.top + rangeRect.height / 2 - 16);
-    } else {
-      const rects = range.getClientRects();
-      if (rects.length > 0) {
-        const rect = rects[0];
-        calculatedTop = Math.ceil(rect.top - editorRect.top - 8);
-      } else {
-        const computedStyle = window.getComputedStyle(editor);
-        const lineHeight = parseFloat(computedStyle.lineHeight) || 24;
-
-        try {
-          const tempSpan = document.createElement('span');
-          tempSpan.innerHTML = '\u200B';
-          range.insertNode(tempSpan);
-          const spanRect = tempSpan.getBoundingClientRect();
-
-          calculatedTop = Math.floor(spanRect.top - editorRect.top + lineHeight / 2 - 20);
-
-          const parent = tempSpan.parentNode;
-          if (parent) {
-            parent.removeChild(tempSpan);
-          }
-
-          selection.removeAllRanges();
-          selection.addRange(range);
-        } catch (e) {
-          calculatedTop = this.buttonPosition().top;
-        }
-      }
-    }
-
-    const clampedTop = Math.max(minTop, Math.min(calculatedTop, maxTop));
-
-    this.buttonPosition.set({
-      top:
-        Math.abs(clampedTop - this.buttonPosition().top) > 20 && !this.jump
-          ? clampedTop
-          : this.buttonPosition().top,
-      left: -45,
-    });
-  }
-
-  onFocus() {
-    this.showAddButton.set(true);
-    this.updateCursorPosition();
-    this.jump = false;
-  }
-
-  onBlur() {
-    this.jump = true;
-  }
-
-  onFilesDropped(files: File[]): void {
-    this.addFiles(files);
-  }
-
-  onAddClick(event: Event) {
-    event.stopPropagation();
   }
 
   onThumbnailSelect(event: Event) {
@@ -316,22 +138,22 @@ export class CreatePostComponent {
     if (file) {
       this.thumbnailFile = file;
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.thumbnailPreview.set(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      if (this.thumbnailPreview()) {
+        URL.revokeObjectURL(this.thumbnailPreview()!);
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      this.thumbnailPreview.set(objectUrl);
     }
   }
 
   removeThumbnail(event: Event) {
     event.stopPropagation();
+    if (this.thumbnailPreview()) {
+      URL.revokeObjectURL(this.thumbnailPreview()!);
+    }
     this.thumbnailFile = null;
     this.thumbnailPreview.set(null);
-  }
-
-  goBack() {
-    this.location.back();
   }
 
   triggerImageUpload() {
@@ -347,28 +169,24 @@ export class CreatePostComponent {
     const file = input.files?.[0];
 
     if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageUrl = e.target?.result as string;
-        const mediaId = this.generateMediaId();
+      const objectUrl = URL.createObjectURL(file);
+      const mediaId = this.generateMediaId();
 
-        this.insertMedia('image', imageUrl, file.name, mediaId);
+      this.insertMedia('image', objectUrl, file.name, mediaId);
+      this.objectUrls.set(mediaId, objectUrl);
 
-        const type = 'image';
-        this.mediaFiles.update((arr) => [
-          ...arr,
-          {
-            id: mediaId,
-            file,
-            preview: String(reader.result),
-            type,
-            position: 0,
-          },
-        ]);
+      this.mediaFiles.update((arr) => [
+        ...arr,
+        {
+          id: mediaId,
+          file,
+          preview: objectUrl,
+          type: 'image',
+          position: 0,
+        },
+      ]);
 
-        this.updateMediaPositions();
-      };
-      reader.readAsDataURL(file);
+      this.updateMediaPositions();
     }
 
     input.value = '';
@@ -379,30 +197,56 @@ export class CreatePostComponent {
     const file = input.files?.[0];
 
     if (file && file.type.startsWith('video/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const videoUrl = e.target?.result as string;
-        const mediaId = this.generateMediaId();
+      const objectUrl = URL.createObjectURL(file);
+      const mediaId = this.generateMediaId();
 
-        this.insertMedia('video', videoUrl, file.name, mediaId);
+      this.insertMedia('video', objectUrl, file.name, mediaId);
+      this.objectUrls.set(mediaId, objectUrl);
 
-        const type = 'video';
-        this.mediaFiles.update((arr) => [
-          ...arr,
-          {
-            id: mediaId,
-            file,
-            preview: String(reader.result),
-            type,
-            position: 0,
-          },
-        ]);
-        this.updateMediaPositions();
-      };
-      reader.readAsDataURL(file);
+      this.mediaFiles.update((arr) => [
+        ...arr,
+        {
+          id: mediaId,
+          file,
+          preview: objectUrl,
+          type: 'video',
+          position: 0,
+        },
+      ]);
+
+      this.updateMediaPositions();
     }
 
     input.value = '';
+  }
+
+  onFilesDropped(files: File[]): void {
+    this.addFiles(files);
+  }
+
+  private addFiles(files: File[]): void {
+    const list = Array.from(files);
+    for (const file of list) {
+      const type: 'image' | 'video' = file.type.startsWith('video/') ? 'video' : 'image';
+      const objectUrl = URL.createObjectURL(file);
+      const mediaId = this.generateMediaId();
+
+      this.insertMedia(type, objectUrl, file.name, mediaId);
+      this.objectUrls.set(mediaId, objectUrl);
+
+      this.mediaFiles.update((arr) => [
+        ...arr,
+        {
+          id: mediaId,
+          file,
+          preview: objectUrl,
+          type,
+          position: 0,
+        },
+      ]);
+
+      this.updateMediaPositions();
+    }
   }
 
   private generateMediaId(): string {
@@ -432,7 +276,6 @@ export class CreatePostComponent {
     }
 
     let mediaParent: HTMLElement | null = null;
-
     if (container.nodeType === Node.ELEMENT_NODE) {
       mediaParent = (container as HTMLElement).closest('.media-element');
     } else if (container.parentElement) {
@@ -508,8 +351,163 @@ export class CreatePostComponent {
     this.onContentChange({ target: this.editorDiv.nativeElement } as any);
   }
 
+  private updateMediaPositions() {
+    const mediaElements = this.editorDiv.nativeElement.querySelectorAll('.media-element');
+    const updatedMediaFiles: MediaItem[] = [];
+
+    mediaElements.forEach((element, index) => {
+      const mediaId = element.getAttribute('data-media-id');
+      if (mediaId) {
+        const mediaItem = this.mediaFiles().find((item) => item.id === mediaId);
+        if (mediaItem) {
+          updatedMediaFiles.push({
+            ...mediaItem,
+            position: index,
+          });
+        }
+      }
+    });
+
+    updatedMediaFiles.sort((a, b) => a.position - b.position);
+    this.mediaFiles.set(updatedMediaFiles);
+  }
+
+  private getOrderedMediaFiles(): File[] {
+    return this.mediaFiles()
+      .sort((a, b) => a.position - b.position)
+      .map((item) => item.file);
+  }
+
+  private insertHtmlAtCursor(html: string): void {
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const container = range.commonAncestorContainer as HTMLElement;
+
+    const mediaParent =
+      container.nodeType === Node.ELEMENT_NODE
+        ? (container as HTMLElement).closest('.media-element')
+        : container.parentElement?.closest('.media-element');
+
+    if (mediaParent) {
+      const afterMediaRange = document.createRange();
+      afterMediaRange.setStartAfter(mediaParent);
+      afterMediaRange.collapse(true);
+
+      selection.removeAllRanges();
+      selection.addRange(afterMediaRange);
+    }
+
+    range.deleteContents();
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerText = html;
+
+    const fragment = document.createDocumentFragment();
+    let lastNode: Node | null = null;
+
+    while (tempDiv.firstChild) {
+      lastNode = fragment.appendChild(tempDiv.firstChild);
+    }
+
+    range.insertNode(fragment);
+
+    if (lastNode) {
+      range.setStartAfter(lastNode);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  }
+
+  onContentChange(event: Event) {
+    const target = event.target as HTMLDivElement;
+    this.currentContent = target.innerText || '';
+    this.isContentEmpty = this.currentContent.trim().length === 0;
+
+    this.blogForm.patchValue({ content: this.currentContent });
+
+    this.showValidationError =
+      (this.currentContent.length > 0 && this.currentContent.length < 100) ||
+      this.currentContent.length > 50000;
+
+    this.updateMediaPositions();
+    this.updateCursorPosition();
+  }
+
+  updateCursorPosition() {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    const editor = this.editorDiv.nativeElement;
+    const editorRect = editor.getBoundingClientRect();
+    const editorHeight = editor.clientHeight;
+    const buttonHeight = 32;
+    const minTop = 16.5;
+    const maxTop = editorHeight - buttonHeight;
+
+    let calculatedTop = 0;
+
+    const rangeRect = range.getBoundingClientRect();
+    if (rangeRect.height > 0 && rangeRect.width > 0) {
+      calculatedTop = Math.floor(rangeRect.top - editorRect.top + rangeRect.height / 2 - 16);
+    } else {
+      const rects = range.getClientRects();
+      if (rects.length > 0) {
+        const rect = rects[0];
+        calculatedTop = Math.ceil(rect.top - editorRect.top - 8);
+      } else {
+        const computedStyle = window.getComputedStyle(editor);
+        const lineHeight = parseFloat(computedStyle.lineHeight) || 24;
+
+        try {
+          const tempSpan = document.createElement('span');
+          tempSpan.innerHTML = '\u200B';
+          range.insertNode(tempSpan);
+          const spanRect = tempSpan.getBoundingClientRect();
+          calculatedTop = Math.floor(spanRect.top - editorRect.top + lineHeight / 2 - 20);
+
+          const parent = tempSpan.parentNode;
+          if (parent) parent.removeChild(tempSpan);
+
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } catch (e) {
+          calculatedTop = this.buttonPosition().top;
+        }
+      }
+    }
+
+    const clampedTop = Math.max(minTop, Math.min(calculatedTop, maxTop));
+
+    this.buttonPosition.set({
+      top:
+        Math.abs(clampedTop - this.buttonPosition().top) > 20 && !this.jump
+          ? clampedTop
+          : this.buttonPosition().top,
+      left: -45,
+    });
+  }
+
+  onFocus() {
+    this.showAddButton.set(true);
+    this.updateCursorPosition();
+    this.jump = false;
+  }
+
+  onBlur() {
+    this.jump = true;
+  }
+
+  onAddClick(event: Event) {
+    event.stopPropagation();
+  }
+
   isContentValid(): boolean {
     return (
+      this.blogForm.value.title.trim().length >= 5 &&
       this.thumbnailFile != null &&
       this.currentContent.length >= 100 &&
       this.currentContent.length <= 50000
@@ -522,14 +520,12 @@ export class CreatePostComponent {
       let content = this.editorDiv.nativeElement.innerHTML;
 
       const formData = new FormData();
-      formData.append('title', this.blogForm.value.title);
+      formData.append('title', this.blogForm.value.title.trim());
       formData.append('content', content);
       if (this.thumbnailFile) formData.append('thumbnail', this.thumbnailFile);
 
       const orderedFiles = this.getOrderedMediaFiles();
-      if (orderedFiles.length > 0) {
-        orderedFiles.forEach((file) => formData.append('files', file));
-      }
+      orderedFiles.forEach((file) => formData.append('files', file));
 
       this.postService.createPost(formData).subscribe({
         next: () => {
@@ -545,33 +541,27 @@ export class CreatePostComponent {
     }
   }
 
-  private addFiles(files: File[]): void {
-    const list = Array.from(files);
-    for (const file of list) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const type: 'image' | 'video' = file.type.startsWith('video') ? 'video' : 'image';
-        const imageUrl = String(reader.result);
-        const mediaId = this.generateMediaId();
-        this.insertMedia(type, imageUrl, file.name, mediaId);
-
-        this.mediaFiles.update((arr) => [
-          ...arr,
-          {
-            id: mediaId,
-            file,
-            preview: imageUrl,
-            type,
-            position: 0,
-          },
-        ]);
-        this.updateMediaPositions();
-      };
-      reader.readAsDataURL(file);
-    }
+  goBack() {
+    this.location.back();
   }
 
   deleteMedia(mediaId: string): void {
+    const url = this.objectUrls.get(mediaId);
+    if (url) {
+      URL.revokeObjectURL(url);
+      this.objectUrls.delete(mediaId);
+    }
+
     this.mediaFiles.update((arr) => arr.filter((v) => v.id !== mediaId));
+  }
+
+  ngOnDestroy(): void {
+    this.objectUrls.forEach((url) => URL.revokeObjectURL(url));
+    this.objectUrls.clear();
+
+    if (this.thumbnailPreview()) {
+      URL.revokeObjectURL(this.thumbnailPreview()!);
+      this.thumbnailPreview.set(null);
+    }
   }
 }

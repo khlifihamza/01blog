@@ -1,4 +1,4 @@
-import { Component, ElementRef, signal, ViewChild } from '@angular/core';
+import { Component, ElementRef, signal, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import {
   FormGroup,
@@ -44,7 +44,7 @@ import { ErrorService } from '../../../core/services/error.service';
   templateUrl: './edit-post.html',
   styleUrl: '../post.css',
 })
-export class EditPostComponent {
+export class EditPostComponent implements OnDestroy {
   @ViewChild('editorDiv') editorDiv!: ElementRef<HTMLDivElement>;
   @ViewChild('addButton') addButton!: ElementRef<HTMLButtonElement>;
   @ViewChild('imageInput') imageInput!: ElementRef<HTMLInputElement>;
@@ -69,6 +69,8 @@ export class EditPostComponent {
   safeContent: SafeHtml | null = null;
   postNotFound = signal(false);
 
+  private objectUrls = new Map<string, string>();
+
   constructor(
     private route: ActivatedRoute,
     private postService: PostService,
@@ -91,8 +93,8 @@ export class EditPostComponent {
   }
 
   ngOnInit() {
-    let postId = this.route.snapshot.paramMap.get('id');
-    if (postId != null) {
+    const postId = this.route.snapshot.paramMap.get('id');
+    if (postId) {
       this.postId = postId;
       this.loadPost();
     }
@@ -105,11 +107,13 @@ export class EditPostComponent {
         this.oldThumbnail = post.thumbnail;
         this.oldFileNames = post.fileNames;
         this.thumbnailPreview.set(post.thumbnail);
+        this.existingThumbnail = !!post.thumbnail;
         this.editForm.patchValue({
           title: post.title,
           content: this.sanitizer.bypassSecurityTrustHtml(post.content),
         });
         this.safeContent = this.sanitizer.bypassSecurityTrustHtml(post.content);
+
         setTimeout(() => {
           this.setupExistingMediaDeleteButtons();
           this.convertExistingMediaToMediaItems();
@@ -131,24 +135,20 @@ export class EditPostComponent {
     const items = clipboardData.items;
     let imageProcessed = false;
 
-    if (items) {
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        if (item.type.indexOf('image') !== -1) {
-          const file = item.getAsFile();
-          if (file) {
-            this.handleImagePaste(file);
-            imageProcessed = true;
-          }
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.indexOf('image') !== -1) {
+        const file = item.getAsFile();
+        if (file) {
+          this.handleImagePaste(file);
+          imageProcessed = true;
         }
       }
     }
+
     if (!imageProcessed) {
       const plainText = clipboardData.getData('text/plain');
-
-      if (!plainText) {
-        return;
-      }
+      if (!plainText) return;
 
       this.currentContent += plainText;
       this.showValidationError =
@@ -159,218 +159,24 @@ export class EditPostComponent {
   }
 
   private handleImagePaste(file: File): void {
-    const reader = new FileReader();
+    const objectUrl = URL.createObjectURL(file);
+    const mediaId = this.generateMediaId();
 
-    reader.onload = (e: ProgressEvent<FileReader>) => {
-      if (e.target && e.target.result) {
-        const imgSrc = e.target.result as string;
-        const mediaId = this.generateMediaId();
+    this.insertMedia('image', objectUrl, file.name, mediaId);
+    this.objectUrls.set(mediaId, objectUrl);
 
-        this.insertMedia('image', imgSrc, file.name, mediaId);
+    this.mediaFiles.update((arr) => [
+      ...arr,
+      {
+        id: mediaId,
+        file,
+        preview: objectUrl,
+        type: 'image',
+        position: 0,
+      },
+    ]);
 
-        const type = 'image';
-        this.mediaFiles.update((arr) => [
-          ...arr,
-          {
-            id: mediaId,
-            file,
-            preview: String(reader.result),
-            type,
-            position: 0,
-          },
-        ]);
-
-        this.updateMediaPositions();
-      }
-    };
-
-    reader.readAsDataURL(file);
-  }
-
-  private insertHtmlAtCursor(html: string): void {
-    const selection = window.getSelection();
-    if (!selection || !selection.rangeCount) return;
-
-    const range = selection.getRangeAt(0);
-    const container = range.commonAncestorContainer as HTMLElement;
-
-    const mediaParent =
-      container.nodeType === Node.ELEMENT_NODE
-        ? (container as HTMLElement).closest('.media-element')
-        : container.parentElement?.closest('.media-element');
-
-    if (mediaParent) {
-      const afterMediaRange = document.createRange();
-      afterMediaRange.setStartAfter(mediaParent);
-      afterMediaRange.collapse(true);
-
-      selection.removeAllRanges();
-      selection.addRange(afterMediaRange);
-    }
-
-    range.deleteContents();
-
-    const tempDiv = document.createElement('div');
-    tempDiv.innerText = html;
-
-    const fragment = document.createDocumentFragment();
-    let lastNode: Node | null = null;
-
-    while (tempDiv.firstChild) {
-      lastNode = fragment.appendChild(tempDiv.firstChild);
-    }
-
-    range.insertNode(fragment);
-
-    if (lastNode) {
-      range.setStartAfter(lastNode);
-      range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
-  }
-
-  private convertExistingMediaToMediaItems() {
-    const mediaElements = this.editorDiv.nativeElement.querySelectorAll('.media-element');
-    const mediaItems: MediaItem[] = [];
-
-    mediaElements.forEach((element, index) => {
-      let mediaId = element.getAttribute('data-media-id');
-      if (!mediaId) {
-        mediaId = this.generateMediaId();
-        element.setAttribute('data-media-id', mediaId);
-      }
-      const imgElement = element.querySelector('img');
-      const videoElement = element.querySelector('video');
-
-      if (imgElement && this.oldFileNames[index]) {
-        const fileName = this.oldFileNames[index];
-        const file = new File([''], fileName, { type: 'image/jpeg' });
-
-        mediaItems.push({
-          id: mediaId,
-          file: file,
-          preview: imgElement.src,
-          type: 'image',
-          position: index,
-        });
-      } else if (videoElement && this.oldFileNames[index]) {
-        const fileName = this.oldFileNames[index];
-        const file = new File([''], fileName, { type: 'video/mp4' });
-
-        mediaItems.push({
-          id: mediaId,
-          file: file,
-          preview: videoElement.src,
-          type: 'video',
-          position: index,
-        });
-      }
-    });
-    this.mediaFiles.set(mediaItems);
-  }
-
-  onFocus() {
-    this.showAddButton.set(true);
-    this.updateCursorPosition();
-    this.jump = false;
-  }
-
-  onBlur() {
-    this.jump = true;
-  }
-
-  private updateMediaPositions() {
-    const mediaElements = this.editorDiv?.nativeElement?.querySelectorAll('.media-element');
-
-    if (!mediaElements || mediaElements.length === 0) {
-      return;
-    }
-
-    this.mediaFiles.update((currentFiles) => {
-      const updatedFiles = [...currentFiles];
-
-      mediaElements.forEach((element, index) => {
-        const mediaId = element.getAttribute('data-media-id');
-        if (mediaId) {
-          const fileIndex = updatedFiles.findIndex((item) => item.id === mediaId);
-          if (fileIndex !== -1) {
-            updatedFiles[fileIndex] = {
-              ...updatedFiles[fileIndex],
-              position: index,
-            };
-          }
-        }
-      });
-
-      return updatedFiles.sort((a, b) => a.position - b.position);
-    });
-  }
-
-  private getOrderedMediaFiles(): { newFiles: File[]; allFileNames: string[] } {
-    const sortedMediaItems = this.mediaFiles().sort((a, b) => a.position - b.position);
-    const newFiles: File[] = [];
-    const allFileNames: string[] = [];
-
-    sortedMediaItems.forEach((item, index) => {
-      if (item.file.size > 0) {
-        newFiles.push(item.file);
-        allFileNames.push(`new_file_${index}`);
-      } else {
-        allFileNames.push(item.file.name);
-      }
-    });
-
-    return { newFiles, allFileNames };
-  }
-
-  private generateMediaId(): string {
-    return 'media_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-  }
-
-  updatePost() {
-    if (this.editForm.valid) {
-      this.isLoading.set(true);
-      let content = this.editorDiv.nativeElement.innerHTML;
-
-      const formData = new FormData();
-      formData.append('title', this.editForm.value.title);
-      formData.append('content', content);
-
-      if (this.thumbnailFile) {
-        formData.append('thumbnail', this.thumbnailFile);
-      } else if (this.oldThumbnail) {
-        formData.append('oldThumbnail', this.oldThumbnail);
-      }
-
-      const { newFiles, allFileNames } = this.getOrderedMediaFiles();
-
-      if (newFiles.length > 0) {
-        newFiles.forEach((file) => formData.append('files', file));
-      }
-
-      allFileNames.forEach((fileName) => formData.append('oldFileNames', fileName));
-
-      this.postService.updatePost(formData, this.postId).subscribe({
-        next: () => {
-          this.isLoading.set(false);
-          this.errorService.showSuccess('Post updated successfully');
-          this.goBack();
-        },
-        error: (error) => {
-          this.errorService.handleError(error);
-          this.isLoading.set(false);
-        },
-      });
-    }
-  }
-
-  goBack() {
-    this.location.back();
-  }
-
-  goHome() {
-    this.router.navigate(['/']);
+    this.updateMediaPositions();
   }
 
   onThumbnailSelect(event: Event) {
@@ -380,94 +186,25 @@ export class EditPostComponent {
     if (file) {
       this.thumbnailFile = file;
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.thumbnailPreview.set(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      if (this.thumbnailPreview() && this.thumbnailPreview()?.startsWith('blob:')) {
+        URL.revokeObjectURL(this.thumbnailPreview()!);
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      this.thumbnailPreview.set(objectUrl);
+      this.existingThumbnail = true;
     }
     this.editorDiv?.nativeElement.focus();
-    this.existingThumbnail = true;
   }
 
-  onContentChange(event: Event) {
-    const target = event.target as HTMLDivElement;
-    this.currentContent = target.innerText || '';
-    this.isContentEmpty = this.currentContent.trim().length === 0;
-
-    this.editForm.patchValue({ content: this.currentContent });
-
-    this.showValidationError =
-      (this.currentContent.length > 0 && this.currentContent.length < 100) ||
-      this.currentContent.length > 50000;
-
-    this.updateMediaPositions();
-
-    this.updateCursorPosition();
-  }
-
-  updateCursorPosition() {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) {
-      return;
+  removeThumbnail(event: Event) {
+    event.stopPropagation();
+    if (this.thumbnailPreview() && this.thumbnailPreview()?.startsWith('blob:')) {
+      URL.revokeObjectURL(this.thumbnailPreview()!);
     }
-
-    const range = selection.getRangeAt(0);
-    const editor = this.editorDiv.nativeElement;
-    const editorRect = editor.getBoundingClientRect();
-
-    const editorHeight = editor.clientHeight;
-
-    const buttonHeight = 32;
-
-    const minTop = 16.5;
-    const maxTop = editorHeight - buttonHeight;
-
-    const rangeRect = range.getBoundingClientRect();
-
-    let calculatedTop = 0;
-
-    if (rangeRect.height > 0 && rangeRect.width > 0) {
-      calculatedTop = Math.floor(rangeRect.top - editorRect.top + rangeRect.height / 2 - 16);
-    } else {
-      const rects = range.getClientRects();
-      if (rects.length > 0) {
-        const rect = rects[0];
-        calculatedTop = Math.ceil(rect.top - editorRect.top - 8);
-      } else {
-        const computedStyle = window.getComputedStyle(editor);
-        const lineHeight = parseFloat(computedStyle.lineHeight) || 24;
-
-        try {
-          const tempSpan = document.createElement('span');
-          tempSpan.innerHTML = '\u200B';
-          range.insertNode(tempSpan);
-          const spanRect = tempSpan.getBoundingClientRect();
-
-          calculatedTop = Math.floor(spanRect.top - editorRect.top + lineHeight / 2 - 20);
-
-          const parent = tempSpan.parentNode;
-          if (parent) {
-            parent.removeChild(tempSpan);
-          }
-
-          selection.removeAllRanges();
-          selection.addRange(range);
-        } catch (e) {
-          calculatedTop = this.buttonPosition().top;
-        }
-      }
-    }
-
-    const clampedTop = Math.max(minTop, Math.min(calculatedTop, maxTop));
-
-    this.buttonPosition.set({
-      top:
-        Math.abs(clampedTop - this.buttonPosition().top) > 20 && !this.jump
-          ? clampedTop
-          : this.buttonPosition().top,
-      left: -45,
-    });
+    this.thumbnailFile = null;
+    this.thumbnailPreview.set(null);
+    this.existingThumbnail = false;
   }
 
   onFilesDropped(files: File[]): void {
@@ -477,34 +214,26 @@ export class EditPostComponent {
   private addFiles(files: File[]): void {
     const list = Array.from(files);
     for (const file of list) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const type: 'image' | 'video' = file.type.startsWith('video') ? 'video' : 'image';
-        const imageUrl = String(reader.result);
-        const mediaId = this.generateMediaId();
+      const type: 'image' | 'video' = file.type.startsWith('video/') ? 'video' : 'image';
+      const objectUrl = URL.createObjectURL(file);
+      const mediaId = this.generateMediaId();
 
-        this.insertMedia(type, imageUrl, file.name, mediaId);
+      this.insertMedia(type, objectUrl, file.name, mediaId);
+      this.objectUrls.set(mediaId, objectUrl);
 
-        this.mediaFiles.update((arr) => [
-          ...arr,
-          {
-            id: mediaId,
-            file,
-            preview: imageUrl,
-            type,
-            position: 0,
-          },
-        ]);
+      this.mediaFiles.update((arr) => [
+        ...arr,
+        {
+          id: mediaId,
+          file,
+          preview: objectUrl,
+          type,
+          position: 0,
+        },
+      ]);
 
-        setTimeout(() => this.updateMediaPositions(), 0);
-      };
-      reader.readAsDataURL(file);
+      setTimeout(() => this.updateMediaPositions(), 0);
     }
-  }
-
-  onAddClick(event: Event) {
-    event.stopPropagation();
-    this.editorDiv?.nativeElement.focus();
   }
 
   triggerImageUpload() {
@@ -520,28 +249,24 @@ export class EditPostComponent {
     const file = input.files?.[0];
 
     if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageUrl = e.target?.result as string;
-        const mediaId = this.generateMediaId();
+      const objectUrl = URL.createObjectURL(file);
+      const mediaId = this.generateMediaId();
 
-        this.insertMedia('image', imageUrl, file.name, mediaId);
+      this.insertMedia('image', objectUrl, file.name, mediaId);
+      this.objectUrls.set(mediaId, objectUrl);
 
-        const type = 'image';
-        this.mediaFiles.update((arr) => [
-          ...arr,
-          {
-            id: mediaId,
-            file,
-            preview: String(reader.result),
-            type,
-            position: 0,
-          },
-        ]);
+      this.mediaFiles.update((arr) => [
+        ...arr,
+        {
+          id: mediaId,
+          file,
+          preview: objectUrl,
+          type: 'image',
+          position: 0,
+        },
+      ]);
 
-        setTimeout(() => this.updateMediaPositions(), 0);
-      };
-      reader.readAsDataURL(file);
+      setTimeout(() => this.updateMediaPositions(), 0);
     }
 
     input.value = '';
@@ -552,31 +277,66 @@ export class EditPostComponent {
     const file = input.files?.[0];
 
     if (file && file.type.startsWith('video/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const videoUrl = e.target?.result as string;
-        const mediaId = this.generateMediaId();
+      const objectUrl = URL.createObjectURL(file);
+      const mediaId = this.generateMediaId();
 
-        this.insertMedia('video', videoUrl, file.name, mediaId);
+      this.insertMedia('video', objectUrl, file.name, mediaId);
+      this.objectUrls.set(mediaId, objectUrl);
 
-        const type = 'video';
-        this.mediaFiles.update((arr) => [
-          ...arr,
-          {
-            id: mediaId,
-            file,
-            preview: String(reader.result),
-            type,
-            position: 0,
-          },
-        ]);
+      this.mediaFiles.update((arr) => [
+        ...arr,
+        {
+          id: mediaId,
+          file,
+          preview: objectUrl,
+          type: 'video',
+          position: 0,
+        },
+      ]);
 
-        setTimeout(() => this.updateMediaPositions(), 0);
-      };
-      reader.readAsDataURL(file);
+      setTimeout(() => this.updateMediaPositions(), 0);
     }
 
     input.value = '';
+  }
+
+  private convertExistingMediaToMediaItems() {
+    const mediaElements = this.editorDiv.nativeElement.querySelectorAll('.media-element');
+    const mediaItems: MediaItem[] = [];
+
+    mediaElements.forEach((element, index) => {
+      let mediaId = element.getAttribute('data-media-id');
+      if (!mediaId) {
+        mediaId = this.generateMediaId();
+        element.setAttribute('data-media-id', mediaId);
+      }
+
+      const imgElement = element.querySelector('img');
+      const videoElement = element.querySelector('video');
+      const fileName = this.oldFileNames[index];
+
+      if (!fileName) return;
+
+      const dummyFile = new File([''], fileName, {
+        type: imgElement ? 'image/jpeg' : 'video/mp4',
+      });
+
+      Object.defineProperty(dummyFile, 'size', { value: 0 });
+
+      mediaItems.push({
+        id: mediaId,
+        file: dummyFile,
+        preview: (imgElement?.src || videoElement?.src)!,
+        type: imgElement ? 'image' : 'video',
+        position: index,
+      });
+    });
+
+    this.mediaFiles.set(mediaItems);
+  }
+
+  private generateMediaId(): string {
+    return 'media_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
   insertMedia(type: 'image' | 'video', src: string, filename: string, mediaId: string) {
@@ -602,7 +362,6 @@ export class EditPostComponent {
     }
 
     let mediaParent: HTMLElement | null = null;
-
     if (container.nodeType === Node.ELEMENT_NODE) {
       mediaParent = (container as HTMLElement).closest('.media-element');
     } else if (container.parentElement) {
@@ -678,26 +437,223 @@ export class EditPostComponent {
     this.onContentChange({ target: this.editorDiv.nativeElement } as any);
   }
 
-  deleteMedia(mediaId: string): void {
-    this.mediaFiles.update((arr) => arr.filter((v) => v.id !== mediaId));
+  private updateMediaPositions() {
+    const mediaElements = this.editorDiv?.nativeElement?.querySelectorAll('.media-element');
+    if (!mediaElements || mediaElements.length === 0) return;
+
+    this.mediaFiles.update((currentFiles) => {
+      const updatedFiles = [...currentFiles];
+
+      mediaElements.forEach((element, index) => {
+        const mediaId = element.getAttribute('data-media-id');
+        if (mediaId) {
+          const fileIndex = updatedFiles.findIndex((item) => item.id === mediaId);
+          if (fileIndex !== -1) {
+            updatedFiles[fileIndex] = {
+              ...updatedFiles[fileIndex],
+              position: index,
+            };
+          }
+        }
+      });
+
+      return updatedFiles.sort((a, b) => a.position - b.position);
+    });
   }
 
-  removeThumbnail(event: Event) {
-    event.stopPropagation();
-    this.thumbnailFile = null;
-    this.thumbnailPreview.set(null);
-    this.existingThumbnail = false;
+  private getOrderedMediaFiles(): { newFiles: File[]; allFileNames: string[] } {
+    const sortedMediaItems = this.mediaFiles().sort((a, b) => a.position - b.position);
+    const newFiles: File[] = [];
+    const allFileNames: string[] = [];
+
+    sortedMediaItems.forEach((item) => {
+      if (item.file.size > 0) {
+        newFiles.push(item.file);
+        allFileNames.push(`new_file_${newFiles.length - 1}`);
+      } else {
+        allFileNames.push(item.file.name);
+      }
+    });
+
+    return { newFiles, allFileNames };
   }
 
-  isContentValid(): boolean {
-    return this.thumbnailPreview() != null && this.currentContent.length >= 100;
-  }
+  private insertHtmlAtCursor(html: string): void {
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
 
-  thumbnailValidator = (control: AbstractControl): ValidationErrors | null => {
-    if (this.existingThumbnail) {
-      return null;
+    const range = selection.getRangeAt(0);
+    const container = range.commonAncestorContainer as HTMLElement;
+
+    const mediaParent =
+      container.nodeType === Node.ELEMENT_NODE
+        ? (container as HTMLElement).closest('.media-element')
+        : container.parentElement?.closest('.media-element');
+
+    if (mediaParent) {
+      const afterMediaRange = document.createRange();
+      afterMediaRange.setStartAfter(mediaParent);
+      afterMediaRange.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(afterMediaRange);
     }
-    return { required: true };
+
+    range.deleteContents();
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerText = html;
+
+    const fragment = document.createDocumentFragment();
+    let lastNode: Node | null = null;
+
+    while (tempDiv.firstChild) {
+      lastNode = fragment.appendChild(tempDiv.firstChild);
+    }
+
+    range.insertNode(fragment);
+
+    if (lastNode) {
+      range.setStartAfter(lastNode);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  }
+
+  onContentChange(event: Event) {
+    const target = event.target as HTMLDivElement;
+    this.currentContent = target.innerText || '';
+    this.isContentEmpty = this.currentContent.trim().length === 0;
+
+    this.editForm.patchValue({ content: this.currentContent });
+
+    this.showValidationError =
+      (this.currentContent.length > 0 && this.currentContent.length < 100) ||
+      this.currentContent.length > 50000;
+
+    this.updateMediaPositions();
+    this.updateCursorPosition();
+  }
+
+  updateCursorPosition() {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    const editor = this.editorDiv.nativeElement;
+    const editorRect = editor.getBoundingClientRect();
+    const editorHeight = editor.clientHeight;
+    const buttonHeight = 32;
+    const minTop = 16.5;
+    const maxTop = editorHeight - buttonHeight;
+
+    let calculatedTop = 0;
+    const rangeRect = range.getBoundingClientRect();
+
+    if (rangeRect.height > 0 && rangeRect.width > 0) {
+      calculatedTop = Math.floor(rangeRect.top - editorRect.top + rangeRect.height / 2 - 16);
+    } else {
+      const rects = range.getClientRects();
+      if (rects.length > 0) {
+        const rect = rects[0];
+        calculatedTop = Math.ceil(rect.top - editorRect.top - 8);
+      } else {
+        const computedStyle = window.getComputedStyle(editor);
+        const lineHeight = parseFloat(computedStyle.lineHeight) || 24;
+
+        try {
+          const tempSpan = document.createElement('span');
+          tempSpan.innerHTML = '\u200B';
+          range.insertNode(tempSpan);
+          const spanRect = tempSpan.getBoundingClientRect();
+          calculatedTop = Math.floor(spanRect.top - editorRect.top + lineHeight / 2 - 20);
+
+          const parent = tempSpan.parentNode;
+          if (parent) parent.removeChild(tempSpan);
+
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } catch (e) {
+          calculatedTop = this.buttonPosition().top;
+        }
+      }
+    }
+
+    const clampedTop = Math.max(minTop, Math.min(calculatedTop, maxTop));
+
+    this.buttonPosition.set({
+      top:
+        Math.abs(clampedTop - this.buttonPosition().top) > 20 && !this.jump
+          ? clampedTop
+          : this.buttonPosition().top,
+      left: -45,
+    });
+  }
+
+  onFocus() {
+    this.showAddButton.set(true);
+    this.updateCursorPosition();
+    this.jump = false;
+  }
+
+  onBlur() {
+    this.jump = true;
+  }
+
+  onAddClick(event: Event) {
+    event.stopPropagation();
+    this.editorDiv?.nativeElement.focus();
+  }
+
+  updatePost() {
+    if (this.editForm.valid) {
+      this.isLoading.set(true);
+      const content = this.editorDiv.nativeElement.innerHTML;
+
+      const formData = new FormData();
+      formData.append('title', this.editForm.value.title.trim());
+      formData.append('content', content);
+
+      if (this.thumbnailFile) {
+        formData.append('thumbnail', this.thumbnailFile);
+      } else if (this.oldThumbnail) {
+        formData.append('oldThumbnail', this.oldThumbnail);
+      }
+
+      const { newFiles, allFileNames } = this.getOrderedMediaFiles();
+      newFiles.forEach((file) => formData.append('files', file));
+      allFileNames.forEach((name) => formData.append('oldFileNames', name));
+
+      this.postService.updatePost(formData, this.postId).subscribe({
+        next: () => {
+          this.isLoading.set(false);
+          this.errorService.showSuccess('Post updated successfully');
+          this.goBack();
+        },
+        error: (error) => {
+          this.errorService.handleError(error);
+          this.isLoading.set(false);
+        },
+      });
+    }
+  }
+
+  goBack() {
+    this.location.back();
+  }
+
+  goHome() {
+    this.router.navigate(['/']);
+  }
+
+  deleteMedia(mediaId: string): void {
+    const url = this.objectUrls.get(mediaId);
+    if (url) {
+      URL.revokeObjectURL(url);
+      this.objectUrls.delete(mediaId);
+    }
+
+    this.mediaFiles.update((arr) => arr.filter((v) => v.id !== mediaId));
   }
 
   private setupExistingMediaDeleteButtons() {
@@ -721,5 +677,27 @@ export class EditPostComponent {
         }
       };
     });
+  }
+
+  isContentValid(): boolean {
+    return (
+      this.editForm.value.title.trim().length >= 5 &&
+      this.thumbnailPreview() != null &&
+      this.currentContent.length >= 100 &&
+      this.currentContent.length <= 50000
+    );
+  }
+
+  thumbnailValidator = (control: AbstractControl): ValidationErrors | null => {
+    return this.existingThumbnail ? null : { required: true };
+  };
+
+  ngOnDestroy(): void {
+    this.objectUrls.forEach((url) => URL.revokeObjectURL(url));
+    this.objectUrls.clear();
+
+    if (this.thumbnailPreview() && this.thumbnailPreview()?.startsWith('blob:')) {
+      URL.revokeObjectURL(this.thumbnailPreview()!);
+    }
   }
 }

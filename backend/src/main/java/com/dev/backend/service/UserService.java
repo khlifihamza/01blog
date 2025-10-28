@@ -124,7 +124,7 @@ public class UserService {
                         ? fetchUrl + user.getAvatar()
                         : null,
                 user.getBio(), user.getCreatedAt().toString(), user.getFollowers().size(),
-                user.getFollowing().size(), postRepository.countByUserIdAndStatus(currentUserId, PostStatus.PUBLISHED),
+                user.getFollowing().size(), postRepository.countByUserIdAndStatus(user.getId(), PostStatus.PUBLISHED),
                 user.getId().equals(currentUserId),
                 followService.isCurrentUserFollowUser(currentUserId, user.getId()));
         return userResponse;

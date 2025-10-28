@@ -85,11 +85,11 @@ export class EditProfileComponent {
     const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
       this.newAvatarFile = file;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.newAvatarPreview.set(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      if (this.newAvatarPreview()) {
+        URL.revokeObjectURL(this.newAvatarPreview()!);
+      }
+      const objectUrl = URL.createObjectURL(file);
+      this.newAvatarPreview.set(objectUrl);
     } else if (!file.type.startsWith('image/')) {
       this.errorService.showWarning('Unsupported File type');
     }
@@ -97,6 +97,9 @@ export class EditProfileComponent {
 
   deleteAvatar(event: Event): void {
     event.stopPropagation();
+    if (this.newAvatarPreview()) {
+      URL.revokeObjectURL(this.newAvatarPreview()!);
+    }
     this.profileForm.patchValue({ avatar: null });
     this.newAvatarPreview.set('default-avatar.png');
     this.newAvatarFile = null;

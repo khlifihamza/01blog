@@ -447,7 +447,7 @@ public class PostService {
     }
 
     private String addLinkToSrc(String htmlString, List<String> fileNames) {
-        Pattern pattern = Pattern.compile("(data:(?:image|video)/[a-zA-Z0-9+.-]+;base64,[^\\\\\\\"']+)");
+        Pattern pattern = Pattern.compile("(blob:http://localhost:4200/[a-zA-Z0-9+.-]+)");
         Matcher matcher = pattern.matcher(htmlString);
         StringBuffer result = new StringBuffer();
         int index = 0;
