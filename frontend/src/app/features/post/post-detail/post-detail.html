@@ -45,10 +45,10 @@
               [src]="post()!.author.avatar ? post()!.author.avatar : 'default-avatar.png'"
               [alt]="post()!.author.username"
               class="author-avatar"
-              (click)="viewProfile()"
+              (click)="viewProfile(post()!.author.username)"
             />
             <div class="author-details">
-              <div class="author-name" (click)="viewProfile()">{{ post()!.author.username }}</div>
+              <div class="author-name" (click)="viewProfile(post()!.author.username)">{{ post()!.author.username }}</div>
               <div class="publish-info">
                 <span>{{ post()!.publishedDate }}</span>
                 <span class="separator">•</span>
@@ -105,10 +105,10 @@
           [src]="post()!.author.avatar ? post()!.author.avatar : 'default-avatar.png'"
           [alt]="post()!.author.username"
           class="author-card-avatar"
-          (click)="viewProfile()"
+          (click)="viewProfile(post()!.author.username)"
         />
         <div class="author-card-info">
-          <h3 class="author-card-name" (click)="viewProfile()">{{ post()!.author.username }}</h3>
+          <h3 class="author-card-name" (click)="viewProfile(post()!.author.username)">{{ post()!.author.username }}</h3>
           <p class="author-card-bio">
             {{ post()!.author.bio ? post()!.author.bio : 'No bio yet' }}
           </p>
@@ -152,12 +152,12 @@
             [src]="comment.avatar ? comment.avatar : 'default-avatar.png'"
             [alt]="comment.username"
             class="comment-avatar"
-            (click)="viewProfile()"
+            (click)="viewProfile(comment.username)"
           />
           <div class="comment-content">
             <div class="comment-header">
               <div>
-                <span class="comment-author" (click)="viewProfile()">{{ comment.username }}</span>
+                <span class="comment-author" (click)="viewProfile(comment.username)">{{ comment.username }}</span>
                 <span class="comment-date">{{ comment.formatedCreatedAt }}</span>
               </div>
               @if(comment.isOwner){

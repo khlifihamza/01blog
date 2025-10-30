@@ -169,6 +169,7 @@ export class CreatePostComponent implements OnDestroy {
     const file = input.files?.[0];
 
     if (file && file.type.startsWith('image/')) {
+      this.contentPlaceholder = '';
       const objectUrl = URL.createObjectURL(file);
       const mediaId = this.generateMediaId();
 
@@ -197,6 +198,7 @@ export class CreatePostComponent implements OnDestroy {
     const file = input.files?.[0];
 
     if (file && file.type.startsWith('video/')) {
+      this.contentPlaceholder = '';
       const objectUrl = URL.createObjectURL(file);
       const mediaId = this.generateMediaId();
 

@@ -360,7 +360,7 @@ export class PostDetailComponent implements OnInit {
     this.router.navigate(['/edit-post', this.post()!.id]);
   }
 
-  viewProfile() {
-    this.router.navigate(['/profile', this.post()!.author.username]);
+  viewProfile(username: string) {
+    this.router.navigate(['/profile', username]);
   }
 }
