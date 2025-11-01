@@ -49,6 +49,7 @@ export class RegisterComponent {
           validators: [
             Validators.required,
             Validators.minLength(3),
+            Validators.maxLength(15),
             Validators.pattern(/^[a-zA-Z0-9\-]+$/),
           ],
         }),
@@ -56,10 +57,10 @@ export class RegisterComponent {
           validators: [Validators.required, Validators.email],
         }),
         password: new FormControl('', {
-          validators: [Validators.required, Validators.minLength(8)],
+          validators: [Validators.required, Validators.minLength(8), Validators.maxLength(24)],
         }),
         confirmPassword: new FormControl('', {
-          validators: [Validators.required, Validators.minLength(8)],
+          validators: [Validators.required, Validators.minLength(8), Validators.maxLength(24)],
         }),
       },
       { validators: this.passwordMatchValidator } as FormControlOptions

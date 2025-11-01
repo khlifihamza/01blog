@@ -62,21 +62,6 @@ public class GlobalValidationExceptionHandler {
                 return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
 
-        @ExceptionHandler(InvalidPostDataException.class)
-        public ResponseEntity<ErrorResponse> handleInvalidPostDataException(
-                        InvalidPostDataException ex,
-                        WebRequest request) {
-
-                ErrorResponse errorResponse = new ErrorResponse(
-                                LocalDateTime.now(),
-                                HttpStatus.BAD_REQUEST.value(),
-                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                                ex.getMessage(),
-                                request.getDescription(false).replace("uri=", ""));
-
-                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-        }
-
         @ExceptionHandler(BadCredentialsException.class)
         public ResponseEntity<ErrorResponse> handleBadCredentialsException(
                         BadCredentialsException ex,

@@ -56,10 +56,15 @@ export class EditProfileComponent {
         validators: [Validators.required, Validators.email],
       }),
       username: new FormControl('', {
-        validators: [Validators.required, Validators.minLength(3)],
+        validators: [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.maxLength(15),
+          Validators.pattern(/^[a-zA-Z0-9\-]+$/),
+        ],
       }),
       bio: new FormControl('', {
-        validators: [Validators.maxLength(50)],
+        validators: [Validators.maxLength(500)],
       }),
     });
   }

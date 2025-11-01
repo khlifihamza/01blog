@@ -19,18 +19,20 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dev.backend.dto.AdminPostResponse;
 import com.dev.backend.dto.Author;
+import com.dev.backend.dto.CreatePostRequest;
 import com.dev.backend.dto.DetailPostResponse;
 import com.dev.backend.dto.DiscoveryPostResponse;
 import com.dev.backend.dto.EditPostResponse;
 import com.dev.backend.dto.FeedPostResponse;
 import com.dev.backend.dto.ProfilePostResponse;
+import com.dev.backend.dto.UpdatePostRequest;
 import com.dev.backend.dto.UploadResponse;
 import com.dev.backend.dto.UserDto;
-import com.dev.backend.exception.InvalidPostDataException;
 import com.dev.backend.exception.SafeHtmlException;
 import com.dev.backend.model.Follow;
 import com.dev.backend.model.NotificationType;
@@ -77,34 +79,18 @@ public class PostService {
     }
 
     @Transactional
-    public Post savePost(String title, String content, MultipartFile thumbnail, List<MultipartFile> files, UUID userId)
+    public Post savePost(UUID userId, @Validated CreatePostRequest data)
             throws SafeHtmlException, IOException {
-        String error = "";
-        if (title.length() < 5 || title.length() > 200) {
-            error += "Title should have between 5 and 200 characters";
-        }
-        if (content.length() < 100 || content.length() > 50000) {
-            error = !error.equals("") ? error += ", " : error;
-            error += "Content should have between 100 and 50000 characters";
-        }
-        if (thumbnail == null) {
-            error = !error.equals("") ? error += ", " : error;
-            error += "Thumbnai is required";
-        }
 
-        if (!error.isEmpty()) {
-            throw new InvalidPostDataException(error);
-        }
+        UploadResponse uploadResponse = upload(data.thumbnail(), data.files());
 
-        UploadResponse uploadResponse = upload(thumbnail, files);
-
-        content = addLinkToSrc(content, uploadResponse.fileNames());
+        String content = addLinkToSrc(data.content(), uploadResponse.fileNames());
 
         String sanitizeContent = htmlSanitizerService.sanitizeContent(content);
 
         User user = userRepository.getReferenceById(userId);
         Post post = new Post();
-        post.setTitle(title);
+        post.setTitle(data.title());
         post.setContent(sanitizeContent);
         post.setFiles(String.join(", ", uploadResponse.fileNames()));
         post.setUser(user);
@@ -120,9 +106,8 @@ public class PostService {
         return post;
     }
 
-    public Post updatePost(UUID id, String title, String content, MultipartFile thumbnail, List<MultipartFile> files,
-            String oldThumbnail, List<String> oldFileNames,
-            UUID currentUserId)
+    public Post updatePost(UUID id,
+            UUID currentUserId, @Validated UpdatePostRequest data)
             throws SafeHtmlException, IOException {
 
         Post post = postRepository.findById(id)
@@ -133,22 +118,22 @@ public class PostService {
         }
 
         String finalThumbnail;
-        if (thumbnail != null && !thumbnail.isEmpty()) {
-            finalThumbnail = upload(thumbnail, null).thumbnail();
-            deleteMedia(oldThumbnail, "");
+        if (data.thumbnail() != null && !data.thumbnail().isEmpty()) {
+            finalThumbnail = upload(data.thumbnail(), null).thumbnail();
+            deleteMedia(data.oldThumbnail(), "");
         } else {
-            finalThumbnail = oldThumbnail.substring(oldThumbnail.lastIndexOf('/') + 1);
+            finalThumbnail = data.oldThumbnail().substring(data.oldThumbnail().lastIndexOf('/') + 1);
         }
 
         List<String> finalFileNames = new ArrayList<>();
-        if (oldFileNames != null && !oldFileNames.isEmpty()) {
+        if (data.oldFileNames() != null && !data.oldFileNames().isEmpty()) {
             List<String> newUploadedFiles = new ArrayList<>();
-            if (files != null && !files.isEmpty()) {
-                newUploadedFiles = upload(null, files).fileNames();
+            if (data.files() != null && !data.files().isEmpty()) {
+                newUploadedFiles = upload(null, data.files()).fileNames();
             }
 
             int newFileIndex = 0;
-            for (String fileName : oldFileNames) {
+            for (String fileName : data.oldFileNames()) {
                 if (fileName.startsWith("new_file_")) {
                     finalFileNames.add(newUploadedFiles.get(newFileIndex++));
                 } else {
@@ -157,7 +142,7 @@ public class PostService {
             }
         }
 
-        content = addLinkToSrc(content, finalFileNames);
+        String content = addLinkToSrc(data.content(), finalFileNames);
 
         String sanitizeContent = htmlSanitizerService.sanitizeContent(content);
 
@@ -174,7 +159,7 @@ public class PostService {
             }
         }
 
-        post.setTitle(title);
+        post.setTitle(data.title());
         post.setContent(sanitizeContent);
         post.setFiles(String.join(", ", finalFileNames));
         post.setThumbnail(finalThumbnail);

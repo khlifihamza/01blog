@@ -17,6 +17,7 @@ import com.dev.backend.dto.ApiResponse;
 import com.dev.backend.dto.FeedUser;
 import com.dev.backend.dto.ProfileEditResponse;
 import com.dev.backend.dto.ProfileUserResponse;
+import com.dev.backend.dto.UpdateProfileRequest;
 import com.dev.backend.model.User;
 import com.dev.backend.service.UserService;
 
@@ -50,7 +51,9 @@ public class UserController {
                         @RequestParam(name = "avatar", required = false) MultipartFile avatar,
                         @RequestParam(name = "defaultAvatar", required = false) String defaultAvatar,
                         @AuthenticationPrincipal User currentUser) throws IOException {
-                userService.saveData(currentUser.getUsername(), username, email, bio, avatar, defaultAvatar);
+                UpdateProfileRequest updateProfileRequest = new UpdateProfileRequest(email, username, bio, avatar,
+                                defaultAvatar);
+                userService.saveData(currentUser.getUsername(), updateProfileRequest);
                 return ResponseEntity.ok(new ApiResponse("Profile data updated successfully"));
         }
 

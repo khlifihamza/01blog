@@ -21,10 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dev.backend.dto.ApiResponse;
+import com.dev.backend.dto.CreatePostRequest;
 import com.dev.backend.dto.DetailPostResponse;
 import com.dev.backend.dto.EditPostResponse;
 import com.dev.backend.dto.FeedPostResponse;
 import com.dev.backend.dto.ProfilePostResponse;
+import com.dev.backend.dto.UpdatePostRequest;
 import com.dev.backend.exception.SafeHtmlException;
 import com.dev.backend.model.User;
 import com.dev.backend.service.PostService;
@@ -60,7 +62,8 @@ public class PostController {
             @RequestParam(name = "files", required = false) List<MultipartFile> files,
             @RequestParam("thumbnail") MultipartFile thumbnail,
             @AuthenticationPrincipal User currentUser) throws SafeHtmlException, IOException {
-        postService.savePost(title, content, thumbnail, files, currentUser.getId());
+        CreatePostRequest createPostRequest = new CreatePostRequest(title, content, files, thumbnail);
+        postService.savePost(currentUser.getId(), createPostRequest);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -94,9 +97,10 @@ public class PostController {
             @RequestParam(value = "oldThumbnail", required = false) String oldThumbnail,
             @RequestParam(value = "oldFileNames", required = false) List<String> oldFileNames,
             @AuthenticationPrincipal User currentUser) throws SafeHtmlException, IOException {
-
-        postService.updatePost(id, title, content, thumbnail, files, oldThumbnail, oldFileNames,
-                currentUser.getId());
+        UpdatePostRequest updatePostRequest = new UpdatePostRequest(title, content, files, thumbnail, oldThumbnail,
+                oldFileNames);
+        postService.updatePost(id,
+                currentUser.getId(), updatePostRequest);
         return ResponseEntity.ok(new ApiResponse("Blog updated successfully"));
     }
 

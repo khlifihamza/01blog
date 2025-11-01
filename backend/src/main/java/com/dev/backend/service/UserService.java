@@ -28,6 +28,7 @@ import com.dev.backend.dto.LoginRequest;
 import com.dev.backend.dto.ProfileEditResponse;
 import com.dev.backend.dto.ProfileUserResponse;
 import com.dev.backend.dto.RegisterRequest;
+import com.dev.backend.dto.UpdateProfileRequest;
 import com.dev.backend.dto.UserResponse;
 import com.dev.backend.model.Post;
 import com.dev.backend.model.PostStatus;
@@ -174,35 +175,39 @@ public class UserService {
                         : null);
     }
 
-    public void saveData(String currentUsername, String username, String email, String bio, MultipartFile avatar,
-            String defaultAvatar)
+    public void saveData(String currentUsername, UpdateProfileRequest data)
             throws IOException {
         User user = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        if (!user.getUsername().equals(username) && userRepository.existsByUsername(username)) {
+        if (!user.getUsername().equals(data.username()) && userRepository.existsByUsername(data.username())) {
             throw new IllegalArgumentException("Username already exists.");
         }
-        if (!user.getEmail().equals(email) && userRepository.existsByEmail(email)) {
+        if (!user.getEmail().equals(data.email()) && userRepository.existsByEmail(data.email())) {
             throw new IllegalArgumentException("Email already exists.");
         }
 
-        user.setUsername(username);
-        user.setEmail(email);
-        if (avatar != null) {
-            String contentType = avatar.getContentType();
+        user.setUsername(data.username());
+        user.setEmail(data.email());
+        if (data.avatar() != null) {
+            String contentType = data.avatar().getContentType();
 
             if (contentType == null || !ACCEPTED_TYPES.contains(contentType)) {
                 throw new IllegalArgumentException("Unsupported file type: " + contentType);
             }
 
             deleteAvatar(user.getAvatar());
-            user.setAvatar(uploadAvatar(avatar));
+            user.setAvatar(uploadAvatar(data.avatar()));
         }
-        if (defaultAvatar != null) {
+        if (data.defaultAvatar() != null) {
             deleteAvatar(user.getAvatar());
             user.setAvatar(null);
         }
-        user.setBio(bio);
+        if (data.bio().equals("null")) {
+            user.setBio(null);
+        } else {
+            user.setBio(data.bio());
+        }
+
         userRepository.save(user);
     }
 
