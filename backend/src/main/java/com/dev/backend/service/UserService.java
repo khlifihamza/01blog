@@ -20,6 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dev.backend.dto.DiscoveryUserResponse;
@@ -39,8 +40,10 @@ import com.dev.backend.repository.PostRepository;
 import com.dev.backend.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 
 @Service
+@Validated
 public class UserService {
     private final UserRepository userRepository;
 
@@ -175,7 +178,7 @@ public class UserService {
                         : null);
     }
 
-    public void saveData(String currentUsername, UpdateProfileRequest data)
+    public void saveData(String currentUsername, @Valid UpdateProfileRequest data)
             throws IOException {
         User user = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));

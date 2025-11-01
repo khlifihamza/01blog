@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -19,8 +20,10 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.IOException;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
@@ -37,6 +40,25 @@ public class GlobalValidationExceptionHandler {
                                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                                 .collect(Collectors.joining(", "));
 
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                validationErrors,
+                                request.getDescription(false).replace("uri=", ""));
+
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        @ExceptionHandler(ConstraintViolationException.class)
+        public ResponseEntity<ErrorResponse> handleConstraintViolationException(
+                        ConstraintViolationException ex,
+                        WebRequest request) {
+
+                String validationErrors = Arrays.stream(ex.getMessage().split(", "))
+                                .map(s -> s.substring(s.lastIndexOf('.') + 1).trim())
+                                .collect(Collectors.joining(", "));
+                
                 ErrorResponse errorResponse = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.BAD_REQUEST.value(),
@@ -250,11 +272,22 @@ public class GlobalValidationExceptionHandler {
                 return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
 
+        @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+        public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(Exception ex,
+                        WebRequest request) {
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.METHOD_NOT_ALLOWED.value(),
+                                HttpStatus.METHOD_NOT_ALLOWED.getReasonPhrase(),
+                                ex.getMessage(),
+                                request.getDescription(false).replace("uri=", ""));
+                return new ResponseEntity<>(errorResponse, HttpStatus.METHOD_NOT_ALLOWED);
+        }
+
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ErrorResponse> handleException(
                         Exception ex,
                         WebRequest request) {
-                System.out.println(ex.getClass());
                 ErrorResponse errorResponse = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.INTERNAL_SERVER_ERROR.value(),

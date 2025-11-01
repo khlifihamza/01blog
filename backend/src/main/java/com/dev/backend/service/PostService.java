@@ -45,8 +45,10 @@ import com.dev.backend.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 
 @Service
+@Validated
 public class PostService {
     private final PostRepository postRepository;
 
@@ -79,7 +81,7 @@ public class PostService {
     }
 
     @Transactional
-    public Post savePost(UUID userId, @Validated CreatePostRequest data)
+    public Post savePost(UUID userId, @Valid CreatePostRequest data)
             throws SafeHtmlException, IOException {
 
         UploadResponse uploadResponse = upload(data.thumbnail(), data.files());
@@ -107,7 +109,7 @@ public class PostService {
     }
 
     public Post updatePost(UUID id,
-            UUID currentUserId, @Validated UpdatePostRequest data)
+            UUID currentUserId, @Valid UpdatePostRequest data)
             throws SafeHtmlException, IOException {
 
         Post post = postRepository.findById(id)
