@@ -14,6 +14,7 @@ import com.dev.backend.repository.LikeRepository;
 import com.dev.backend.repository.PostRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 @Service
 public class LikeService {
@@ -31,6 +32,7 @@ public class LikeService {
         this.postRepository = postRepository;
     }
 
+    @Transactional
     public void like(User currentUser, UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
@@ -46,6 +48,7 @@ public class LikeService {
         }
     }
 
+    @Transactional
     public void dislike(User currentUser, UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));

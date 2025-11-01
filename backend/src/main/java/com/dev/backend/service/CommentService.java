@@ -20,6 +20,7 @@ import com.dev.backend.repository.PostRepository;
 import com.dev.backend.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 @Service
 public class CommentService {
@@ -43,6 +44,7 @@ public class CommentService {
                 this.userRepository = userRepository;
         }
 
+        @Transactional
         public CommentResponse comment(User currentUser, UUID postId, String content) {
                 Post post = postRepository.findById(postId)
                                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
@@ -62,6 +64,7 @@ public class CommentService {
                 return commentResponse;
         }
 
+        @Transactional
         public void deleteComment(UUID commentId, UUID currentUserId) {
                 Comment comment = commentRepository.findById(commentId)
                                 .orElseThrow(() -> new EntityNotFoundException("Comment not found"));

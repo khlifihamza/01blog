@@ -42,6 +42,7 @@ import com.dev.backend.repository.PostRepository;
 import com.dev.backend.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 @Service
 public class PostService {
@@ -75,6 +76,7 @@ public class PostService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public Post savePost(String title, String content, MultipartFile thumbnail, List<MultipartFile> files, UUID userId)
             throws SafeHtmlException, IOException {
         String error = "";
@@ -179,6 +181,7 @@ public class PostService {
         return postRepository.save(post);
     }
 
+    @Transactional
     public void deletePost(UUID id, UUID currentUserId) throws IOException {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));

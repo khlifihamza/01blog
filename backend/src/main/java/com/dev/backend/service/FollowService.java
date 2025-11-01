@@ -13,6 +13,7 @@ import com.dev.backend.repository.FollowRepository;
 import com.dev.backend.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 @Service
 public class FollowService {
@@ -30,6 +31,7 @@ public class FollowService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public void followUser(UUID followerId, String username) {
         UUID userToFollowId = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
@@ -56,6 +58,7 @@ public class FollowService {
         }
     }
 
+    @Transactional
     public void unfollowUser(UUID unfollowerId, String username) {
         UUID userToUnfollowId = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
