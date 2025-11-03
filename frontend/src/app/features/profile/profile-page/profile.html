@@ -119,5 +119,24 @@
       </div>
     </div>
   </div>
+  } @if(userNotFound()){
+  <div class="not-found-container">
+    <div class="content">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <h1>404</h1>
+      <h2>User Not Found</h2>
+      <p>Oops! The User you're looking for doesn't exist.</p>
+      <div class="actions">
+        <button mat-raised-button color="primary" (click)="goHome()">
+          <mat-icon>home</mat-icon>
+          Back to Home
+        </button>
+        <button mat-stroked-button color="accent" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Go Back
+        </button>
+      </div>
+    </div>
+  </div>
   }
 </div>

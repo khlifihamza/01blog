@@ -1,5 +1,5 @@
 import { Component, HostListener, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -42,6 +42,7 @@ export class ProfileComponent {
   isFollowing = signal(false);
   userPosts = signal<ProfilePost[]>([]);
   username = '';
+  userNotFound = signal(false);
 
   hasMore = signal(false);
   isLoadingMore = signal(false);
@@ -52,7 +53,8 @@ export class ProfileComponent {
     private route: ActivatedRoute,
     private profileService: ProfileService,
     private errorService: ErrorService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private location: Location
   ) {}
 
   ngOnInit() {
@@ -62,7 +64,6 @@ export class ProfileComponent {
         this.username = username;
       }
       this.loadProfile();
-      this.loadUserPosts();
     });
   }
 
@@ -84,8 +85,13 @@ export class ProfileComponent {
         profile.joinDate = this.formatDate(profile.joinDate);
         this.profile.set(profile);
         this.isFollowing.set(profile.isFollowing);
+        this.loadUserPosts();
       },
-      error: (error) => this.errorService.handleError(error),
+      error: (error) => {
+        if (error.status === 404) {
+          this.userNotFound.set(true);
+        }
+      },
     });
   }
 
@@ -185,5 +191,13 @@ export class ProfileComponent {
 
   openPost(post: ProfilePost) {
     this.router.navigate(['/post', post.id]);
+  }
+
+  goBack() {
+    this.location.back();
+  }
+
+  goHome() {
+    this.router.navigate(['/']);
   }
 }
