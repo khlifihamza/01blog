@@ -1,6 +1,8 @@
-package com.dev.backend.exception;
+package com.dev.backend.advices;
 
 import com.dev.backend.dto.ErrorResponse;
+import com.dev.backend.exception.SafeHtmlException;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
