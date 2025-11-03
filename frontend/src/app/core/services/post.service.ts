@@ -48,8 +48,4 @@ export class PostService {
   deletePost(id: string): Observable<ApiResponse> {
     return this.http.delete<ApiResponse>(`${this.url}/delete/${id}`);
   }
-
-  getOldThumbnail(filename: string): Observable<Blob> {
-    return this.http.get(`${this.url}/file/${filename}`, { responseType: 'blob' });
-  }
 }
