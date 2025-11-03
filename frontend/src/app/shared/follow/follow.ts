@@ -19,10 +19,24 @@ export class FollowComponent {
 
   constructor(private followService: FollowService, private errorService: ErrorService) {}
 
-  toggleFollow() {
-    const action = this.isFollowing ? 'unfollow' : 'follow';
+  follow() {
     this.loading.set(true);
-    this.followService.follow(this.username, action).subscribe({
+    this.followService.follow(this.username).subscribe({
+      next: () => {
+        this.isFollowing = !this.isFollowing;
+        this.followChange.emit(this.isFollowing);
+        this.loading.set(false);
+      },
+      error: (error) => {
+        this.errorService.handleError(error);
+        this.loading.set(true);
+      },
+    });
+  }
+
+  unfollow() {
+    this.loading.set(true);
+    this.followService.unfollow(this.username).subscribe({
       next: () => {
         this.isFollowing = !this.isFollowing;
         this.followChange.emit(this.isFollowing);

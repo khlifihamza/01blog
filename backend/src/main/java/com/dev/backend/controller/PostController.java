@@ -64,7 +64,7 @@ public class PostController {
             @AuthenticationPrincipal User currentUser) throws SafeHtmlException, IOException {
         CreatePostRequest createPostRequest = new CreatePostRequest(title, content, files, thumbnail);
         postService.savePost(currentUser.getId(), createPostRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Blog created successfully"));
     }
 
     @GetMapping("/{id}")

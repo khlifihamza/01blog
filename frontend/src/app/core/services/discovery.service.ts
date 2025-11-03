@@ -12,10 +12,10 @@ export class DiscoveryService {
   constructor(private http: HttpClient) {}
 
   getDiscoveryData(): Observable<DiscoveryResponse> {
-    return this.http.get<any>(`${this.url}/suggest`);
+    return this.http.get<DiscoveryResponse>(`${this.url}/suggest`);
   }
 
   getSearchedData(query: string, page: number = 0, size: number = 10): Observable<DiscoveryResponse> {
-    return this.http.get<any>(`${this.url}/search?query=${query}&page=${page}&size=${size}`);
+    return this.http.get<DiscoveryResponse>(`${this.url}/search?query=${query}&page=${page}&size=${size}`);
   }
 }

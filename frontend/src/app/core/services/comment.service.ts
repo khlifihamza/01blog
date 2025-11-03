@@ -25,6 +25,6 @@ export class CommentService {
   }
 
   updateComment(commentId: string, content: string): Observable<Comment> {
-    return this.http.post<Comment>(`${this.url}/update/${commentId}`, { content });
+    return this.http.patch<Comment>(`${this.url}/update/${commentId}`, { content });
   }
 }

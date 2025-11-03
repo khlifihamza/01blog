@@ -3,8 +3,9 @@ package com.dev.backend.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,14 +23,14 @@ public class FollowController {
         this.followService = followService;
     }
 
-    @GetMapping("/follow/{username}")
+    @PostMapping("/follow/{username}")
     public ResponseEntity<ApiResponse> followUser(@PathVariable String username,
             @AuthenticationPrincipal User currentUser) {
         followService.followUser(currentUser.getId(), username);
         return ResponseEntity.ok(new ApiResponse("Follewed successfully"));
     }
 
-    @GetMapping("/unfollow/{username}")
+    @DeleteMapping("/unfollow/{username}")
     public ResponseEntity<ApiResponse> unfollowUser(@PathVariable String username,
             @AuthenticationPrincipal User currentUser) {
         followService.unfollowUser(currentUser.getId(), username);

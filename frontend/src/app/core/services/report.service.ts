@@ -13,6 +13,6 @@ export class ReportService {
   constructor(private http: HttpClient) {}
 
   create(reportData: ReportRequest): Observable<ApiResponse> {
-    return this.http.post<any>(`${this.url}/create`, reportData);
+    return this.http.post<ApiResponse>(`${this.url}/create`, reportData);
   }
 }
