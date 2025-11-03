@@ -41,7 +41,7 @@ import { ErrorService } from '../../../core/services/error.service';
     NavbarComponent,
   ],
   templateUrl: './post-detail.html',
-  styleUrl: './post-detail.css',
+  styleUrls: ['./post-detail.css', '../../errors/not-found/not-found.css'],
 })
 export class PostDetailComponent implements OnInit {
   post = signal<DetailPost | null>(null);

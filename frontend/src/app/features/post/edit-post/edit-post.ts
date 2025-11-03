@@ -42,7 +42,7 @@ import { ErrorService } from '../../../core/services/error.service';
     NavbarComponent,
   ],
   templateUrl: './edit-post.html',
-  styleUrl: '../post.css',
+  styleUrls: ['../post.css', '../../errors/not-found/not-found.css'],
 })
 export class EditPostComponent implements OnDestroy {
   @ViewChild('editorDiv') editorDiv!: ElementRef<HTMLDivElement>;

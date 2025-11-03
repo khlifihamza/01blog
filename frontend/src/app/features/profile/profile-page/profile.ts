@@ -35,7 +35,7 @@ import { PostCardComponent } from '../../../shared/post-card/post-card';
     PostCardComponent,
   ],
   templateUrl: './profile.html',
-  styleUrl: './profile.css',
+  styleUrls: ['./profile.css', '../../errors/not-found/not-found.css'],
 })
 export class ProfileComponent {
   profile = signal<UserProfile | null>(null);
