@@ -22,7 +22,6 @@ import { NavbarComponent } from '../../shared/navbar/navbar';
 import { calculReadTime } from '../../shared/utils/readtime';
 import { ErrorService } from '../../core/services/error.service';
 
-
 @Component({
   selector: 'app-discover',
   imports: [
@@ -56,8 +55,8 @@ export class DiscoveryComponent implements OnInit {
 
   searchPage = 0;
   searchPageSize = 10;
-  hasMoreSearchResults = true;
-  isLoadingMoreSearchResults = false;
+  hasMoreSearchResults = signal(false);
+  isLoadingMoreSearchResults = signal(false);
 
   constructor(
     private router: Router,
@@ -72,7 +71,7 @@ export class DiscoveryComponent implements OnInit {
 
   @HostListener('window:scroll')
   onScroll() {
-    if (this.isLoadingMoreSearchResults) return;
+    if (this.isLoadingMoreSearchResults()) return;
 
     const scrollPosition = window.innerHeight + window.scrollY;
     const scrollThreshold = document.documentElement.scrollHeight - 300;
@@ -89,7 +88,6 @@ export class DiscoveryComponent implements OnInit {
       .pipe(debounceTime(300), distinctUntilChanged())
       .subscribe((searchValue) => {
         this.searchPage = 0;
-        this.hasMoreSearchResults = true;
         this.discoveryService
           .getSearchedData(searchValue!.toLowerCase(), this.searchPage, this.searchPageSize)
           .subscribe({
@@ -97,9 +95,10 @@ export class DiscoveryComponent implements OnInit {
               this.searchedUsers.set(response.discoveryUsers);
               this.searchedPosts.set(this.formatPostsDate(response.discoveryPosts));
               this.updateSearchReadtime();
-              this.hasMoreSearchResults =
+              this.hasMoreSearchResults.set(
                 response.discoveryPosts.length >= this.searchPageSize ||
-                response.discoveryUsers.length >= this.searchPageSize;
+                  response.discoveryUsers.length >= this.searchPageSize
+              );
             },
             error: (error) => this.errorService.handleError(error),
           });
@@ -135,9 +134,9 @@ export class DiscoveryComponent implements OnInit {
   }
 
   loadMoreSearchResults() {
-    if (this.isLoadingMoreSearchResults || !this.hasMoreSearchResults) return;
+    if (this.isLoadingMoreSearchResults() || !this.hasMoreSearchResults()) return;
 
-    this.isLoadingMoreSearchResults = true;
+    this.isLoadingMoreSearchResults.set(true);
     this.searchPage++;
 
     this.discoveryService
@@ -148,7 +147,7 @@ export class DiscoveryComponent implements OnInit {
             response.discoveryPosts.length < this.searchPageSize &&
             response.discoveryUsers.length < this.searchPageSize
           ) {
-            this.hasMoreSearchResults = false;
+            this.hasMoreSearchResults.set(false);
           }
           if (response.discoveryPosts.length > 0) {
             this.searchedPosts.update((currentPosts) => [
@@ -162,12 +161,12 @@ export class DiscoveryComponent implements OnInit {
               ...response.discoveryUsers,
             ]);
           }
-          this.isLoadingMoreSearchResults = false;
+          this.isLoadingMoreSearchResults.set(false);
           this.updateSearchReadtime();
         },
         error: (error) => {
           this.errorService.handleError(error);
-          this.isLoadingMoreSearchResults = false;
+          this.isLoadingMoreSearchResults.set(false);
           this.searchPage--;
         },
       });

@@ -33,8 +33,8 @@ import { ErrorService } from '../../../core/services/error.service';
 })
 export class RegisterComponent {
   registerForm: FormGroup;
-  passwordVisible = false;
-  confirmPasswordVisible = false;
+  passwordVisible = signal(false);
+  confirmPasswordVisible = signal(false);
   loading = signal(false);
 
   constructor(
@@ -77,11 +77,11 @@ export class RegisterComponent {
   }
 
   togglePasswordVisibility() {
-    this.passwordVisible = !this.passwordVisible;
+    this.passwordVisible.set(!this.passwordVisible());
   }
 
   toggleConfirmPasswordVisibility() {
-    this.confirmPasswordVisible = !this.confirmPasswordVisible;
+    this.confirmPasswordVisible.set(!this.confirmPasswordVisible());
   }
 
   onSubmit() {

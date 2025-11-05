@@ -79,7 +79,7 @@
             (paste)="onPaste($event)"
             (filesDropped)="onFilesDropped($event)"
             [attr.data-placeholder]="contentPlaceholder"
-            [class.empty]="isContentEmpty"
+            [class.empty]="isContentEmpty()"
           ></div>
 
           <!-- Floating Add Button -->
@@ -124,7 +124,7 @@
             (change)="handleVideoUpload($event)"
           />
         </div>
-        @if(showValidationError){
+        @if(showValidationError()){
         <div class="content-validation">
           <span class="error-text">Content must be at least 100 characters and at most 50000</span>
         </div>

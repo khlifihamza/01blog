@@ -59,8 +59,8 @@ export class EditPostComponent implements OnDestroy {
   tags: string[] = [];
   postId: string = '';
   private currentContent = '';
-  isContentEmpty = true;
-  showValidationError = false;
+  isContentEmpty = signal(false);
+  showValidationError = signal(false);
   mediaFiles = signal<MediaItem[]>([]);
   buttonPosition = signal({ top: 16, left: -45 });
   showAddButton = signal(false);
@@ -150,9 +150,10 @@ export class EditPostComponent implements OnDestroy {
       if (!plainText) return;
 
       this.currentContent += plainText;
-      this.showValidationError =
+      this.showValidationError.set(
         (this.currentContent.length > 0 && this.currentContent.length < 100) ||
-        this.currentContent.length > 50000;
+          this.currentContent.length > 50000
+      );
       this.insertHtmlAtCursor(plainText);
     }
   }
@@ -522,13 +523,14 @@ export class EditPostComponent implements OnDestroy {
   onContentChange(event: Event) {
     const target = event.target as HTMLDivElement;
     this.currentContent = target.innerText || '';
-    this.isContentEmpty = this.currentContent.trim().length === 0;
+    this.isContentEmpty.set(this.currentContent.trim().length === 0);
 
     this.editForm.patchValue({ content: this.currentContent });
 
-    this.showValidationError =
+    this.showValidationError.set(
       (this.currentContent.length > 0 && this.currentContent.length < 100) ||
-      this.currentContent.length > 50000;
+        this.currentContent.length > 50000
+    );
 
     this.updateMediaPositions();
     this.updateCursorPosition();

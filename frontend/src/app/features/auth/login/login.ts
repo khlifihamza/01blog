@@ -1,10 +1,5 @@
 import { Component, signal } from '@angular/core';
-import {
-  FormGroup,
-  Validators,
-  ReactiveFormsModule,
-  FormControl,
-} from '@angular/forms';
+import { FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -34,7 +29,7 @@ import { ErrorService } from '../../../core/services/error.service';
 })
 export class LoginComponent {
   loginForm: FormGroup;
-  passwordVisible = false;
+  passwordVisible = signal(false);
   loading = signal(false);
 
   constructor(
@@ -53,7 +48,7 @@ export class LoginComponent {
   }
 
   togglePasswordVisibility() {
-    this.passwordVisible = !this.passwordVisible;
+    this.passwordVisible.set(!this.passwordVisible());
   }
 
   onSubmit() {

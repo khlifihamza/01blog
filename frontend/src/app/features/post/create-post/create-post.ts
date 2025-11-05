@@ -48,11 +48,11 @@ export class CreatePostComponent implements OnDestroy {
 
   showAddButton = signal(false);
   buttonPosition = signal({ top: 20, left: -45 });
-  isContentEmpty = true;
+  isContentEmpty = signal(true);
   jump = false;
   contentPlaceholder =
     'Share your journey, insights, and experiences with the 01Student community...';
-  showValidationError = false;
+  showValidationError = signal(false);
   private currentContent = '';
 
   private objectUrls = new Map<string, string>();
@@ -102,9 +102,10 @@ export class CreatePostComponent implements OnDestroy {
       if (!plainText) return;
 
       this.currentContent += plainText;
-      this.showValidationError =
+      this.showValidationError.set(
         (this.currentContent.length > 0 && this.currentContent.length < 100) ||
-        this.currentContent.length > 50000;
+          this.currentContent.length > 50000
+      );
       this.insertHtmlAtCursor(plainText);
     }
   }
@@ -425,13 +426,14 @@ export class CreatePostComponent implements OnDestroy {
   onContentChange(event: Event) {
     const target = event.target as HTMLDivElement;
     this.currentContent = target.innerText || '';
-    this.isContentEmpty = this.currentContent.trim().length === 0;
+    this.isContentEmpty.set(this.currentContent.trim().length === 0);
 
     this.blogForm.patchValue({ content: this.currentContent });
 
-    this.showValidationError =
+    this.showValidationError.set(
       (this.currentContent.length > 0 && this.currentContent.length < 100) ||
-      this.currentContent.length > 50000;
+        this.currentContent.length > 50000
+    );
 
     this.updateMediaPositions();
     this.updateCursorPosition();

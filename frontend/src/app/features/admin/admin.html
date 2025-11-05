@@ -270,7 +270,7 @@
           <div class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
           </div>
-          } @if(!hasMoreReports && reports().length > 10) {
+          } @if(!hasMoreReports() && reports().length > 10) {
           <div class="end-message">
             <p>No more reports to load</p>
           </div>
@@ -457,7 +457,7 @@
           <div class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
           </div>
-          } @if(!hasMoreUsers && users().length > 10) {
+          } @if(!hasMoreUsers() && users().length > 10) {
           <div class="end-message">
             <p>No more users to load</p>
           </div>
@@ -629,7 +629,7 @@
           <div class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
           </div>
-          } @if(!hasMorePosts && posts().length > 10) {
+          } @if(!hasMorePosts() && posts().length > 10) {
           <div class="end-message">
             <p>No more posts to load</p>
           </div>

@@ -29,7 +29,7 @@ export class FollowComponent {
       },
       error: (error) => {
         this.errorService.handleError(error);
-        this.loading.set(true);
+        this.loading.set(false);
       },
     });
   }
@@ -44,7 +44,7 @@ export class FollowComponent {
       },
       error: (error) => {
         this.errorService.handleError(error);
-        this.loading.set(true);
+        this.loading.set(false);
       },
     });
   }
