@@ -17,7 +17,6 @@ import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-create-post',
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,

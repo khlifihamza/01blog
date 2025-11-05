@@ -20,7 +20,6 @@ import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-report-dialog',
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,

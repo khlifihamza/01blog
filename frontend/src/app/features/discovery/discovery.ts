@@ -25,7 +25,6 @@ import { ErrorService } from '../../core/services/error.service';
 
 @Component({
   selector: 'app-discover',
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,

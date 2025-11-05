@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import com.dev.backend.model.Notification;
 
+@Repository
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
     List<Notification> findTop10ByRecipientIdAndCreatedAtLessThanOrderByCreatedAtDesc(UUID userId,
             LocalDateTime lastCreatedAt);

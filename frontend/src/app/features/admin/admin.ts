@@ -31,7 +31,6 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 
 @Component({
   selector: 'app-admin-dashboard',
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,

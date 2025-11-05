@@ -19,7 +19,6 @@ import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-register',
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,

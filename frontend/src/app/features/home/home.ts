@@ -19,7 +19,6 @@ import { PostCardComponent } from '../../shared/post-card/post-card';
 
 @Component({
   selector: 'app-feed',
-  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,

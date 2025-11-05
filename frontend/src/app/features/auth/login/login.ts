@@ -19,7 +19,6 @@ import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-login',
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,

@@ -26,7 +26,6 @@ import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-edit-post',
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,

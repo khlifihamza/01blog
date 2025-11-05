@@ -25,7 +25,6 @@ import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-post-detail',
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,

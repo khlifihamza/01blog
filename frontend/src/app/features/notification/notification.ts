@@ -19,7 +19,6 @@ import { ConfirmDialogData } from '../../shared/models/confirm-dialog.model';
 
 @Component({
   selector: 'app-notifications',
-  standalone: true,
   imports: [
     CommonModule,
     MatCardModule,

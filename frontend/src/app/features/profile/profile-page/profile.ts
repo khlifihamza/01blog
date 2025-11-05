@@ -21,7 +21,6 @@ import { PostCardComponent } from '../../../shared/post-card/post-card';
 
 @Component({
   selector: 'app-profile',
-  standalone: true,
   imports: [
     CommonModule,
     MatIconModule,
