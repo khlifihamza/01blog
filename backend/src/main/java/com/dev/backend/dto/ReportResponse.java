@@ -8,7 +8,7 @@ public record ReportResponse(
         UUID id,
         UUID postId,
         String postTitle,
-        String ReportedUser,
+        String reportedUser,
         String reportedBy,
         String reason,
         String details,

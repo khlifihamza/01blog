@@ -491,7 +491,7 @@ npm install
 
 **Issue: API calls fail (CORS)**
 - Verify backend is running on port 8080
-- Check CORS configuration in `SecurityConfig.java`
+- Check CORS configuration in `SecurityConfiguration.java`
 
 #### Docker Issues
 
