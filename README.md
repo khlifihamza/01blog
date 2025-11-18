@@ -120,7 +120,6 @@ This project demonstrates professional fullstack development practices, includin
 | **RxJS** | 7.8.0 | Reactive programming |
 | **Angular Router** | 20.2.0 | Client-side routing |
 | **Angular CDK** | 20.2.1 | Component dev kit |
-| **Karma & Jasmine** | Latest | Testing framework |
 
 ### DevOps & Infrastructure
 | Technology | Version | Purpose |
@@ -374,26 +373,6 @@ Backend:
 ```bash
 cd backend
 ./mvnw clean package
-```
-
-Frontend:
-```bash
-cd backend
-./mvnw test
-```
-
-Frontend tests:
-```bash
-cd frontend
-npm test
-```
-
-### Building for Production
-
-Backend:
-```bash
-cd backend
-./mvnw clean package
 # JAR file will be in target/backend-0.0.1-SNAPSHOT.jar
 ```
 
@@ -428,7 +407,7 @@ npm run build
 - **CORS Configuration** - Properly configured cross-origin requests
 - **CSRF Protection** - Disabled for stateless JWT (API-only)
 - **Security Headers** - Configured via Spring Security
-- **HTTPS Ready** - Production configuration supports TLS/SSL
+- **HTTPS Support** - Can be configured via reverse proxy (Nginx/Apache) or application server
 
 #### Data Protection
 - **Password Never Exposed** - Excluded from JSON serialization
@@ -440,11 +419,10 @@ npm run build
 
 1. **Change Default Credentials** in production
 2. **Use Environment Variables** for sensitive configuration
-3. **Enable HTTPS** in production environments
-4. **Implement Rate Limiting** for API endpoints
-5. **Regular Security Updates** - Keep dependencies up to date
-6. **Database Backups** - Regular automated backups
-7. **Monitor Logs** - Track suspicious activities
+3. **Enable HTTPS** in production environments (configure via reverse proxy like Nginx)
+4. **Regular Security Updates** - Keep dependencies up to date
+5. **Database Backups** - Regular automated backups
+6. **Monitor Logs** - Track suspicious activities
 
 ---
 
@@ -465,7 +443,7 @@ kill -9 <PID>
 **Issue: Database connection failed**
 - Verify PostgreSQL is running: `sudo service postgresql status`
 - Check database credentials in `application.properties`
-- Ensure database `DB01B` exists
+- Ensure database `dbname` exists
 
 **Issue: Maven build fails**
 ```bash
@@ -533,10 +511,10 @@ docker compose logs db
 #### Using Docker (Recommended)
 
 1. **Configure production environment variables** in `docker-compose.yaml`
-2. **Update API URLs** in Angular environment files
+2. **Update API URLs** in Angular service files (located in `frontend/src/app/core/services/`)
 3. **Build and deploy**:
 ```bash
-docker compose -f docker-compose.prod.yaml up -d
+docker compose up -d --build
 ```
 
 #### Manual Deployment
@@ -546,8 +524,8 @@ docker compose -f docker-compose.prod.yaml up -d
 # Build JAR
 ./mvnw clean package -DskipTests
 
-# Run with production profile
-java -jar target/backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
+# Run the application
+java -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
 
 **Frontend (Angular)**
