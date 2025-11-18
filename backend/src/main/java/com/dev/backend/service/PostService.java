@@ -444,7 +444,7 @@ public class PostService {
 
         while (matcher.find()) {
             if (index < fileNames.size()) {
-                String newUrl = "http://localhost:8080/api/post/file/" + fileNames.get(index++);
+                String newUrl = fetchUrl + fileNames.get(index++);
                 String replacement = newUrl;
                 matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
             }
