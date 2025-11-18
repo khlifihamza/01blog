@@ -5,9 +5,10 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "follows")
+@Table(name = "follows", uniqueConstraints = { @UniqueConstraint(columnNames = { "follower_id", "following_id" }) })
 public class Follow extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "follower_id")
@@ -20,7 +21,7 @@ public class Follow extends BaseEntity {
     public Follow() {
     }
 
-    public Follow(User follower, User following){
+    public Follow(User follower, User following) {
         this.follower = follower;
         this.following = following;
     }

@@ -1,6 +1,6 @@
 import { Component, Inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import {
   MatDialogModule,
   MatDialogRef,
@@ -20,7 +20,6 @@ import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-report-dialog',
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -39,7 +38,6 @@ export class ReportDialogComponent {
   isSubmitting = signal(false);
 
   constructor(
-    private fb: FormBuilder,
     private dialogRef: MatDialogRef<ReportDialogComponent>,
     private reportService: ReportService,
     private errorService: ErrorService,
@@ -47,9 +45,13 @@ export class ReportDialogComponent {
     @Inject(MAT_DIALOG_DATA)
     public data: ReportData
   ) {
-    this.reportForm = this.fb.group({
-      reason: ['', Validators.required],
-      details: [''],
+    this.reportForm = new FormGroup({
+      reason: new FormControl('', {
+        validators: [Validators.required],
+      }),
+      details: new FormControl('', {
+        validators: [Validators.maxLength(500)],
+      }),
     });
   }
 

@@ -1,20 +1,9 @@
-export interface CreatePostPayload {
-  title: string;
-  content: string;
-  thumbnail: string;
-  files?: String[];
-}
 export interface MediaItem {
   id: string;
   position: number;
   file: File;
   preview: string;
   type: string;
-}
-
-export interface UploadResponse {
-  thumbnail: string;
-  fileNames: string[];
 }
 
 export interface FeedPost {
@@ -79,6 +68,7 @@ export interface Post {
   likes: number;
   comments: number;
   status: 'PUBLISHED' | 'HIDDEN';
+  formatedPublishedDate: string;
 }
 
 export interface DiscoveryPost {
@@ -100,6 +90,7 @@ export interface Comment {
   username: string;
   avatar: string | null;
   createAt: string;
+  formatedCreatedAt: string;
   content: string;
   isOwner: boolean;
 }

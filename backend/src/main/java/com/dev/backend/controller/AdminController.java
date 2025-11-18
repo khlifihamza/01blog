@@ -1,11 +1,12 @@
 package com.dev.backend.controller;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,6 +22,7 @@ import com.dev.backend.dto.ApiResponse;
 import com.dev.backend.dto.InsightsResponse;
 import com.dev.backend.dto.ReportResponse;
 import com.dev.backend.dto.UserResponse;
+import com.dev.backend.model.ReportStatus;
 import com.dev.backend.model.User;
 import com.dev.backend.service.AdminService;
 import com.dev.backend.service.PostService;
@@ -55,34 +57,30 @@ public class AdminController {
     }
 
     @GetMapping("/get-reports")
-    public ResponseEntity<List<ReportResponse>> getReports(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        List<ReportResponse> reports = reportService.getReports(PageRequest.of(page, size));
+    public ResponseEntity<List<ReportResponse>> getReports(@RequestParam(required = false) ReportStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt) {
+        List<ReportResponse> reports = reportService.getReports(status, lastCreatedAt);
         return ResponseEntity.ok(reports);
     }
 
     @GetMapping("/get-users")
     public ResponseEntity<List<UserResponse>> getAllUsers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        List<UserResponse> users = userService.getAllUsers(PageRequest.of(page, size));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt) {
+        List<UserResponse> users = userService.getAllUsers(lastCreatedAt);
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/search-users")
     public ResponseEntity<List<UserResponse>> getSearchedUsers(@RequestParam String query,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        List<UserResponse> users = userService.getSearchedUsers(query, PageRequest.of(page, size));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt) {
+        List<UserResponse> users = userService.getSearchedUsers(query, lastCreatedAt);
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/search-posts")
     public ResponseEntity<List<AdminPostResponse>> getSearchedPosts(@RequestParam String query,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        List<AdminPostResponse> posts = postService.getSearchedPosts(query, PageRequest.of(page, size));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt) {
+        List<AdminPostResponse> posts = postService.getSearchedPosts(query, lastCreatedAt);
         return ResponseEntity.ok(posts);
     }
 
@@ -99,7 +97,7 @@ public class AdminController {
     }
 
     @DeleteMapping("/delete-user/{username}")
-    public ResponseEntity<ApiResponse> deleteUser(@PathVariable String username) {
+    public ResponseEntity<ApiResponse> deleteUser(@PathVariable String username) throws IOException {
         userService.deleteUser(username);
         return ResponseEntity.ok(new ApiResponse("User deleted successfully"));
     }
@@ -125,9 +123,8 @@ public class AdminController {
 
     @GetMapping("/get-posts")
     public ResponseEntity<List<AdminPostResponse>> getAllPosts(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        List<AdminPostResponse> posts = postService.getAllPosts(PageRequest.of(page, size));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt) {
+        List<AdminPostResponse> posts = postService.getAllPosts(lastCreatedAt);
         return ResponseEntity.ok(posts);
     }
 

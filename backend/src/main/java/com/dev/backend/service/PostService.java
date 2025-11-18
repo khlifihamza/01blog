@@ -5,9 +5,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,16 +19,18 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dev.backend.dto.AdminPostResponse;
 import com.dev.backend.dto.Author;
+import com.dev.backend.dto.CreatePostRequest;
 import com.dev.backend.dto.DetailPostResponse;
 import com.dev.backend.dto.DiscoveryPostResponse;
 import com.dev.backend.dto.EditPostResponse;
 import com.dev.backend.dto.FeedPostResponse;
-import com.dev.backend.dto.PostRequest;
 import com.dev.backend.dto.ProfilePostResponse;
+import com.dev.backend.dto.UpdatePostRequest;
 import com.dev.backend.dto.UploadResponse;
 import com.dev.backend.dto.UserDto;
 import com.dev.backend.exception.SafeHtmlException;
@@ -39,8 +44,11 @@ import com.dev.backend.repository.PostRepository;
 import com.dev.backend.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 
 @Service
+@Validated
 public class PostService {
     private final PostRepository postRepository;
 
@@ -72,59 +80,95 @@ public class PostService {
         this.userRepository = userRepository;
     }
 
-    public Post savePost(PostRequest postDto, UUID userId) throws SafeHtmlException {
-        String sanitizedTitle = htmlSanitizerService.sanitizeTitle(postDto.title());
-        String sanitizedContent = htmlSanitizerService.sanitizeContent(postDto.content());
+    @Transactional
+    public Post savePost(UUID userId, @Valid CreatePostRequest data)
+            throws SafeHtmlException, IOException {
 
-        if (sanitizedTitle.trim().isEmpty()) {
-            throw new SafeHtmlException("Title cannot be empty or contain only HTML");
-        }
+        UploadResponse uploadResponse = upload(data.thumbnail(), data.files());
 
-        if (sanitizedContent.trim().isEmpty()) {
-            throw new SafeHtmlException("Title cannot be empty or contain only HTML");
-        }
+        String content = addLinkToSrc(data.content(), uploadResponse.fileNames());
+
+        String sanitizeContent = htmlSanitizerService.sanitizeContent(content);
 
         User user = userRepository.getReferenceById(userId);
         Post post = new Post();
-        post.setTitle(sanitizedTitle);
-        post.setContent(postDto.content());
-        post.setFiles(String.join(", ", postDto.files()));
+        post.setTitle(data.title());
+        post.setContent(sanitizeContent);
+        post.setFiles(String.join(", ", uploadResponse.fileNames()));
         post.setUser(user);
-        post.setThumbnail(postDto.thumbnail());
+        post.setThumbnail(uploadResponse.thumbnail());
         post.setStatus(PostStatus.PUBLISHED);
         postRepository.save(post);
         List<Follow> followers = user.getFollowers();
         for (Follow follow : followers) {
-            notificationService.createNotification(post, follow.getFollower(), "New post from " + user.getUsername(),
+            notificationService.createNotification(post, null, null, null, follow.getFollower(),
+                    "New post from " + user.getUsername(),
                     user.getUsername() + " published: \"" + post.getTitle() + "\"", NotificationType.POST);
         }
         return post;
     }
 
-    public Post updatePost(UUID id, PostRequest updatedPost, UUID currentUserId) throws SafeHtmlException {
-        String sanitizedTitle = htmlSanitizerService.sanitizeTitle(updatedPost.title());
-        String sanitizedContent = htmlSanitizerService.sanitizeContent(updatedPost.content());
-
-        if (sanitizedTitle.trim().isEmpty()) {
-            throw new SafeHtmlException("Title cannot be empty or contain only HTML");
-        }
-
-        if (sanitizedContent.trim().isEmpty()) {
-            throw new SafeHtmlException("Title cannot be empty or contain only HTML");
-        }
+    public Post updatePost(UUID id,
+            UUID currentUserId, @Valid UpdatePostRequest data)
+            throws SafeHtmlException, IOException {
 
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+
         if (!post.getUser().getId().equals(currentUserId)) {
             throw new AccessDeniedException("You cannot delete another user's post.");
         }
-        post.setTitle(sanitizedTitle);
-        post.setContent(updatedPost.content());
-        post.setFiles(String.join(", ", updatedPost.files()));
-        post.setThumbnail(updatedPost.thumbnail());
+
+        String finalThumbnail;
+        if (data.thumbnail() != null && !data.thumbnail().isEmpty()) {
+            finalThumbnail = upload(data.thumbnail(), null).thumbnail();
+            deleteMedia(data.oldThumbnail(), "");
+        } else {
+            finalThumbnail = data.oldThumbnail().substring(data.oldThumbnail().lastIndexOf('/') + 1);
+        }
+
+        List<String> finalFileNames = new ArrayList<>();
+        if (data.oldFileNames() != null && !data.oldFileNames().isEmpty()) {
+            List<String> newUploadedFiles = new ArrayList<>();
+            if (data.files() != null && !data.files().isEmpty()) {
+                newUploadedFiles = upload(null, data.files()).fileNames();
+            }
+
+            int newFileIndex = 0;
+            for (String fileName : data.oldFileNames()) {
+                if (fileName.startsWith("new_file_")) {
+                    finalFileNames.add(newUploadedFiles.get(newFileIndex++));
+                } else {
+                    finalFileNames.add(fileName);
+                }
+            }
+        }
+
+        String content = addLinkToSrc(data.content(), finalFileNames);
+
+        String sanitizeContent = htmlSanitizerService.sanitizeContent(content);
+
+        if (!post.getFiles().equals("")) {
+            String[] filesToCheck = post.getFiles().split(", ");
+            List<String> filesToDelete = new ArrayList<>();
+            for (String file : filesToCheck) {
+                if (!sanitizeContent.contains(file)) {
+                    filesToDelete.add(file);
+                }
+            }
+            if (!filesToDelete.isEmpty()) {
+                deleteMedia(null, String.join(", ", filesToDelete));
+            }
+        }
+
+        post.setTitle(data.title());
+        post.setContent(sanitizeContent);
+        post.setFiles(String.join(", ", finalFileNames));
+        post.setThumbnail(finalThumbnail);
         return postRepository.save(post);
     }
 
+    @Transactional
     public void deletePost(UUID id, UUID currentUserId) throws IOException {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
@@ -133,8 +177,15 @@ public class PostService {
         if (!post.getUser().getId().equals(user.getId()) && !user.getRole().equals(Role.ADMIN)) {
             throw new AccessDeniedException("You cannot delete another user's post.");
         }
+        List<Follow> followers = user.getFollowers();
+        for (Follow follow : followers) {
+            if (notificationService.existsByPostAndRecipient(id, follow.getFollower().getId())) {
+                notificationService.deletePostNotification(id, follow.getFollower().getId());
+            }
+        }
         deleteMedia(post.getThumbnail(), post.getFiles());
         postRepository.deleteById(id);
+
     }
 
     public void hidePost(UUID id) {
@@ -151,8 +202,11 @@ public class PostService {
         postRepository.save(post);
     }
 
-    public List<FeedPostResponse> getFeedPosts(UUID userId, Pageable pageable) {
-        List<Post> posts = postRepository.findFeedPosts(userId, pageable).getContent();
+    public List<FeedPostResponse> getFeedPosts(UUID userId, LocalDateTime lastCreatedAt) {
+        if (lastCreatedAt == null) {
+            lastCreatedAt = LocalDateTime.now();
+        }
+        List<Post> posts = postRepository.findFeedPosts(userId, lastCreatedAt);
         List<FeedPostResponse> feedPostsResponses = new ArrayList<>();
         for (Post post : posts) {
             Author author = new Author(post.getUser().getUsername(),
@@ -197,15 +251,15 @@ public class PostService {
         return editpost;
     }
 
-    public List<ProfilePostResponse> getProfilePosts(String username, UUID currentUserId, Pageable pageable) {
+    public List<ProfilePostResponse> getProfilePosts(String username, LocalDateTime lastCreatedAt) {
+        lastCreatedAt = (lastCreatedAt == null) ? LocalDateTime.now() : lastCreatedAt;
         UUID userId = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
-        List<Post> posts = postRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable).getContent();
+        List<Post> posts = postRepository
+                .findTop10ByUserIdAndStatusAndCreatedAtLessThanOrderByCreatedAtDesc(userId, PostStatus.PUBLISHED,
+                        lastCreatedAt);
         List<ProfilePostResponse> postsResponse = new ArrayList<>();
         for (Post post : posts) {
-            if (post.getStatus() == PostStatus.HIDDEN && !userId.equals(currentUserId)) {
-                continue;
-            }
             ProfilePostResponse postResponse = new ProfilePostResponse(post.getId(), post.getTitle(), post.getContent(),
                     post.getCreatedAt().toString(), post.getLikes().size(), post.getComments().size(),
                     fetchUrl + post.getThumbnail());
@@ -218,8 +272,9 @@ public class PostService {
         return postRepository.findAll();
     }
 
-    public List<AdminPostResponse> getAllPosts(Pageable pageable) {
-        List<Post> posts = postRepository.findAll(pageable).getContent();
+    public List<AdminPostResponse> getAllPosts(LocalDateTime lastCreatedAt) {
+        lastCreatedAt = (lastCreatedAt == null) ? LocalDateTime.now() : lastCreatedAt;
+        List<Post> posts = postRepository.findTop10ByCreatedAtLessThanOrderByCreatedAtDesc(lastCreatedAt);
         List<AdminPostResponse> postsResponse = new ArrayList<>();
         for (Post post : posts) {
             AdminPostResponse postResponse = new AdminPostResponse(post.getId(), post.getTitle(),
@@ -234,8 +289,10 @@ public class PostService {
         return postRepository.count();
     }
 
-    public List<AdminPostResponse> getSearchedPosts(String query, Pageable pageable) {
-        List<Post> posts = postRepository.findByTitleContainingIgnoreCase(query, pageable).getContent();
+    public List<AdminPostResponse> getSearchedPosts(String query, LocalDateTime lastCreatedAt) {
+        lastCreatedAt = (lastCreatedAt == null) ? LocalDateTime.now() : lastCreatedAt;
+        List<Post> posts = postRepository
+                .findTop10ByCreatedAtLessThanAndTitleContainingIgnoreCaseOrderByCreatedAtDesc(lastCreatedAt, query);
         List<AdminPostResponse> postsResponse = new ArrayList<>();
         for (Post post : posts) {
             AdminPostResponse postResponse = new AdminPostResponse(post.getId(), post.getTitle(),
@@ -247,7 +304,8 @@ public class PostService {
     }
 
     public List<DiscoveryPostResponse> getSearchedDiscoveryPosts(String query, Pageable pageable) {
-        List<Post> posts = postRepository.findByTitleContainingIgnoreCase(query, pageable).getContent();
+        List<Post> posts = postRepository
+                .findByStatusAndTitleContainingIgnoreCase(PostStatus.PUBLISHED, query, pageable).getContent();
         List<DiscoveryPostResponse> postsResponse = new ArrayList<>();
         for (Post post : posts) {
             DiscoveryPostResponse discoveryPostResponse = new DiscoveryPostResponse(post.getId(),
@@ -267,7 +325,8 @@ public class PostService {
     }
 
     public List<DiscoveryPostResponse> getTop9Posts(UUID currentUserId) {
-        List<Post> posts = postRepository.findTop9ByUserIdNotOrderByLikesDesc(currentUserId);
+        List<Post> posts = postRepository.findTop9ByUserIdNotAndStatusOrderByLikes(currentUserId,
+                PostStatus.PUBLISHED);
         List<DiscoveryPostResponse> postsResponse = new ArrayList<>();
         for (Post post : posts) {
             DiscoveryPostResponse discoveryPostResponse = new DiscoveryPostResponse(post.getId(),
@@ -288,16 +347,18 @@ public class PostService {
 
     public UploadResponse upload(MultipartFile thumbnail, List<MultipartFile> files) throws IOException {
         String thumbnailId = "";
-        String thumbnailName = thumbnail.getOriginalFilename();
-        String thumbnailExtension = (thumbnailName != null && thumbnailName.contains("."))
-                ? thumbnailName.substring(thumbnailName.lastIndexOf("."))
-                : "";
-        thumbnailId = UUID.randomUUID() + thumbnailExtension;
+        if (thumbnail != null) {
+            String thumbnailName = thumbnail.getOriginalFilename();
+            String thumbnailExtension = (thumbnailName != null && thumbnailName.contains("."))
+                    ? thumbnailName.substring(thumbnailName.lastIndexOf("."))
+                    : "";
+            thumbnailId = UUID.randomUUID() + thumbnailExtension;
 
-        Path path = Paths.get(uploadDir + "/images", thumbnailId);
+            Path path = Paths.get(uploadDir + "/images", thumbnailId);
 
-        Files.createDirectories(path.getParent());
-        Files.copy(thumbnail.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+            Files.createDirectories(path.getParent());
+            Files.copy(thumbnail.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+        }
         List<String> fileNames = new ArrayList<>();
         if (files != null && !files.isEmpty()) {
             for (MultipartFile file : files) {
@@ -313,7 +374,7 @@ public class PostService {
                     subDir = (contentType.startsWith("image")) ? "/images" : "/videos";
                 }
 
-                path = Paths.get(uploadDir + subDir, id);
+                Path path = Paths.get(uploadDir + subDir, id);
 
                 Files.createDirectories(path.getParent());
                 Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
@@ -346,14 +407,19 @@ public class PostService {
                 .body(fileBytes);
     }
 
-    private void deleteMedia(String thumbnail, String files) throws IOException {
-        Path pathThumbnail = Paths.get(uploadDir + "/images").resolve(thumbnail).normalize();
+    public void deleteMedia(String thumbnail, String files) throws IOException {
+        if (thumbnail != null) {
+            Path pathThumbnail = Paths.get(uploadDir + "/images").resolve(thumbnail).normalize();
 
-        if (pathThumbnail == null || !Files.exists(pathThumbnail)) {
-            return;
+            if (pathThumbnail == null || !Files.exists(pathThumbnail)) {
+                return;
+            }
+
+            Files.delete(pathThumbnail);
         }
 
-        Files.delete(pathThumbnail);
+        if (files.equals(""))
+            return;
 
         String[] fileNames = files.split(", ");
 
@@ -368,5 +434,22 @@ public class PostService {
 
             Files.delete(filePath);
         }
+    }
+
+    private String addLinkToSrc(String htmlString, List<String> fileNames) {
+        Pattern pattern = Pattern.compile("(blob:http://localhost:4200/[a-zA-Z0-9+.-]+)");
+        Matcher matcher = pattern.matcher(htmlString);
+        StringBuffer result = new StringBuffer();
+        int index = 0;
+
+        while (matcher.find()) {
+            if (index < fileNames.size()) {
+                String newUrl = "http://localhost:8080/api/post/file/" + fileNames.get(index++);
+                String replacement = newUrl;
+                matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
+            }
+        }
+        matcher.appendTail(result);
+        return result.toString();
     }
 }

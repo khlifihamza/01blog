@@ -1,4 +1,4 @@
-<button mat-raised-button [disabled]="loading()" class="" (click)="toggleFollow()">
+<button mat-raised-button [disabled]="loading()" class="" (click)="isFollowing ? unfollow() : follow()">
   @if(loading()) {
   <mat-progress-spinner diameter="20" mode="indeterminate" class="spinner"> </mat-progress-spinner>
   }@else{

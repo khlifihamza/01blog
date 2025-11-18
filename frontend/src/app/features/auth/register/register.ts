@@ -1,5 +1,11 @@
 import { Component, signal } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+  FormControlOptions,
+  FormControl,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,7 +19,6 @@ import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-register',
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -28,24 +33,36 @@ import { ErrorService } from '../../../core/services/error.service';
 })
 export class RegisterComponent {
   registerForm: FormGroup;
-  passwordVisible = false;
-  confirmPasswordVisible = false;
+  passwordVisible = signal(false);
+  confirmPasswordVisible = signal(false);
   loading = signal(false);
 
   constructor(
-    private fb: FormBuilder,
     private router: Router,
     private authService: AuthService,
     private errorService: ErrorService
   ) {
-    this.registerForm = this.fb.group(
+    this.registerForm = new FormGroup(
       {
-        username: ['', [Validators.required, Validators.minLength(3)]],
-        email: ['', [Validators.required, Validators.email]],
-        password: ['', [Validators.required, Validators.minLength(8)]],
-        confirmPassword: ['', [Validators.required, Validators.minLength(8)]],
+        username: new FormControl('', {
+          validators: [
+            Validators.required,
+            Validators.minLength(3),
+            Validators.maxLength(15),
+            Validators.pattern(/^[a-zA-Z0-9\-]+$/),
+          ],
+        }),
+        email: new FormControl('', {
+          validators: [Validators.required, Validators.email],
+        }),
+        password: new FormControl('', {
+          validators: [Validators.required, Validators.minLength(8), Validators.maxLength(24)],
+        }),
+        confirmPassword: new FormControl('', {
+          validators: [Validators.required, Validators.minLength(8), Validators.maxLength(24)],
+        }),
       },
-      { validators: this.passwordMatchValidator }
+      { validators: this.passwordMatchValidator } as FormControlOptions
     );
   }
 
@@ -60,11 +77,11 @@ export class RegisterComponent {
   }
 
   togglePasswordVisibility() {
-    this.passwordVisible = !this.passwordVisible;
+    this.passwordVisible.set(!this.passwordVisible());
   }
 
   toggleConfirmPasswordVisibility() {
-    this.confirmPasswordVisible = !this.confirmPasswordVisible;
+    this.confirmPasswordVisible.set(!this.confirmPasswordVisible());
   }
 
   onSubmit() {

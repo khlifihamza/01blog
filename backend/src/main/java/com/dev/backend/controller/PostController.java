@@ -1,33 +1,32 @@
 package com.dev.backend.controller;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.dev.backend.dto.ApiResponse;
+import com.dev.backend.dto.CreatePostRequest;
 import com.dev.backend.dto.DetailPostResponse;
 import com.dev.backend.dto.EditPostResponse;
 import com.dev.backend.dto.FeedPostResponse;
-import com.dev.backend.dto.PostRequest;
 import com.dev.backend.dto.ProfilePostResponse;
-import com.dev.backend.dto.UploadResponse;
+import com.dev.backend.dto.UpdatePostRequest;
 import com.dev.backend.exception.SafeHtmlException;
 import com.dev.backend.model.User;
 import com.dev.backend.service.PostService;
@@ -45,34 +44,27 @@ public class PostController {
     @GetMapping("/feed")
     public ResponseEntity<List<FeedPostResponse>> getFeedPosts(
             @AuthenticationPrincipal User currentUser,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        List<FeedPostResponse> posts = postService.getFeedPosts(currentUser.getId(), PageRequest.of(page, size));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt) {
+        List<FeedPostResponse> posts = postService.getFeedPosts(currentUser.getId(), lastCreatedAt);
         return ResponseEntity.ok(posts);
     }
 
     @GetMapping("/profile/{username}")
     public ResponseEntity<List<ProfilePostResponse>> getUserPosts(@PathVariable String username,
-            @AuthenticationPrincipal User currentUser, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        List<ProfilePostResponse> posts = postService.getProfilePosts(username, currentUser.getId(),
-                PageRequest.of(page, size));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt) {
+        List<ProfilePostResponse> posts = postService.getProfilePosts(username, lastCreatedAt);
         return ResponseEntity.ok(posts);
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createPost(@Validated @RequestBody PostRequest postDto,
-            @AuthenticationPrincipal User currentUser) throws SafeHtmlException {
-        postService.savePost(postDto, currentUser.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
-
-    @PostMapping("/upload")
-    public ResponseEntity<UploadResponse> upload(
+    public ResponseEntity<?> createPost(@RequestParam("title") String title,
+            @RequestParam("content") String content,
             @RequestParam(name = "files", required = false) List<MultipartFile> files,
-            @RequestParam("thumbnail") MultipartFile thumbnail) throws IOException {
-        UploadResponse response = postService.upload(thumbnail, files);
-        return ResponseEntity.ok(response);
+            @RequestParam("thumbnail") MultipartFile thumbnail,
+            @AuthenticationPrincipal User currentUser) throws SafeHtmlException, IOException {
+        CreatePostRequest createPostRequest = new CreatePostRequest(title, content, files, thumbnail);
+        postService.savePost(currentUser.getId(), createPostRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Blog created successfully"));
     }
 
     @GetMapping("/{id}")
@@ -96,10 +88,20 @@ public class PostController {
     }
 
     @PatchMapping("/update/{id}")
-    public ResponseEntity<ApiResponse> updatePost(@PathVariable UUID id, @Validated @RequestBody PostRequest postDto,
-            @AuthenticationPrincipal User currentUser) throws SafeHtmlException {
-        postService.updatePost(id, postDto, currentUser.getId());
-        return ResponseEntity.ok(new ApiResponse("Blog updated successful"));
+    public ResponseEntity<ApiResponse> updatePost(
+            @PathVariable UUID id,
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            @RequestParam(value = "thumbnail", required = false) MultipartFile thumbnail,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
+            @RequestParam(value = "oldThumbnail", required = false) String oldThumbnail,
+            @RequestParam(value = "oldFileNames", required = false) List<String> oldFileNames,
+            @AuthenticationPrincipal User currentUser) throws SafeHtmlException, IOException {
+        UpdatePostRequest updatePostRequest = new UpdatePostRequest(title, content, files, thumbnail, oldThumbnail,
+                oldFileNames);
+        postService.updatePost(id,
+                currentUser.getId(), updatePostRequest);
+        return ResponseEntity.ok(new ApiResponse("Blog updated successfully"));
     }
 
     @DeleteMapping("/delete/{id}")

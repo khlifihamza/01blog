@@ -8,10 +8,12 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.AssertTrue;
 
 @Entity
-@Table(name = "reports")
+@Table(name = "reports", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "reporter", "reported_user", "reported_post" }) })
 public class Report extends BaseEntity {
     @Column(nullable = false)
     private String reason;

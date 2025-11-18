@@ -6,7 +6,6 @@ import { Location } from '@angular/common';
 
 @Component({
   selector: 'app-not-found',
-  standalone: true,
   imports: [
     MatButtonModule,
     MatIconModule,

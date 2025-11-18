@@ -12,10 +12,10 @@ export class LikeService {
   constructor(private http: HttpClient) {}
 
   like(postId: string): Observable<ApiResponse> {
-    return this.http.get<any>(`${this.url}/like/${postId}`);
+    return this.http.post<ApiResponse>(`${this.url}/like/${postId}`, {});
   }
 
   dislike(postId: string): Observable<ApiResponse> {
-    return this.http.get<any>(`${this.url}/dislike/${postId}`);
+    return this.http.delete<ApiResponse>(`${this.url}/dislike/${postId}`);
   }
 }

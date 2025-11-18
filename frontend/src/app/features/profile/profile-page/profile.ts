@@ -1,5 +1,5 @@
 import { Component, HostListener, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,11 +19,8 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { ErrorService } from '../../../core/services/error.service';
 import { PostCardComponent } from '../../../shared/post-card/post-card';
 
-
-
 @Component({
   selector: 'app-profile',
-  standalone: true,
   imports: [
     CommonModule,
     MatIconModule,
@@ -37,18 +34,17 @@ import { PostCardComponent } from '../../../shared/post-card/post-card';
     PostCardComponent,
   ],
   templateUrl: './profile.html',
-  styleUrl: './profile.css',
+  styleUrls: ['./profile.css', '../../errors/not-found/not-found.css'],
 })
 export class ProfileComponent {
   profile = signal<UserProfile | null>(null);
   isFollowing = signal(false);
   userPosts = signal<ProfilePost[]>([]);
   username = '';
+  userNotFound = signal(false);
 
-  page = 0;
-  pageSize = 10;
-  hasMore = false;
-  isLoadingMore = false;
+  hasMore = signal(false);
+  isLoadingMore = signal(false);
 
   constructor(
     private router: Router,
@@ -56,21 +52,23 @@ export class ProfileComponent {
     private route: ActivatedRoute,
     private profileService: ProfileService,
     private errorService: ErrorService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private location: Location
   ) {}
 
   ngOnInit() {
-    let username = this.route.snapshot.paramMap.get('username');
-    if (username != null) {
-      this.username = username;
-    }
-    this.loadProfile();
-    this.loadUserPosts();
+    this.route.params.subscribe(() => {
+      let username = this.route.snapshot.paramMap.get('username');
+      if (username != null) {
+        this.username = username;
+      }
+      this.loadProfile();
+    });
   }
 
   @HostListener('window:scroll')
   onScroll() {
-    if (this.isLoadingMore || !this.hasMore) return;
+    if (this.isLoadingMore() || !this.hasMore()) return;
 
     const scrollPosition = window.innerHeight + window.scrollY;
     const scrollThreshold = document.documentElement.scrollHeight - 200;
@@ -86,16 +84,21 @@ export class ProfileComponent {
         profile.joinDate = this.formatDate(profile.joinDate);
         this.profile.set(profile);
         this.isFollowing.set(profile.isFollowing);
+        this.loadUserPosts();
       },
-      error: (error) => this.errorService.handleError(error),
+      error: (error) => {
+        if (error.status === 404) {
+          this.userNotFound.set(true);
+        }
+      },
     });
   }
 
   loadUserPosts() {
-    this.postService.getProfilePosts(this.username, this.page, this.pageSize).subscribe({
+    this.postService.getProfilePosts(this.username, '').subscribe({
       next: (posts) => {
         this.userPosts.set(posts);
-        this.hasMore = posts.length >= this.pageSize;
+        this.hasMore.set(posts.length >= 10);
         this.updateReadtime();
       },
       error: (error) => this.errorService.handleError(error),
@@ -103,26 +106,22 @@ export class ProfileComponent {
   }
 
   loadMorePosts() {
-    if (this.isLoadingMore || !this.hasMore) return;
+    if (this.isLoadingMore() || !this.hasMore()) return;
 
-    this.isLoadingMore = true;
-    this.page++;
+    this.isLoadingMore.set(true);
 
-    this.postService.getProfilePosts(this.username, this.page, this.pageSize).subscribe({
-      next: (posts) => {
-        if (posts.length < this.pageSize) {
-          this.hasMore = false;
-        }
-        if (posts.length > 0) {
-          this.userPosts.update((currentPosts) => [...currentPosts, ...posts]);
-        }
-        this.isLoadingMore = false;
+    const lastPost = this.userPosts()[this.userPosts().length - 1];
+    if (!lastPost) return;
+
+    this.postService.getProfilePosts(this.username, lastPost.createdAt).subscribe({
+      next: (newPosts) => {
+        this.userPosts.update((currentPosts) => [...currentPosts, ...newPosts]);
+        this.isLoadingMore.set(false);
         this.updateReadtime();
       },
       error: (error) => {
         this.errorService.handleError(error);
-        this.isLoadingMore = false;
-        this.page--;
+        this.isLoadingMore.set(false);
       },
     });
   }
@@ -191,5 +190,13 @@ export class ProfileComponent {
 
   openPost(post: ProfilePost) {
     this.router.navigate(['/post', post.id]);
+  }
+
+  goBack() {
+    this.location.back();
+  }
+
+  goHome() {
+    this.router.navigate(['/']);
   }
 }

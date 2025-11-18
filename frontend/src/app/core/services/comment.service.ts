@@ -20,14 +20,11 @@ export class CommentService {
     return this.http.delete<ApiResponse>(`${this.url}/delete/${commentId}`);
   }
 
-  getComments(postId: string, page: number = 0, size: number = 10): Observable<Comment[]> {
-    return this.http.get<Comment[]>(
-      `${this.url}/${postId}`,
-      { params: { page: page.toString(), size: size.toString() } }
-    );
+  getComments(postId: string, lastCreatedAt: string): Observable<Comment[]> {
+    return this.http.get<Comment[]>(`${this.url}/${postId}?lastCreatedAt=${lastCreatedAt}`);
   }
 
   updateComment(commentId: string, content: string): Observable<Comment> {
-    return this.http.post<Comment>(`${this.url}/update/${commentId}`, { content });
+    return this.http.patch<Comment>(`${this.url}/update/${commentId}`, { content });
   }
 }

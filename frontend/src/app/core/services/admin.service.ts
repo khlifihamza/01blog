@@ -18,8 +18,10 @@ export class AdminService {
     return this.http.get<Insights>(`${this.url}/get-insights`);
   }
 
-  getReports(page: number = 0, size: number = 20): Observable<Report[]> {
-    return this.http.get<Report[]>(`${this.url}/get-reports?page=${page}&size=${size}`);
+  getReports(status: string, lastCreatedAt: string): Observable<Report[]> {
+    return this.http.get<Report[]>(
+      `${this.url}/get-reports?lastCreatedAt=${lastCreatedAt}&status=${status.toUpperCase()}`
+    );
   }
 
   resolveReport(id: string) {
@@ -30,20 +32,24 @@ export class AdminService {
     return this.http.patch<ApiResponse>(`${this.url}/dismiss-report/${id}`, {});
   }
 
-  getUsers(page: number = 0, size: number = 20): Observable<User[]> {
-    return this.http.get<User[]>(`${this.url}/get-users?page=${page}&size=${size}`);
+  getUsers(lastCreatedAt: string): Observable<User[]> {
+    return this.http.get<User[]>(`${this.url}/get-users?lastCreatedAt=${lastCreatedAt}`);
   }
 
-  searchUsers(query: string, page: number = 0, size: number = 20): Observable<User[]> {
-    return this.http.get<User[]>(`${this.url}/search-users?query=${query}&page=${page}&size=${size}`);
+  searchUsers(query: string, lastCreatedAt: string): Observable<User[]> {
+    return this.http.get<User[]>(
+      `${this.url}/search-users?query=${query}&lastCreatedAt=${lastCreatedAt}`
+    );
   }
 
-  searchPosts(query: string, page: number = 0, size: number = 20): Observable<Post[]> {
-    return this.http.get<Post[]>(`${this.url}/search-posts?query=${query}&page=${page}&size=${size}`);
+  searchPosts(query: string, lastCreatedAt: string): Observable<Post[]> {
+    return this.http.get<Post[]>(
+      `${this.url}/search-posts?query=${query}&lastCreatedAt=${lastCreatedAt}`
+    );
   }
 
-  getPosts(page: number = 0, size: number = 20): Observable<Post[]> {
-    return this.http.get<Post[]>(`${this.url}/get-posts?page=${page}&size=${size}`);
+  getPosts(lastCreatedAt: string): Observable<Post[]> {
+    return this.http.get<Post[]>(`${this.url}/get-posts?lastCreatedAt=${lastCreatedAt}`);
   }
 
   banUser(username: string): Observable<ApiResponse> {

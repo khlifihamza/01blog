@@ -1,6 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, ElementRef, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,7 +12,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { Router } from '@angular/router';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { ProfileService } from '../../../core/services/profile.service';
-import { EditUserProfile } from '../../../shared/models/user.model';
+import { EditUserProfileResponse } from '../../../shared/models/user.model';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog';
 import { ConfirmDialogData } from '../../../shared/models/confirm-dialog.model';
 import { MatDialog } from '@angular/material/dialog';
@@ -20,7 +20,6 @@ import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-edit-profile',
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -37,24 +36,35 @@ import { ErrorService } from '../../../core/services/error.service';
   templateUrl: './edit-profile.html',
   styleUrl: './edit-profile.css',
 })
-export class EditProfileComponent{
-  currentProfile = signal<EditUserProfile | null>(null);
+export class EditProfileComponent {
+  @ViewChild('avatarInput') avatarInput!: ElementRef<HTMLInputElement>;
+  currentProfile = signal<EditUserProfileResponse | null>(null);
   profileForm: FormGroup;
   isLoading = signal(false);
   newAvatarFile: File | null = null;
   newAvatarPreview = signal<string | null | undefined>(null);
 
   constructor(
-    private fb: FormBuilder,
     private router: Router,
     private errorService: ErrorService,
     private profileService: ProfileService,
     private dialog: MatDialog
   ) {
-    this.profileForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      username: ['', Validators.required],
-      bio: ['', Validators.maxLength(500)],
+    this.profileForm = new FormGroup({
+      email: new FormControl('', {
+        validators: [Validators.required, Validators.email],
+      }),
+      username: new FormControl('', {
+        validators: [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.maxLength(15),
+          Validators.pattern(/^[a-zA-Z0-9\-]+$/),
+        ],
+      }),
+      bio: new FormControl('', {
+        validators: [Validators.maxLength(500)],
+      }),
     });
   }
 
@@ -77,13 +87,28 @@ export class EditProfileComponent{
 
   onAvatarSelect(event: any) {
     const file = event.target.files[0];
-    if (file) {
+    if (file && file.type.startsWith('image/')) {
       this.newAvatarFile = file;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.newAvatarPreview.set(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      if (this.newAvatarPreview()) {
+        URL.revokeObjectURL(this.newAvatarPreview()!);
+      }
+      const objectUrl = URL.createObjectURL(file);
+      this.newAvatarPreview.set(objectUrl);
+    } else if (!file.type.startsWith('image/')) {
+      this.errorService.showWarning('Unsupported File type');
+    }
+  }
+
+  deleteAvatar(event: Event): void {
+    event.stopPropagation();
+    if (this.newAvatarPreview()) {
+      URL.revokeObjectURL(this.newAvatarPreview()!);
+    }
+    this.profileForm.patchValue({ avatar: null });
+    this.newAvatarPreview.set('default-avatar.png');
+    this.newAvatarFile = null;
+    if (this.avatarInput?.nativeElement) {
+      this.avatarInput.nativeElement.value = '';
     }
   }
 
@@ -103,38 +128,31 @@ export class EditProfileComponent{
       dialogRef.afterClosed().subscribe((result) => {
         if (result) {
           this.isLoading.set(true);
-          const updateData = (avatar: string | null) => {
-            const profileData: EditUserProfile = {
-              ...this.profileForm.value,
-              avatar: avatar,
-            };
-            this.profileService.EditProfileDetails(profileData).subscribe({
-              next: () => {
-                this.isLoading.set(false);
-                this.errorService.showSuccess('Profile updated successfully!');
-                this.router.navigate(['/profile']);
-              },
-              error: (error) => {
-                this.errorService.handleError(error);
-                this.isLoading.set(false);
-              },
-            });
-          };
-
           if (this.newAvatarFile) {
             const formData = new FormData();
             formData.append('avatar', this.newAvatarFile);
-            this.profileService.uploadAvatar(formData).subscribe({
-              next: (response) => updateData(response.avatar.toString()),
-              error: (error) => this.errorService.handleError(error),
-            });
-          } else {
-            const avatar =
-              this.newAvatarPreview() === 'default-avatar.png'
-                ? null
-                : this.currentProfile()!.avatar;
-            updateData(avatar);
           }
+          const formData = new FormData();
+          formData.append('username', this.profileForm.value.username);
+          formData.append('email', this.profileForm.value.email);
+          formData.append('bio', this.profileForm.value.bio);
+          if (this.newAvatarFile) {
+            formData.append('avatar', this.newAvatarFile);
+          }
+          if (this.newAvatarPreview() === 'default-avatar.png') {
+            formData.append('defaultAvatar', this.newAvatarPreview()!);
+          }
+          this.profileService.EditProfileDetails(formData).subscribe({
+            next: () => {
+              this.isLoading.set(false);
+              this.errorService.showSuccess('Profile updated successfully!');
+              this.router.navigate([`/profile/${this.currentProfile()?.username}`]);
+            },
+            error: (error) => {
+              this.errorService.handleError(error);
+              this.isLoading.set(false);
+            },
+          });
         }
       });
     }

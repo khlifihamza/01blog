@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -14,7 +14,6 @@ import { ErrorService } from '../../../core/services/error.service';
 
 @Component({
   selector: 'app-login',
-  standalone: true,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -30,23 +29,26 @@ import { ErrorService } from '../../../core/services/error.service';
 })
 export class LoginComponent {
   loginForm: FormGroup;
-  passwordVisible = false;
+  passwordVisible = signal(false);
   loading = signal(false);
 
   constructor(
-    private fb: FormBuilder,
     private router: Router,
     private authService: AuthService,
     private errorService: ErrorService
   ) {
-    this.loginForm = this.fb.group({
-      identifier: ['', [Validators.required]],
-      password: ['', [Validators.required, Validators.minLength(8)]],
+    this.loginForm = new FormGroup({
+      identifier: new FormControl('', {
+        validators: [Validators.required],
+      }),
+      password: new FormControl('', {
+        validators: [Validators.required],
+      }),
     });
   }
 
   togglePasswordVisibility() {
-    this.passwordVisible = !this.passwordVisible;
+    this.passwordVisible.set(!this.passwordVisible());
   }
 
   onSubmit() {

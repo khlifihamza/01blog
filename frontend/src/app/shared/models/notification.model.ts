@@ -4,6 +4,7 @@ export interface Notification {
   title: string;
   message: string;
   createdAt: string;
+  formatedCreatedAt: string;
   isRead: boolean;
   link: string;
 }

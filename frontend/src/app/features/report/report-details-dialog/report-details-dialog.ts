@@ -10,7 +10,6 @@ import { Report } from '../../../shared/models/report.model';
 
 @Component({
   selector: 'app-report-details-dialog',
-  standalone: true,
   imports: [
     CommonModule,
     MatDialogModule,

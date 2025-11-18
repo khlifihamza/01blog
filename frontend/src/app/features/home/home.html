@@ -34,14 +34,14 @@
       }
 
       <!-- Loading Spinner -->
-      @if(isLoadingMore) {
+      @if(isLoadingMore()) {
       <div class="loading-container" style="display: flex; justify-content: center; padding: 20px">
         <mat-spinner diameter="40"></mat-spinner>
       </div>
       }
 
       <!-- End of Feed Message -->
-      @if(!hasMore && allPosts().length > 10) {
+      @if(!hasMore() && allPosts().length > 10) {
       <div class="end-message" style="text-align: center; padding: 20px; color: #666">
         <p>You've reached the end of the feed</p>
       </div>

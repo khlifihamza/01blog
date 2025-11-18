@@ -41,6 +41,17 @@
           <div class="avatar-overlay">
             <mat-icon>camera_alt</mat-icon>
           </div>
+          @if(newAvatarPreview() !== 'default-avatar.png'){
+          <button
+            type="button"
+            class="avatar-delete-btn"
+            mat-mini-fab
+            color="warn"
+            (click)="deleteAvatar($event)"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+          }
         </div>
       </div>
 

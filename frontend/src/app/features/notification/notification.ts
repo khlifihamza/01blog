@@ -13,10 +13,12 @@ import { Notification } from '../../shared/models/notification.model';
 import { NotificationService } from '../../core/services/notification.service';
 import { NavbarComponent } from '../../shared/navbar/navbar';
 import { ErrorService } from '../../core/services/error.service';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog';
+import { ConfirmDialogData } from '../../shared/models/confirm-dialog.model';
 
 @Component({
   selector: 'app-notifications',
-  standalone: true,
   imports: [
     CommonModule,
     MatCardModule,
@@ -33,17 +35,16 @@ import { ErrorService } from '../../core/services/error.service';
   styleUrl: './notification.css',
 })
 export class NotificationsComponent {
-  allNotifications = signal<Notification[]>([]);
+  notifications = signal<Notification[]>([]);
   unreadCount = signal(0);
   loading = signal(false);
-  page = 0;
-  pageSize = 10;
-  hasMoreNotifications = true;
+  hasMoreNotifications = signal(false);
 
   constructor(
     private router: Router,
     private notificationService: NotificationService,
-    private errorService: ErrorService
+    private errorService: ErrorService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -52,7 +53,7 @@ export class NotificationsComponent {
 
   @HostListener('window:scroll')
   onScroll() {
-    if (this.loading() || !this.hasMoreNotifications) return;
+    if (this.loading() || !this.hasMoreNotifications()) return;
 
     const scrollPosition = window.innerHeight + window.scrollY;
     const scrollThreshold = document.documentElement.scrollHeight - 300;
@@ -64,13 +65,12 @@ export class NotificationsComponent {
 
   loadNotifications() {
     this.loading.set(true);
-    this.page = 0;
-    this.hasMoreNotifications = true;
+    this.hasMoreNotifications.set(true);
 
-    this.notificationService.getNotifications(this.page, this.pageSize).subscribe({
+    this.notificationService.getNotifications('').subscribe({
       next: (notifications) => {
-        this.allNotifications.set(this.formatNotificationsDate(notifications));
-        this.hasMoreNotifications = notifications.length >= this.pageSize;
+        this.notifications.set(this.formatNotificationsDate(notifications));
+        this.hasMoreNotifications.set(notifications.length === 10);
         this.updateCounts();
         this.loading.set(false);
       },
@@ -82,28 +82,25 @@ export class NotificationsComponent {
   }
 
   loadMoreNotifications() {
-    if (this.loading() || !this.hasMoreNotifications) return;
+    if (this.loading() || !this.hasMoreNotifications()) return;
 
     this.loading.set(true);
-    this.page++;
 
-    this.notificationService.getNotifications(this.page, this.pageSize).subscribe({
-      next: (notifications) => {
-        if (notifications.length < this.pageSize) {
-          this.hasMoreNotifications = false;
-        }
-        if (notifications.length > 0) {
-          this.allNotifications.update((current) => [
-            ...current,
-            ...this.formatNotificationsDate(notifications),
-          ]);
-        }
+    const lastNotification = this.notifications()[this.notifications().length - 1];
+    if (!lastNotification) return;
+
+    this.notificationService.getNotifications(lastNotification.createdAt).subscribe({
+      next: (newNotifications) => {
+        this.notifications.update((current) => [
+          ...current,
+          ...this.formatNotificationsDate(newNotifications),
+        ]);
+        this.hasMoreNotifications.set(newNotifications.length === 10);
         this.loading.set(false);
       },
       error: (error) => {
         this.errorService.handleError(error);
         this.loading.set(false);
-        this.page--;
       },
     });
   }
@@ -112,14 +109,15 @@ export class NotificationsComponent {
     return notifications.map((n) => {
       return {
         ...n,
-        createdAt: this.formatTime(n.createdAt),
+        formatedCreatedAt: this.formatTime(n.createdAt),
       };
     });
   }
 
   updateCounts() {
-    const count = this.allNotifications().filter((n) => !n.isRead).length;
+    const count = this.notifications().filter((n) => !n.isRead).length;
     this.unreadCount.set(count);
+    this.notificationService.updateUnreadCount(count);
   }
 
   formatTime(dateStr: string): string {
@@ -149,7 +147,7 @@ export class NotificationsComponent {
     if (!notification.isRead) {
       this.notificationService.markAsRead(notification.id).subscribe({
         next: () => {
-          notification.isRead = !notification.isRead;
+          notification.isRead = true;
           this.updateCounts();
         },
         error: (error) => this.errorService.handleError(error),
@@ -159,13 +157,18 @@ export class NotificationsComponent {
 
   deleteNotification(notification: Notification, event: Event) {
     event.stopPropagation();
-    const index = this.allNotifications().findIndex((n) => n.id === notification.id);
+    const wasUnread = !notification.isRead;
+    const index = this.notifications().findIndex((n) => n.id === notification.id);
+    
     if (index > -1) {
       this.notificationService.delete(notification.id).subscribe({
         next: () => {
-          const currentNotifications = this.allNotifications();
+          const currentNotifications = this.notifications();
           currentNotifications.splice(index, 1);
-          this.allNotifications.set([...currentNotifications]);
+          this.notifications.set([...currentNotifications]);
+          if (wasUnread) {
+            this.notificationService.decrementCount();
+          }
           this.updateCounts();
         },
         error: (error) => this.errorService.handleError(error),
@@ -176,8 +179,8 @@ export class NotificationsComponent {
   markAllAsRead() {
     this.notificationService.markAllAsRead().subscribe({
       next: () => {
-        const updatedNotifications = this.allNotifications().map((n) => ({ ...n, isRead: true }));
-        this.allNotifications.set(updatedNotifications);
+        const updatedNotifications = this.notifications().map((n) => ({ ...n, isRead: true }));
+        this.notifications.set(updatedNotifications);
         this.updateCounts();
       },
       error: (error) => this.errorService.handleError(error),
@@ -185,14 +188,26 @@ export class NotificationsComponent {
   }
 
   clearAll() {
-    if (confirm('Are you sure you want to clear all notifications?')) {
-      this.notificationService.deleteAll().subscribe({
-        next: () => {
-          this.allNotifications.set([]);
-          this.updateCounts();
-        },
-        error: (error) => this.errorService.handleError(error),
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: <ConfirmDialogData>{
+        title: 'Delete All Notifications',
+        message: 'Are you sure you want to delete All notifications?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.notificationService.deleteAll().subscribe({
+          next: () => {
+            this.notifications.set([]);
+            this.updateCounts();
+          },
+          error: (error) => this.errorService.handleError(error),
+        });
+      }
+    });
   }
 }

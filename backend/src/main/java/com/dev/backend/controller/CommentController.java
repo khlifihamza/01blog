@@ -1,15 +1,17 @@
 package com.dev.backend.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -51,14 +53,13 @@ public class CommentController {
         @GetMapping("/{postId}")
         public ResponseEntity<List<CommentResponse>> getComments(@PathVariable UUID postId,
                         @AuthenticationPrincipal User currentUser,
-                        @RequestParam(defaultValue = "0") int page,
-                        @RequestParam(defaultValue = "10") int size) {
+                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt) {
                 List<CommentResponse> comments = commentService.getPostComments(postId, currentUser.getId(),
-                                PageRequest.of(page, size));
+                                lastCreatedAt);
                 return ResponseEntity.ok(comments);
         }
 
-        @PostMapping("/update/{commentId}")
+        @PatchMapping("/update/{commentId}")
         public ResponseEntity<CommentResponse> updateComment(@PathVariable UUID commentId,
                         @Validated @RequestBody CommentRequest commentDto,
                         @AuthenticationPrincipal User currentUser) {

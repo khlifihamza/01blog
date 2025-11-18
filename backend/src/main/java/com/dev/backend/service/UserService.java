@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -13,33 +14,44 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.dev.backend.dto.AvatarResponse;
 import com.dev.backend.dto.DiscoveryUserResponse;
 import com.dev.backend.dto.FeedUser;
 import com.dev.backend.dto.LoginRequest;
 import com.dev.backend.dto.ProfileEditResponse;
 import com.dev.backend.dto.ProfileUserResponse;
 import com.dev.backend.dto.RegisterRequest;
+import com.dev.backend.dto.UpdateProfileRequest;
 import com.dev.backend.dto.UserResponse;
+import com.dev.backend.model.Post;
+import com.dev.backend.model.PostStatus;
 import com.dev.backend.model.Role;
 import com.dev.backend.model.User;
 import com.dev.backend.model.UserStatus;
+import com.dev.backend.repository.PostRepository;
 import com.dev.backend.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 
 @Service
+@Validated
 public class UserService {
     private final UserRepository userRepository;
 
     private final FollowService followService;
+
+    private final PostRepository postRepository;
+
+    private final PostService postService;
 
     private final AuthenticationManager authenticationManager;
 
@@ -51,13 +63,28 @@ public class UserService {
     @Value("${file.fetchUrl}")
     private String fetchUrl;
 
+    private static final List<String> ACCEPTED_TYPES = List.of(
+            MediaType.IMAGE_JPEG_VALUE,
+            "image/jpg",
+            MediaType.IMAGE_PNG_VALUE,
+            "image/gif",
+            "image/webp",
+            "image/svg+xml",
+            "video/mp4",
+            "video/webm",
+            "video/ogg",
+            "video/quicktime");
+
     @Autowired
     public UserService(UserRepository userRepository, FollowService followService,
-            AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
+            AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder,
+            PostRepository postRepository, PostService postService) {
         this.authenticationManager = authenticationManager;
         this.followService = followService;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
+        this.postRepository = postRepository;
+        this.postService = postService;
     }
 
     public User signup(RegisterRequest input) {
@@ -101,7 +128,7 @@ public class UserService {
                         ? fetchUrl + user.getAvatar()
                         : null,
                 user.getBio(), user.getCreatedAt().toString(), user.getFollowers().size(),
-                user.getFollowing().size(), user.getPosts().size(),
+                user.getFollowing().size(), postRepository.countByUserIdAndStatus(user.getId(), PostStatus.PUBLISHED),
                 user.getId().equals(currentUserId),
                 followService.isCurrentUserFollowUser(currentUserId, user.getId()));
         return userResponse;
@@ -118,18 +145,29 @@ public class UserService {
         return profileEditResponse;
     }
 
-    public AvatarResponse uploadAvatar(MultipartFile avatar) throws IOException {
-        String thumbnailId = "";
-        String thumbnailName = avatar.getOriginalFilename();
-        String thumbnailExtension = (thumbnailName != null && thumbnailName.contains("."))
-                ? thumbnailName.substring(thumbnailName.lastIndexOf("."))
+    private String uploadAvatar(MultipartFile avatar) throws IOException {
+        String avatarId = "";
+        String avatarName = avatar.getOriginalFilename();
+        String avatarExtension = (avatarName != null && avatarName.contains("."))
+                ? avatarName.substring(avatarName.lastIndexOf("."))
                 : "";
-        thumbnailId = UUID.randomUUID() + thumbnailExtension;
-        Path path = Paths.get(uploadDir + "/images", thumbnailId);
+        avatarId = UUID.randomUUID() + avatarExtension;
+        Path path = Paths.get(uploadDir + "/images", avatarId);
         Files.createDirectories(path.getParent());
         Files.copy(avatar.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-        AvatarResponse response = new AvatarResponse(thumbnailId);
-        return response;
+        return avatarId;
+    }
+
+    private void deleteAvatar(String filename) throws IOException {
+        if (filename == null)
+            return;
+        Path avatarPath = Paths.get(uploadDir + "/images").resolve(filename).normalize();
+
+        if (avatarPath == null || !Files.exists(avatarPath)) {
+            return;
+        }
+
+        Files.delete(avatarPath);
     }
 
     public FeedUser getFeedUser(User currentUser) {
@@ -140,27 +178,39 @@ public class UserService {
                         : null);
     }
 
-    public void saveData(String username, ProfileEditResponse data) throws IOException {
-        User user = userRepository.findByUsername(username)
+    public void saveData(String currentUsername, @Valid UpdateProfileRequest data)
+            throws IOException {
+        User user = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (!user.getUsername().equals(data.username()) && userRepository.existsByUsername(data.username())) {
-            if (data.avatar() != null) {
-                Path filePath = Paths.get(uploadDir + "/avatars" + data.avatar());
-                Files.delete(filePath);
-            }
             throw new IllegalArgumentException("Username already exists.");
         }
         if (!user.getEmail().equals(data.email()) && userRepository.existsByEmail(data.email())) {
-            if (data.avatar() != null) {
-                Path filePath = Paths.get(uploadDir + "/avatars" + data.avatar());
-                Files.delete(filePath);
-            }
             throw new IllegalArgumentException("Email already exists.");
         }
+
         user.setUsername(data.username());
         user.setEmail(data.email());
-        user.setAvatar(data.avatar());
-        user.setBio(data.bio());
+        if (data.avatar() != null) {
+            String contentType = data.avatar().getContentType();
+
+            if (contentType == null || !ACCEPTED_TYPES.contains(contentType)) {
+                throw new IllegalArgumentException("Unsupported file type: " + contentType);
+            }
+
+            deleteAvatar(user.getAvatar());
+            user.setAvatar(uploadAvatar(data.avatar()));
+        }
+        if (data.defaultAvatar() != null) {
+            deleteAvatar(user.getAvatar());
+            user.setAvatar(null);
+        }
+        if (data.bio().equals("null")) {
+            user.setBio(null);
+        } else {
+            user.setBio(data.bio());
+        }
+
         userRepository.save(user);
     }
 
@@ -168,8 +218,9 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public List<UserResponse> getAllUsers(Pageable pageable) {
-        List<User> users = userRepository.findAll(pageable).getContent();
+    public List<UserResponse> getAllUsers(LocalDateTime lastCreatedAt) {
+        lastCreatedAt = (lastCreatedAt == null) ? LocalDateTime.now() : lastCreatedAt;
+        List<User> users = userRepository.findTop10ByCreatedAtLessThanOrderByCreatedAtDesc(lastCreatedAt);
         List<UserResponse> usersResponse = new ArrayList<>();
         for (User user : users) {
             UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail(),
@@ -181,8 +232,10 @@ public class UserService {
         return usersResponse;
     }
 
-    public List<UserResponse> getSearchedUsers(String query, Pageable pageable) {
-        List<User> users = userRepository.findByUsernameContainingIgnoreCase(query, pageable).getContent();
+    public List<UserResponse> getSearchedUsers(String query, LocalDateTime lastCreatedAt) {
+        lastCreatedAt = (lastCreatedAt == null) ? LocalDateTime.now() : lastCreatedAt;
+        List<User> users = userRepository
+                .findTop10ByUsernameContainingIgnoreCaseAndCreatedAtLessThanOrderByCreatedAtDesc(query, lastCreatedAt);
         List<UserResponse> usersResponse = new ArrayList<>();
         for (User user : users) {
             UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail(),
@@ -195,7 +248,8 @@ public class UserService {
     }
 
     public List<DiscoveryUserResponse> getSearchedDiscoveryUsers(UUID currentUserId, String query, Pageable pageable) {
-        List<User> users = userRepository.findByUsernameContainingIgnoreCase(query, pageable).getContent();
+        List<User> users = userRepository
+                .findByUsernameContainingIgnoreCase(query, pageable).getContent();
         List<DiscoveryUserResponse> usersResponse = new ArrayList<>();
         for (User user : users) {
             DiscoveryUserResponse discoveryUserResponse = new DiscoveryUserResponse(user.getId(),
@@ -232,11 +286,15 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public void deleteUser(String username) {
+    public void deleteUser(String username) throws IOException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         if (user.getRole().equals(Role.ADMIN)) {
-            throw new DataIntegrityViolationException("You cannot delete yourself.");
+            throw new DataIntegrityViolationException("You dont have permession to do this action.");
+        }
+        deleteAvatar(user.getAvatar());
+        for (Post post : user.getPosts()) {
+            postService.deleteMedia(post.getThumbnail(), post.getFiles());
         }
         userRepository.delete(user);
     }
@@ -246,7 +304,7 @@ public class UserService {
     }
 
     public List<DiscoveryUserResponse> getTop9Profiles(UUID currentUserId) {
-        List<User> users = userRepository.findTop9ByIdNotOrderByFollowersDesc(currentUserId);
+        List<User> users = userRepository.findTop9RecommendedUsers(currentUserId);
         List<DiscoveryUserResponse> usersResponse = new ArrayList<>();
         for (User user : users) {
             DiscoveryUserResponse discoveryUserResponse = new DiscoveryUserResponse(user.getId(),

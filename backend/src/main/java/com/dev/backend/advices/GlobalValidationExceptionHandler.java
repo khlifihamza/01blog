@@ -1,16 +1,20 @@
-package com.dev.backend.exception;
+package com.dev.backend.advices;
 
 import com.dev.backend.dto.ErrorResponse;
+import com.dev.backend.exception.SafeHtmlException;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -18,8 +22,10 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.IOException;
 import io.jsonwebtoken.security.SignatureException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
@@ -46,6 +52,40 @@ public class GlobalValidationExceptionHandler {
                 return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
 
+        @ExceptionHandler(ConstraintViolationException.class)
+        public ResponseEntity<ErrorResponse> handleConstraintViolationException(
+                        ConstraintViolationException ex,
+                        WebRequest request) {
+
+                String validationErrors = Arrays.stream(ex.getMessage().split(", "))
+                                .map(s -> s.substring(s.lastIndexOf('.') + 1).trim())
+                                .collect(Collectors.joining(", "));
+                
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                validationErrors,
+                                request.getDescription(false).replace("uri=", ""));
+
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+
+        @ExceptionHandler(MissingServletRequestPartException.class)
+        public ResponseEntity<ErrorResponse> handleMissingServletRequestPartException(
+                        MissingServletRequestPartException ex,
+                        WebRequest request) {
+
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                ex.getMessage(),
+                                request.getDescription(false).replace("uri=", ""));
+
+                return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+
         @ExceptionHandler(BadCredentialsException.class)
         public ResponseEntity<ErrorResponse> handleBadCredentialsException(
                         BadCredentialsException ex,
@@ -55,7 +95,7 @@ public class GlobalValidationExceptionHandler {
                                 LocalDateTime.now(),
                                 HttpStatus.BAD_REQUEST.value(),
                                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                                "Invalid username or password",
+                                ex.getMessage(),
                                 request.getDescription(false).replace("uri=", ""));
 
                 return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
@@ -103,14 +143,15 @@ public class GlobalValidationExceptionHandler {
         }
 
         @ExceptionHandler(UnsupportedJwtException.class)
-        public ResponseEntity<ErrorResponse> handleUnsupportedJwtException(UnsupportedJwtException ex, WebRequest request){
-               ErrorResponse errorResponse = new ErrorResponse(
+        public ResponseEntity<ErrorResponse> handleUnsupportedJwtException(UnsupportedJwtException ex,
+                        WebRequest request) {
+                ErrorResponse errorResponse = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.UNAUTHORIZED.value(),
                                 HttpStatus.UNAUTHORIZED.getReasonPhrase(),
                                 "Invalid or unsupported jwt format.",
                                 request.getDescription(false).replace("uri=", ""));
-                return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED); 
+                return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
         }
 
         @ExceptionHandler(SignatureException.class)
@@ -233,11 +274,22 @@ public class GlobalValidationExceptionHandler {
                 return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
 
+        @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+        public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(Exception ex,
+                        WebRequest request) {
+                ErrorResponse errorResponse = new ErrorResponse(
+                                LocalDateTime.now(),
+                                HttpStatus.METHOD_NOT_ALLOWED.value(),
+                                HttpStatus.METHOD_NOT_ALLOWED.getReasonPhrase(),
+                                ex.getMessage(),
+                                request.getDescription(false).replace("uri=", ""));
+                return new ResponseEntity<>(errorResponse, HttpStatus.METHOD_NOT_ALLOWED);
+        }
+
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ErrorResponse> handleException(
                         Exception ex,
                         WebRequest request) {
-
                 ErrorResponse errorResponse = new ErrorResponse(
                                 LocalDateTime.now(),
                                 HttpStatus.INTERNAL_SERVER_ERROR.value(),

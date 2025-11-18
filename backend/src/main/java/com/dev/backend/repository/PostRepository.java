@@ -1,5 +1,6 @@
 package com.dev.backend.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,10 +12,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.dev.backend.model.Post;
+import com.dev.backend.model.PostStatus;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, UUID> {
-    Page<Post> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
+    List<Post> findTop10ByUserIdAndStatusAndCreatedAtLessThanOrderByCreatedAtDesc(UUID userId, PostStatus status, LocalDateTime lastCreatedAt);
 
     @Query("""
                 SELECT p
@@ -28,13 +30,22 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
                        )
                 )
                 AND p.status = 'PUBLISHED'
+                AND (p.createdAt < :lastCreatedAt)
                 ORDER BY p.createdAt DESC
+                LIMIT 10
             """)
-    Page<Post> findFeedPosts(@Param("userId") UUID userId, Pageable pageable);
+    List<Post> findFeedPosts(
+            @Param("userId") UUID userId,
+            @Param("lastCreatedAt") LocalDateTime lastCreatedAt);
 
-    Page<Post> findByTitleContainingIgnoreCase(String query, Pageable pageable);
+    List<Post> findTop10ByCreatedAtLessThanAndTitleContainingIgnoreCaseOrderByCreatedAtDesc(LocalDateTime lastCreatedAt,
+            String query);
 
-    List<Post> findTop9ByUserIdNotOrderByLikesDesc(UUID currentUserId);
+    Page<Post> findByStatusAndTitleContainingIgnoreCase(PostStatus status, String query, Pageable pageable);
 
-    Page<Post> findAll(Pageable pageable);
+    List<Post> findTop9ByUserIdNotAndStatusOrderByLikes(UUID currentUserId, PostStatus status);
+
+    List<Post> findTop10ByCreatedAtLessThanOrderByCreatedAtDesc(LocalDateTime lastCreatedAt);
+
+    long countByUserIdAndStatus(UUID currentUserId, PostStatus status);
 }

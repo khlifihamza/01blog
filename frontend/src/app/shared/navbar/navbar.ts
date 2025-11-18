@@ -1,4 +1,4 @@
-import { Component, HostListener, signal, ViewChild } from '@angular/core';
+import { Component, HostListener, signal, ViewChild, OnDestroy } from '@angular/core';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -11,6 +11,7 @@ import { NotificationService } from '../../core/services/notification.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { ErrorService } from '../../core/services/error.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -25,11 +26,12 @@ import { ErrorService } from '../../core/services/error.service';
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.css'],
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnDestroy {
   user = signal<FeedUser | null>(null);
   notificationCount = signal(0);
   @ViewChild('menuTrigger') menuTrigger!: MatMenuTrigger;
   breakpoint = 480;
+  private notificationSubscription?: Subscription;
 
   constructor(
     private router: Router,
@@ -42,6 +44,16 @@ export class NavbarComponent {
   ngOnInit() {
     this.loadUser();
     this.loadNotificationCount();
+    
+    this.notificationSubscription = this.notificationService.unreadCount$.subscribe({
+      next: (count) => {
+        this.notificationCount.set(count);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.notificationSubscription?.unsubscribe();
   }
 
   loadUser() {
@@ -55,9 +67,6 @@ export class NavbarComponent {
 
   loadNotificationCount() {
     this.notificationService.getUnreadNotificationCount().subscribe({
-      next: (count) => {
-        this.notificationCount.set(count);
-      },
       error: (error) => this.errorService.handleError(error),
     });
   }

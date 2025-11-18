@@ -10,7 +10,7 @@ public record ProfileUserResponse(
         String joinDate,
         int followers,
         int following,
-        int posts,
+        long posts,
         boolean isOwner,
         boolean isFollowing) {
 }

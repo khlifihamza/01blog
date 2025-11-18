@@ -14,6 +14,7 @@ import com.dev.backend.repository.LikeRepository;
 import com.dev.backend.repository.PostRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 @Service
 public class LikeService {
@@ -31,21 +32,23 @@ public class LikeService {
         this.postRepository = postRepository;
     }
 
+    @Transactional
     public void like(User currentUser, UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
         if (likeRepository.existsByUserIdAndPostId(currentUser.getId(), post.getId())) {
             throw new DataIntegrityViolationException("you already liked this post");
         }
+        Like like = new Like(currentUser, post);
+        likeRepository.save(like);
         if (!currentUser.getId().equals(post.getUser().getId())) {
-            notificationService.createNotification(post, post.getUser(),
+            notificationService.createNotification(null, null, null, like, post.getUser(),
                     currentUser.getUsername() + " liked your post",
                     "Your post \"" + post.getTitle() + "\" received a new like", NotificationType.LIKE);
         }
-        Like like = new Like(currentUser, post);
-        likeRepository.save(like);
     }
 
+    @Transactional
     public void dislike(User currentUser, UUID postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
@@ -53,6 +56,11 @@ public class LikeService {
             throw new DataIntegrityViolationException("you already disliked this post");
         }
         Like like = likeRepository.findByUserAndPost(currentUser, post);
+
+        if (notificationService.existsByLikeAndRecipient(like.getId(), post.getUser().getId())) {
+            notificationService.deleteLikeNotification(like.getId(), post.getUser().getId());
+        }
+
         likeRepository.delete(like);
     }
 

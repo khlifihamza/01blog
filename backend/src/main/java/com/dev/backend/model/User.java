@@ -46,6 +46,12 @@ public class User extends BaseEntity implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Post> posts = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    private List<Like> likes = new ArrayList<>();
+
     @OneToMany(mappedBy = "follower", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Follow> following = new ArrayList<>();
 
@@ -53,7 +59,10 @@ public class User extends BaseEntity implements UserDetails {
     private List<Follow> followers = new ArrayList<>();
 
     @OneToMany(mappedBy = "recipient", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
-    private List<Notification> notifications = new ArrayList<>();
+    private List<Notification> receivingNotifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "sender", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    private List<Notification> sendingNotifications = new ArrayList<>();
 
     @OneToMany(mappedBy = "reportedUser", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Report> reports = new ArrayList<>();
@@ -68,6 +77,22 @@ public class User extends BaseEntity implements UserDetails {
         this.password = password;
         this.role = role;
         this.status = status;
+    }
+
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
+    }
+
+    public List<Like> getLikes() {
+        return likes;
+    }
+
+    public void setLikes(List<Like> likes) {
+        this.likes = likes;
     }
 
     public List<Report> getReports() {
@@ -94,12 +119,20 @@ public class User extends BaseEntity implements UserDetails {
         this.avatar = avatar;
     }
 
-    public List<Notification> getNotifications() {
-        return notifications;
+    public List<Notification> getReceivingNotifications() {
+        return receivingNotifications;
     }
 
-    public void setNotifications(List<Notification> notifications) {
-        this.notifications = notifications;
+    public void setReceivingNotifications(List<Notification> receivingNotifications) {
+        this.receivingNotifications = receivingNotifications;
+    }
+
+    public List<Notification> getSendingNotifications() {
+        return sendingNotifications;
+    }
+
+    public void setSendingNotifications(List<Notification> sendingNotifications) {
+        this.sendingNotifications = sendingNotifications;
     }
 
     public void setFollowers(List<Follow> followers) {

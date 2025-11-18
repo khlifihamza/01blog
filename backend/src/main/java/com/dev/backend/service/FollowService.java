@@ -7,11 +7,13 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.dev.backend.model.Follow;
+import com.dev.backend.model.NotificationType;
 import com.dev.backend.model.User;
 import com.dev.backend.repository.FollowRepository;
 import com.dev.backend.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 @Service
 public class FollowService {
@@ -29,8 +31,10 @@ public class FollowService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public void followUser(UUID followerId, String username) {
-        UUID userToFollowId = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
+        UUID userToFollowId = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
         if (followerId.equals(userToFollowId)) {
             throw new DataIntegrityViolationException("You cannot follow yourself.");
         }
@@ -46,17 +50,18 @@ public class FollowService {
 
         if (!followRepository.existsByFollowerIdAndFollowingId(followerId, userToFollowId)) {
             Follow follow = new Follow(follower, following);
-
-            notificationService.createNotificationForFollow(follower, following,
+            notificationService.createNotification(null, follower, null, null, following,
                     follower.getUsername() + " started following you",
-                    "You have a new follower! Check out their profile.");
+                    "You have a new follower! Check out their profile.", NotificationType.FOLLOW);
 
             followRepository.save(follow);
         }
     }
 
+    @Transactional
     public void unfollowUser(UUID unfollowerId, String username) {
-        UUID userToUnfollowId = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
+        UUID userToUnfollowId = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found")).getId();
         if (unfollowerId.equals(userToUnfollowId)) {
             throw new DataIntegrityViolationException("You cannot unfollow yourself.");
         }
@@ -72,6 +77,11 @@ public class FollowService {
 
         if (followRepository.existsByFollowerIdAndFollowingId(unfollowerId, userToUnfollowId)) {
             Follow followRow = followRepository.findByFollowerIdAndFollowingId(unfollowerId, userToUnfollowId);
+
+            if (notificationService.existsBysenderAndRecipient(unfollowerId, userToUnfollowId)) {
+                notificationService.deleteFollowNotification(unfollowerId, userToUnfollowId);
+            }
+
             followRepository.delete(followRow);
         }
     }

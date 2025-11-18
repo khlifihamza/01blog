@@ -11,7 +11,11 @@ export class FollowService {
 
   constructor(private http: HttpClient) {}
 
-  follow(username: string, action: string): Observable<ApiResponse> {
-    return this.http.get<any>(`${this.url}/${action}/${username}`);
+  follow(username: string): Observable<ApiResponse> {
+    return this.http.post<ApiResponse>(`${this.url}/follow/${username}`, {});
+  }
+
+  unfollow(username: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(`${this.url}/unfollow/${username}`);
   }
 }

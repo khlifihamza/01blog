@@ -32,7 +32,7 @@ export interface UserProfile {
   isFollowing: boolean;
 }
 
-export interface EditUserProfile {
+export interface EditUserProfileResponse {
   username: string;
   email: string;
   avatar: string | null;
@@ -52,6 +52,7 @@ export interface User {
   joinDate: string;
   postsCount: number;
   status: 'ACTIVE' | 'BANNED';
+  formatedJoinDate: string;
 }
 
 export interface DiscoveryUser {
@@ -61,7 +62,7 @@ export interface DiscoveryUser {
   bio: string;
   followers: number;
   posts: number;
-  isOwner: boolean,
+  isOwner: boolean;
   isFollowing: boolean;
 }
 

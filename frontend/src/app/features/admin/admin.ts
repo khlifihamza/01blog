@@ -29,10 +29,8 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { NavbarComponent } from '../../shared/navbar/navbar';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 
-
 @Component({
   selector: 'app-admin-dashboard',
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -73,31 +71,21 @@ export class AdminComponent implements OnInit {
   users = signal<User[]>([]);
   posts = signal<Post[]>([]);
 
-  filteredReports = signal<Report[]>([]);
-
   selectedReportStatus = '';
   userSearchQuery = new FormControl('');
   postSearchQuery = new FormControl('');
 
-  reportsPage = 0;
-  reportsPageSize = 10;
-  hasMoreReports = true;
+  hasMoreReports = signal(true);
   isLoadingMoreReports = signal(false);
 
-  usersPage = 0;
-  usersPageSize = 10;
-  hasMoreUsers = true;
+  hasMoreUsers = signal(true);
   isLoadingMoreUsers = signal(false);
 
-  postsPage = 0;
-  postsPageSize = 10;
-  hasMorePosts = true;
+  hasMorePosts = signal(true);
   isLoadingMorePosts = signal(false);
 
-  userSearchPage = 0;
-  postSearchPage = 0;
-  hasMoreUserSearchResults = true;
-  hasMorePostSearchResults = true;
+  hasMoreUserSearchResults = signal(true);
+  hasMorePostSearchResults = signal(true);
   isLoadingMoreUserSearch = signal(false);
   isLoadingMorePostSearch = signal(false);
 
@@ -137,19 +125,19 @@ export class AdminComponent implements OnInit {
 
     if (scrollPosition >= scrollThreshold) {
       if (this.activeTabIndex === 1 && this.userSearchQuery.value) {
-        if (this.hasMoreUserSearchResults && !this.isLoadingMoreUserSearch()) {
+        if (this.hasMoreUserSearchResults() && !this.isLoadingMoreUserSearch()) {
           this.loadMoreUserSearchResults();
         }
       } else if (this.activeTabIndex === 2 && this.postSearchQuery.value) {
-        if (this.hasMorePostSearchResults && !this.isLoadingMorePostSearch()) {
+        if (this.hasMorePostSearchResults() && !this.isLoadingMorePostSearch()) {
           this.loadMorePostSearchResults();
         }
       } else {
-        if (this.activeTabIndex === 0 && this.hasMoreReports && !this.isLoadingMoreReports()) {
+        if (this.activeTabIndex === 0 && this.hasMoreReports() && !this.isLoadingMoreReports()) {
           this.loadMoreReports();
-        } else if (this.activeTabIndex === 1 && this.hasMoreUsers && !this.isLoadingMoreUsers()) {
+        } else if (this.activeTabIndex === 1 && this.hasMoreUsers() && !this.isLoadingMoreUsers()) {
           this.loadMoreUsers();
-        } else if (this.activeTabIndex === 2 && this.hasMorePosts && !this.isLoadingMorePosts()) {
+        } else if (this.activeTabIndex === 2 && this.hasMorePosts() && !this.isLoadingMorePosts()) {
           this.loadMorePosts();
         }
       }
@@ -164,19 +152,16 @@ export class AdminComponent implements OnInit {
     this.userSearchQuery.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged())
       .subscribe((searchValue) => {
-        this.userSearchPage = 0;
-        this.hasMoreUserSearchResults = true;
+        this.hasMoreUserSearchResults.set(true);
 
         if (searchValue) {
-          this.adminService
-            .searchUsers(searchValue.toLowerCase(), this.userSearchPage, this.usersPageSize)
-            .subscribe({
-              next: (users) => {
-                this.users.set(users);
-                this.hasMoreUserSearchResults = users.length >= this.usersPageSize;
-              },
-              error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
-            });
+          this.adminService.searchUsers(searchValue.toLowerCase(), '').subscribe({
+            next: (users) => {
+              this.users.set(this.formatUsersDate(users));
+              this.hasMoreUserSearchResults.set(users.length >= 10);
+            },
+            error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+          });
         } else {
           this.loadUsers();
         }
@@ -185,19 +170,17 @@ export class AdminComponent implements OnInit {
     this.postSearchQuery.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged())
       .subscribe((searchValue) => {
-        this.postSearchPage = 0;
-        this.hasMorePostSearchResults = true;
+        this.isLoadingMorePostSearch.set(true);
 
         if (searchValue) {
-          this.adminService
-            .searchPosts(searchValue.toLowerCase(), this.postSearchPage, this.postsPageSize)
-            .subscribe({
-              next: (posts) => {
-                this.posts.set(posts);
-                this.hasMorePostSearchResults = posts.length >= this.postsPageSize;
-              },
-              error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
-            });
+          this.adminService.searchPosts(searchValue.toLowerCase(), '').subscribe({
+            next: (posts) => {
+              this.posts.set(this.formatPostsDate(posts));
+              this.hasMorePostSearchResults.set(posts.length === 10);
+              this.isLoadingMorePostSearch.set(false);
+            },
+            error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
+          });
         } else {
           this.loadPosts();
         }
@@ -224,109 +207,97 @@ export class AdminComponent implements OnInit {
   }
 
   loadReports() {
-    this.adminService.getReports(this.reportsPage, this.reportsPageSize).subscribe({
+    this.adminService.getReports(this.selectedReportStatus, '').subscribe({
       next: (reports) => {
         this.reports.set(this.formatReportsDate(reports));
-        this.filterReports();
-        this.hasMoreReports = reports.length >= this.reportsPageSize;
+        this.hasMoreReports.set(reports.length >= 10);
       },
       error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
   loadUsers() {
-    this.adminService.getUsers(this.usersPage, this.usersPageSize).subscribe({
+    this.adminService.getUsers('').subscribe({
       next: (users) => {
         this.users.set(this.formatUsersDate(users));
-        this.hasMoreUsers = users.length >= this.usersPageSize;
+        this.hasMoreUsers.set(users.length >= 10);
       },
       error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
   loadPosts() {
-    this.adminService.getPosts(this.postsPage, this.postsPageSize).subscribe({
+    this.adminService.getPosts('').subscribe({
       next: (posts) => {
         this.posts.set(this.formatPostsDate(posts));
-        this.filterPosts();
-        this.hasMorePosts = posts.length >= this.postsPageSize;
+        this.hasMorePosts.set(posts.length === 10);
       },
       error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
     });
   }
 
   loadMoreReports() {
-    if (this.isLoadingMoreReports() || !this.hasMoreReports) return;
+    if (this.isLoadingMoreReports() || !this.hasMoreReports()) return;
 
     this.isLoadingMoreReports.set(true);
-    this.reportsPage++;
 
-    this.adminService.getReports(this.reportsPage, this.reportsPageSize).subscribe({
-      next: (reports) => {
-        if (reports.length < this.reportsPageSize) {
-          this.hasMoreReports = false;
-        }
-        if (reports.length > 0) {
-          this.reports.update((currentReports) => [
-            ...currentReports,
-            ...this.formatReportsDate(reports),
-          ]);
-          this.filterReports();
-        }
+    const lastReport = this.reports()[this.reports().length - 1];
+    if (!lastReport) return;
+
+    this.adminService.getReports(this.selectedReportStatus, lastReport.createdAt).subscribe({
+      next: (newReports) => {
+        this.reports.update((currentReports) => [
+          ...currentReports,
+          ...this.formatReportsDate(newReports),
+        ]);
+        this.hasMoreReports.set(newReports.length === 10);
         this.isLoadingMoreReports.set(false);
       },
       error: (error) => {
         this.snackBar.open(error.message, 'Close', { duration: 5000 });
         this.isLoadingMoreReports.set(false);
-        this.reportsPage--;
       },
     });
   }
 
   loadMoreUsers() {
-    if (this.isLoadingMoreUsers() || !this.hasMoreUsers) return;
+    if (this.isLoadingMoreUsers() || !this.hasMoreUsers()) return;
 
     this.isLoadingMoreUsers.set(true);
-    this.usersPage++;
 
-    this.adminService.getUsers(this.usersPage, this.usersPageSize).subscribe({
-      next: (users) => {
-        if (users.length < this.usersPageSize) {
-          this.hasMoreUsers = false;
-        }
-        if (users.length > 0) {
-          this.users.update((currentUsers) => [...currentUsers, ...this.formatUsersDate(users)]);
-        }
+    const lastUser = this.users()[this.users().length - 1];
+    if (!lastUser) return;
+
+    this.adminService.getUsers(lastUser.joinDate).subscribe({
+      next: (newUsers) => {
+        this.users.update((currentUsers) => [...currentUsers, ...this.formatUsersDate(newUsers)]);
+        this.hasMoreUsers.set(newUsers.length === 10);
         this.isLoadingMoreUsers.set(false);
       },
       error: (error) => {
         this.snackBar.open(error.message, 'Close', { duration: 5000 });
         this.isLoadingMoreUsers.set(false);
-        this.usersPage--;
       },
     });
   }
 
   loadMorePosts() {
-    if (this.isLoadingMorePosts() || !this.hasMorePosts) return;
+    if (this.isLoadingMorePosts() || !this.hasMorePosts()) return;
 
     this.isLoadingMorePosts.set(true);
-    this.postsPage++;
 
-    this.adminService.getPosts(this.postsPage, this.postsPageSize).subscribe({
-      next: (posts) => {
-        if (posts.length < this.postsPageSize) {
-          this.hasMorePosts = false;
-        }
-        if (posts.length > 0) {
-          this.posts.update((currentPosts) => [...currentPosts, ...this.formatPostsDate(posts)]);
-        }
+    const lastPost = this.posts()[this.posts().length - 1];
+    if (!lastPost) return;
+
+    this.adminService.getPosts(lastPost.publishedDate).subscribe({
+      next: (newPosts) => {
+        this.posts.update((currentPosts) => [...currentPosts, ...this.formatPostsDate(newPosts)]);
+        this.hasMorePosts.set(newPosts.length === 10);
         this.isLoadingMorePosts.set(false);
       },
       error: (error) => {
         this.snackBar.open(error.message, 'Close', { duration: 5000 });
         this.isLoadingMorePosts.set(false);
-        this.postsPage--;
       },
     });
   }
@@ -335,7 +306,7 @@ export class AdminComponent implements OnInit {
     return reports.map((r) => {
       return {
         ...r,
-        createdAt: this.formatDate(r.createdAt),
+        formatedCreatedAt: this.formatDate(r.createdAt),
       };
     });
   }
@@ -344,7 +315,7 @@ export class AdminComponent implements OnInit {
     return posts.map((p) => {
       return {
         ...p,
-        publishedDate: this.formatDate(p.publishedDate),
+        formatedPublishedDate: this.formatDate(p.publishedDate),
       };
     });
   }
@@ -353,7 +324,7 @@ export class AdminComponent implements OnInit {
     return user.map((u) => {
       return {
         ...u,
-        joinDate: this.formatDate(u.joinDate),
+        formatedJoinDate: this.formatDate(u.joinDate),
       };
     });
   }
@@ -364,45 +335,33 @@ export class AdminComponent implements OnInit {
   }
 
   filterReports() {
-    const reports = this.selectedReportStatus
-      ? this.reports().filter((r) => r.status.toLowerCase() === this.selectedReportStatus)
-      : this.reports();
-    this.filteredReports.set(reports);
+    this.loadReports();
   }
-
-  filterPosts() {}
 
   loadMoreUserSearchResults() {
     if (
       this.isLoadingMoreUserSearch() ||
-      !this.hasMoreUserSearchResults ||
+      !this.hasMoreUserSearchResults() ||
       !this.userSearchQuery.value
     )
       return;
 
     this.isLoadingMoreUserSearch.set(true);
-    this.userSearchPage++;
+
+    const lastUser = this.users()[this.users().length - 1];
+    if (!lastUser) return;
 
     this.adminService
-      .searchUsers(
-        this.userSearchQuery.value.toLowerCase(),
-        this.userSearchPage,
-        this.usersPageSize
-      )
+      .searchUsers(this.userSearchQuery.value.toLowerCase(), lastUser.joinDate)
       .subscribe({
-        next: (users) => {
-          if (users.length < this.usersPageSize) {
-            this.hasMoreUserSearchResults = false;
-          }
-          if (users.length > 0) {
-            this.users.update((currentUsers) => [...currentUsers, ...this.formatUsersDate(users)]);
-          }
+        next: (newUsers) => {
+          this.users.update((currentUsers) => [...currentUsers, ...this.formatUsersDate(newUsers)]);
+          this.hasMoreUserSearchResults.set(newUsers.length >= 10);
           this.isLoadingMoreUserSearch.set(false);
         },
         error: (error) => {
           this.snackBar.open(error.message, 'Close', { duration: 5000 });
           this.isLoadingMoreUserSearch.set(false);
-          this.userSearchPage--;
         },
       });
   }
@@ -410,34 +369,27 @@ export class AdminComponent implements OnInit {
   loadMorePostSearchResults() {
     if (
       this.isLoadingMorePostSearch() ||
-      !this.hasMorePostSearchResults ||
+      !this.hasMorePostSearchResults() ||
       !this.postSearchQuery.value
     )
       return;
 
     this.isLoadingMorePostSearch.set(true);
-    this.postSearchPage++;
+
+    const lastPost = this.posts()[this.posts().length - 1];
+    if (!lastPost) return;
 
     this.adminService
-      .searchPosts(
-        this.postSearchQuery.value.toLowerCase(),
-        this.postSearchPage,
-        this.postsPageSize
-      )
+      .searchPosts(this.postSearchQuery.value.toLowerCase(), lastPost.publishedDate)
       .subscribe({
-        next: (posts) => {
-          if (posts.length < this.postsPageSize) {
-            this.hasMorePostSearchResults = false;
-          }
-          if (posts.length > 0) {
-            this.posts.update((currentPosts) => [...currentPosts, ...this.formatPostsDate(posts)]);
-          }
+        next: (newPosts) => {
+          this.posts.update((currentPosts) => [...currentPosts, ...this.formatPostsDate(newPosts)]);
+          this.hasMorePostSearchResults.set(newPosts.length === 10);
           this.isLoadingMorePostSearch.set(false);
         },
         error: (error) => {
           this.snackBar.open(error.message, 'Close', { duration: 5000 });
           this.isLoadingMorePostSearch.set(false);
-          this.postSearchPage--;
         },
       });
   }
@@ -713,7 +665,6 @@ export class AdminComponent implements OnInit {
         this.adminService.deletePost(post.id).subscribe({
           next: () => {
             this.posts.set(this.posts().filter((p) => p.id !== post.id));
-            this.filterPosts();
           },
           error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
         });
