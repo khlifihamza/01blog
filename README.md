@@ -110,6 +110,7 @@ This project demonstrates professional fullstack development practices, includin
 | **Maven** | 3.x | Dependency management & build |
 | **OWASP HTML Sanitizer** | 20220608.1 | XSS prevention |
 | **Hibernate Validator** | 8.x | Input validation |
+| **Bucket4j** | Latest | Rate limiting |
 
 ### Frontend Stack
 | Technology | Version | Purpose |
@@ -120,6 +121,7 @@ This project demonstrates professional fullstack development practices, includin
 | **RxJS** | 7.8.0 | Reactive programming |
 | **Angular Router** | 20.2.0 | Client-side routing |
 | **Angular CDK** | 20.2.1 | Component dev kit |
+| **JUnit** | 5.x | Testing framework (Backend) |
 
 ### DevOps & Infrastructure
 | Technology | Version | Purpose |
@@ -408,6 +410,7 @@ npm run build
 - **CSRF Protection** - Disabled for stateless JWT (API-only)
 - **Security Headers** - Configured via Spring Security
 - **HTTPS Support** - Can be configured via reverse proxy (Nginx/Apache) or application server
+- **Rate Limiting** - Bucket4j-based rate limiting to prevent abuse
 
 #### Data Protection
 - **Password Never Exposed** - Excluded from JSON serialization
@@ -420,9 +423,10 @@ npm run build
 1. **Change Default Credentials** in production
 2. **Use Environment Variables** for sensitive configuration
 3. **Enable HTTPS** in production environments (configure via reverse proxy like Nginx)
-4. **Regular Security Updates** - Keep dependencies up to date
-5. **Database Backups** - Regular automated backups
-6. **Monitor Logs** - Track suspicious activities
+4. **Configure Rate Limiting** - Adjust rate limit settings in `RateLimitConfig.java` based on your needs
+5. **Regular Security Updates** - Keep dependencies up to date
+6. **Database Backups** - Regular automated backups
+7. **Monitor Logs** - Track suspicious activities
 
 ---
 
@@ -443,7 +447,7 @@ kill -9 <PID>
 **Issue: Database connection failed**
 - Verify PostgreSQL is running: `sudo service postgresql status`
 - Check database credentials in `application.properties`
-- Ensure database `dbname` exists
+- Ensure database `DB01B` exists
 
 **Issue: Maven build fails**
 ```bash
@@ -645,7 +649,7 @@ Want to see your name here? [Contribute to the project!](#-contributing)
 - ✅ Discovery page
 - ✅ Responsive design
 - ✅ Docker deployment
-- ✅ Security features (JWT, XSS prevention)
+- ✅ Security features (JWT, XSS prevention, Rate limiting)
 
 ---
 
