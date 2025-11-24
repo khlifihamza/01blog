@@ -1,4 +1,4 @@
-import { Component, signal, HostListener } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,6 +16,9 @@ import { ErrorService } from '../../core/services/error.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog';
 import { ConfirmDialogData } from '../../shared/models/confirm-dialog.model';
+import { TimeAgoPipe } from '../../shared/pipes/time-ago.pipe';
+import { InfiniteScrollDirective } from '../../shared/directives/infinite-scroll.directive';
+import { NotificationType } from '../../shared/models/enums.model';
 
 @Component({
   selector: 'app-notifications',
@@ -30,11 +33,15 @@ import { ConfirmDialogData } from '../../shared/models/confirm-dialog.model';
     MatToolbarModule,
     MatBadgeModule,
     NavbarComponent,
+    TimeAgoPipe,
+    InfiniteScrollDirective
   ],
   templateUrl: './notification.html',
   styleUrl: './notification.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NotificationsComponent {
+  NotificationType = NotificationType;
   notifications = signal<Notification[]>([]);
   unreadCount = signal(0);
   loading = signal(false);
@@ -51,16 +58,9 @@ export class NotificationsComponent {
     this.loadNotifications();
   }
 
-  @HostListener('window:scroll')
   onScroll() {
     if (this.loading() || !this.hasMoreNotifications()) return;
-
-    const scrollPosition = window.innerHeight + window.scrollY;
-    const scrollThreshold = document.documentElement.scrollHeight - 300;
-
-    if (scrollPosition >= scrollThreshold) {
-      this.loadMoreNotifications();
-    }
+    this.loadMoreNotifications();
   }
 
   loadNotifications() {
@@ -69,7 +69,7 @@ export class NotificationsComponent {
 
     this.notificationService.getNotifications('').subscribe({
       next: (notifications) => {
-        this.notifications.set(this.formatNotificationsDate(notifications));
+        this.notifications.set(notifications);
         this.hasMoreNotifications.set(notifications.length === 10);
         this.updateCounts();
         this.loading.set(false);
@@ -93,7 +93,7 @@ export class NotificationsComponent {
       next: (newNotifications) => {
         this.notifications.update((current) => [
           ...current,
-          ...this.formatNotificationsDate(newNotifications),
+          ...newNotifications,
         ]);
         this.hasMoreNotifications.set(newNotifications.length === 10);
         this.loading.set(false);
@@ -105,34 +105,10 @@ export class NotificationsComponent {
     });
   }
 
-  formatNotificationsDate(notifications: Notification[]): Notification[] {
-    return notifications.map((n) => {
-      return {
-        ...n,
-        formatedCreatedAt: this.formatTime(n.createdAt),
-      };
-    });
-  }
-
   updateCounts() {
     const count = this.notifications().filter((n) => !n.isRead).length;
     this.unreadCount.set(count);
     this.notificationService.updateUnreadCount(count);
-  }
-
-  formatTime(dateStr: string): string {
-    const now = new Date();
-    const date = new Date(dateStr);
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
   }
 
   handleNotificationClick(notification: Notification, event: Event) {

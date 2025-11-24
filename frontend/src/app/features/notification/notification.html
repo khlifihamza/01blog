@@ -1,4 +1,4 @@
-<div class="notifications-container">
+<div class="notifications-container" appInfiniteScroll (scrolled)="onScroll()">
   <!-- Header -->
   <app-navbar></app-navbar>
 
@@ -32,11 +32,11 @@
         (click)="handleNotificationClick(notification, $event)"
       >
         <div class="notification-icon" [class]="'icon-' + notification.type">
-          @switch (notification.type) { @case ('like') {
+          @switch (notification.type) { @case (NotificationType.LIKE) {
           <mat-icon>favorite</mat-icon>
-          } @case ('comment') {
+          } @case (NotificationType.COMMENT) {
           <mat-icon>comment</mat-icon>
-          } @case ('follow') {
+          } @case (NotificationType.FOLLOW) {
           <mat-icon>person_add</mat-icon>
           } @default {
           <mat-icon>article</mat-icon>
@@ -46,7 +46,7 @@
         <div class="notification-content">
           <div class="notification-header">
             <h4 class="notification-title">{{ notification.title }}</h4>
-            <span class="notification-time">{{ notification.formatedCreatedAt }}</span>
+            <span class="notification-time">{{ notification.createdAt | timeAgo }}</span>
           </div>
           <p class="notification-message">{{ notification.message }}</p>
         </div>

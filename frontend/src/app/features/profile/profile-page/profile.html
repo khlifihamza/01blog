@@ -1,4 +1,4 @@
-<div class="profile-container">
+<div class="profile-container" appInfiniteScroll (scrolled)="onScroll()">
   <!-- Header -->
   <app-navbar></app-navbar>
 
@@ -73,7 +73,7 @@
         <div class="profile-details">
           <div class="detail-item">
             <mat-icon>calendar_today</mat-icon>
-            <span>Joined {{ profile()!.joinDate }}</span>
+            <span>Joined {{ profile()!.joinDate | timeAgo }}</span>
           </div>
         </div>
       </mat-card-content>

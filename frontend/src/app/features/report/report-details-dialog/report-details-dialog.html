@@ -21,7 +21,7 @@
         <div class="info-grid">
           <div class="info-item">
             <label>Submitted:</label>
-            <span>{{ formatDate(data.createdAt) }}</span>
+            <span>{{ data.createdAt | timeAgo }}</span>
           </div>
           <div class="info-item">
             <label>Type:</label>

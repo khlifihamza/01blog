@@ -11,6 +11,7 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MediaItem } from '../../../shared/models/post.model';
+import { PostType } from '../../../shared/models/enums.model';
 import { MatMenuModule } from '@angular/material/menu';
 import { DndUploadDirective } from '../../../core/directives/dnd-upload.directive';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -171,7 +172,7 @@ export class EditPostComponent implements OnDestroy {
         id: mediaId,
         file,
         preview: objectUrl,
-        type: 'image',
+        type: PostType.IMAGE,
         position: 0,
       },
     ]);
@@ -227,7 +228,7 @@ export class EditPostComponent implements OnDestroy {
           id: mediaId,
           file,
           preview: objectUrl,
-          type,
+          type: type === 'image' ? PostType.IMAGE : PostType.VIDEO,
           position: 0,
         },
       ]);
@@ -261,7 +262,7 @@ export class EditPostComponent implements OnDestroy {
           id: mediaId,
           file,
           preview: objectUrl,
-          type: 'image',
+          type: PostType.IMAGE,
           position: 0,
         },
       ]);
@@ -289,7 +290,7 @@ export class EditPostComponent implements OnDestroy {
           id: mediaId,
           file,
           preview: objectUrl,
-          type: 'video',
+          type: PostType.VIDEO,
           position: 0,
         },
       ]);
@@ -327,7 +328,7 @@ export class EditPostComponent implements OnDestroy {
         id: mediaId,
         file: dummyFile,
         preview: (imgElement?.src || videoElement?.src)!,
-        type: imgElement ? 'image' : 'video',
+        type: imgElement ? PostType.IMAGE : PostType.VIDEO,
         position: index,
       });
     });

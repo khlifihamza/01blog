@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,6 +7,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatCardModule } from '@angular/material/card';
 import { Router } from '@angular/router';
 import { Report } from '../../../shared/models/report.model';
+import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
+import { ReportStatus } from '../../../shared/models/enums.model';
 
 @Component({
   selector: 'app-report-details-dialog',
@@ -17,9 +19,11 @@ import { Report } from '../../../shared/models/report.model';
     MatIconModule,
     MatChipsModule,
     MatCardModule,
+    TimeAgoPipe,
   ],
   templateUrl: './report-details-dialog.html',
   styleUrl: './report-details-dialog.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ReportDetailsDialogComponent {
   constructor(
@@ -27,17 +31,6 @@ export class ReportDetailsDialogComponent {
     private router: Router,
     @Inject(MAT_DIALOG_DATA) public data: Report
   ) {}
-
-  formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(date);
-  }
 
   formatReason(reason: string): string {
     const reasonMap: { [key: string]: string } = {
@@ -66,12 +59,12 @@ export class ReportDetailsDialogComponent {
   }
 
   resolveReport() {
-    this.data.status = 'RESOLVED';
+    this.data.status = ReportStatus.RESOLVED;
     this.dialogRef.close({ action: 'resolved', report: this.data });
   }
 
   dismissReport() {
-    this.data.status = 'DISMISSED';
+    this.data.status = ReportStatus.DISMISSED;
     this.dialogRef.close({ action: 'dismissed', report: this.data });
   }
 }

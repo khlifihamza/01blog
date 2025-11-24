@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, HostListener } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -21,6 +21,8 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { NavbarComponent } from '../../shared/navbar/navbar';
 import { calculReadTime } from '../../shared/utils/readtime';
 import { ErrorService } from '../../core/services/error.service';
+import { TimeAgoPipe } from '../../shared/pipes/time-ago.pipe';
+import { InfiniteScrollDirective } from '../../shared/directives/infinite-scroll.directive';
 
 @Component({
   selector: 'app-discover',
@@ -41,9 +43,12 @@ import { ErrorService } from '../../core/services/error.service';
     MatProgressSpinnerModule,
     FollowComponent,
     NavbarComponent,
+    TimeAgoPipe,
+    InfiniteScrollDirective
   ],
   templateUrl: './discovery.html',
   styleUrl: './discovery.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DiscoveryComponent implements OnInit {
   searchQuery = new FormControl('');
@@ -69,17 +74,11 @@ export class DiscoveryComponent implements OnInit {
     this.setupSearch();
   }
 
-  @HostListener('window:scroll')
   onScroll() {
     if (this.isLoadingMoreSearchResults()) return;
 
-    const scrollPosition = window.innerHeight + window.scrollY;
-    const scrollThreshold = document.documentElement.scrollHeight - 300;
-
-    if (scrollPosition >= scrollThreshold) {
-      if (this.searchQuery.value) {
-        this.loadMoreSearchResults();
-      }
+    if (this.searchQuery.value) {
+      this.loadMoreSearchResults();
     }
   }
 
@@ -93,7 +92,7 @@ export class DiscoveryComponent implements OnInit {
           .subscribe({
             next: (response) => {
               this.searchedUsers.set(response.discoveryUsers);
-              this.searchedPosts.set(this.formatPostsDate(response.discoveryPosts));
+              this.searchedPosts.set(response.discoveryPosts);
               this.updateSearchReadtime();
               this.hasMoreSearchResults.set(
                 response.discoveryPosts.length >= this.searchPageSize ||
@@ -116,20 +115,11 @@ export class DiscoveryComponent implements OnInit {
   loadData() {
     this.discoveryService.getDiscoveryData().subscribe({
       next: (response) => {
-        this.suggestedPosts.set(this.formatPostsDate(response.discoveryPosts));
+        this.suggestedPosts.set(response.discoveryPosts);
         this.suggestedUsers.set(response.discoveryUsers);
         this.updateDiscoveryReadtime();
       },
       error: (error) => this.errorService.handleError(error),
-    });
-  }
-
-  formatPostsDate(posts: DiscoveryPost[]): DiscoveryPost[] {
-    return posts.map((p) => {
-      return {
-        ...p,
-        publishedDate: this.formatDate(p.publishedDate),
-      };
     });
   }
 
@@ -152,7 +142,7 @@ export class DiscoveryComponent implements OnInit {
           if (response.discoveryPosts.length > 0) {
             this.searchedPosts.update((currentPosts) => [
               ...currentPosts,
-              ...this.formatPostsDate(response.discoveryPosts),
+              ...response.discoveryPosts,
             ]);
           }
           if (response.discoveryUsers.length > 0) {
@@ -176,44 +166,6 @@ export class DiscoveryComponent implements OnInit {
     return calculReadTime(htmlString);
   }
 
-  formatDate(dateStr: string): string {
-    const now = new Date();
-    const date = new Date(dateStr);
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMins < 60) {
-      return diffMins < 1 ? 'Just now' : `${diffMins} minutes ago`;
-    }
-
-    if (diffHours < 24) {
-      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
-    }
-
-    if (diffDays === 1) return 'Yesterday';
-
-    if (diffDays < 7) {
-      return `${diffDays} days ago`;
-    }
-
-    if (date.getFullYear() === now.getFullYear()) {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    }
-
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  }
-
   openPost(post: DiscoveryPost) {
     this.router.navigate(['/post', post.id]);
   }
@@ -227,3 +179,4 @@ export class DiscoveryComponent implements OnInit {
     user.followers += user.isFollowing ? 1 : -1;
   }
 }
+

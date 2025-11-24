@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, HostListener } from '@angular/core';
+import { Component, OnInit, signal, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -22,6 +22,8 @@ import { FollowComponent } from '../../../shared/follow/follow';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { calculReadTime } from '../../../shared/utils/readtime';
 import { ErrorService } from '../../../core/services/error.service';
+import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
+import { InfiniteScrollDirective } from '../../../shared/directives/infinite-scroll.directive';
 
 @Component({
   selector: 'app-post-detail',
@@ -38,9 +40,12 @@ import { ErrorService } from '../../../core/services/error.service';
     MatProgressSpinnerModule,
     FollowComponent,
     NavbarComponent,
+    TimeAgoPipe,
+    InfiniteScrollDirective,
   ],
   templateUrl: './post-detail.html',
   styleUrls: ['./post-detail.css', '../../errors/not-found/not-found.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PostDetailComponent implements OnInit {
   post = signal<DetailPost | null>(null);
@@ -83,7 +88,6 @@ export class PostDetailComponent implements OnInit {
         this.isAuthor.set(post.isAuthor);
         this.isFollowing.set(post.author.isFollowed);
         this.isLiked.set(post.isLiked);
-        post.publishedDate = this.formatDate(post.publishedDate);
         this.post.set(post);
         this.safeContent = this.sanitizer.bypassSecurityTrustHtml(
           this.formatContent(this.post()!.content)
@@ -103,23 +107,11 @@ export class PostDetailComponent implements OnInit {
     if (this.postNotFound()) return;
     this.commentService.getComments(postId, '').subscribe({
       next: (comments) => {
-        this.Comments.set(this.formatCommentsDate(comments));
+        this.Comments.set(comments);
         this.hasMore.set(comments.length === 10);
       },
       error: (error) => this.errorService.handleError(error),
     });
-  }
-
-  @HostListener('window:scroll')
-  onScroll() {
-    if (this.isLoadingMore() || !this.hasMore()) return;
-
-    const scrollPosition = window.innerHeight + window.scrollY;
-    const documentHeight = document.documentElement.scrollHeight;
-
-    if (scrollPosition >= documentHeight - 200) {
-      this.loadMoreComments();
-    }
   }
 
   loadMoreComments() {
@@ -133,7 +125,7 @@ export class PostDetailComponent implements OnInit {
 
     this.commentService.getComments(postId, lastComment.createAt).subscribe({
       next: (newComments) => {
-        this.Comments.set([...this.Comments(), ...this.formatCommentsDate(newComments)]);
+        this.Comments.set([...this.Comments(), ...newComments]);
         this.hasMore.set(newComments.length === 10);
         this.isLoadingMore.set(false);
       },
@@ -141,15 +133,6 @@ export class PostDetailComponent implements OnInit {
         this.errorService.handleError(error);
         this.isLoadingMore.set(false);
       },
-    });
-  }
-
-  formatCommentsDate(comments: Comment[]): Comment[] {
-    return comments.map((c) => {
-      return {
-        ...c,
-        formatedCreatedAt: this.formatDate(c.createAt),
-      };
     });
   }
 
@@ -194,7 +177,6 @@ export class PostDetailComponent implements OnInit {
 
     this.commentService.addComment(createCommentPayload).subscribe({
       next: (comment) => {
-        comment.createAt = this.formatDate(comment.createAt);
         const comments = this.Comments() || [];
         this.Comments.set([comment, ...comments]);
         this.newCommentText = '';
@@ -237,37 +219,6 @@ export class PostDetailComponent implements OnInit {
 
   getReadTime(htmlString: string): number {
     return calculReadTime(htmlString);
-  }
-
-  formatDate(dateStr: string): string {
-    const now = new Date();
-    const date = new Date(dateStr);
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffMins < 60) {
-      return diffMins < 1 ? 'Just now' : `${diffMins} minutes ago`;
-    }
-
-    if (diffHours < 24) {
-      return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
-    }
-
-    if (diffDays === 1) return 'Yesterday';
-
-    if (diffDays < 7) {
-      return `${diffDays} days ago`;
-    }
-
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   }
 
   formatContent(content: string): string {

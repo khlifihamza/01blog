@@ -11,6 +11,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { PostService } from '../../../core/services/post.service';
 import { MediaItem } from '../../../shared/models/post.model';
+import { PostType } from '../../../shared/models/enums.model';
 import { DndUploadDirective } from '../../../core/directives/dnd-upload.directive';
 import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { ErrorService } from '../../../core/services/error.service';
@@ -123,7 +124,7 @@ export class CreatePostComponent implements OnDestroy {
         id: mediaId,
         file,
         preview: objectUrl,
-        type: 'image',
+        type: PostType.IMAGE,
         position: 0,
       },
     ]);
@@ -182,7 +183,7 @@ export class CreatePostComponent implements OnDestroy {
           id: mediaId,
           file,
           preview: objectUrl,
-          type: 'image',
+          type: PostType.IMAGE,
           position: 0,
         },
       ]);
@@ -211,7 +212,7 @@ export class CreatePostComponent implements OnDestroy {
           id: mediaId,
           file,
           preview: objectUrl,
-          type: 'video',
+          type: PostType.VIDEO,
           position: 0,
         },
       ]);
@@ -242,7 +243,7 @@ export class CreatePostComponent implements OnDestroy {
           id: mediaId,
           file,
           preview: objectUrl,
-          type,
+          type: type === 'image' ? PostType.IMAGE : PostType.VIDEO,
           position: 0,
         },
       ]);

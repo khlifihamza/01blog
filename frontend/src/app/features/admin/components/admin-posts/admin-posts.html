@@ -1,0 +1,168 @@
+<div class="tab-content" appInfiniteScroll (scrolled)="loadMore.emit()">
+  <div class="tab-header">
+    <h2>Content Management</h2>
+    <mat-form-field appearance="outline">
+      <mat-label>Search Posts</mat-label>
+      <input matInput [formControl]="postSearchQuery" placeholder="Search by title" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+  </div>
+
+  <!-- Desktop Table View -->
+  @if(!isMobile) {
+  <mat-card class="data-table-card">
+    <table mat-table [dataSource]="posts" class="posts-table">
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef>Title</th>
+        <td mat-cell *matCellDef="let post">
+          <div class="post-title">{{ post.title }}</div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="author">
+        <th mat-header-cell *matHeaderCellDef>Author</th>
+        <td mat-cell *matCellDef="let post">{{ post.author }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="engagement">
+        <th mat-header-cell *matHeaderCellDef>Engagement</th>
+        <td mat-cell *matCellDef="let post">
+          <div class="engagement-stats">
+            <span>{{ post.likes }} likes</span>
+            <span>{{ post.comments }} comments</span>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="date">
+        <th mat-header-cell *matHeaderCellDef>Published</th>
+        <td mat-cell *matCellDef="let post">{{ post.publishedDate | timeAgo }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let post">
+          <mat-chip [class]="'status-' + post.status.toLowerCase()">{{
+            post.status
+          }}</mat-chip>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let post">
+          <button mat-icon-button [matMenuTriggerFor]="postMenu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #postMenu="matMenu">
+            <button mat-menu-item (click)="viewPost.emit(post.id)">
+              <mat-icon>article</mat-icon>
+              View Post
+            </button>
+            @if(post.status === "HIDDEN"){
+            <button mat-menu-item (click)="unhidePost.emit(post.id)">
+              <mat-icon>visibility</mat-icon>
+              Unhide Post
+            </button>
+            }@else{
+            <button mat-menu-item (click)="hidePost.emit(post.id)">
+              <mat-icon>visibility_off</mat-icon>
+              Hide Post
+            </button>
+            }
+            <button mat-menu-item (click)="deletePost.emit(post)">
+              <mat-icon>delete</mat-icon>
+              Delete Post
+            </button>
+          </mat-menu>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="postColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: postColumns"></tr>
+    </table>
+  </mat-card>
+  }
+
+  <!-- Mobile Card View -->
+  @if(isMobile) {
+  <div class="mobile-cards-container">
+    @for(post of posts; track post.id) {
+    <mat-card
+      class="mobile-data-card"
+      role="article"
+      [attr.aria-label]="'Post: ' + post.title"
+    >
+      <mat-card-content>
+        <div class="card-row">
+          <span class="card-label">Title:</span>
+          <span class="card-value"
+            ><strong>{{ post.title }}</strong></span
+          >
+        </div>
+
+        <div class="card-row">
+          <span class="card-label">Author:</span>
+          <span class="card-value">{{ post.author }}</span>
+        </div>
+
+        <div class="card-row">
+          <span class="card-label">Engagement:</span>
+          <div class="engagement-stats">
+            <span>{{ post.likes }} likes</span>
+            <span>{{ post.comments }} comments</span>
+          </div>
+        </div>
+
+        <div class="card-row">
+          <span class="card-label">Published:</span>
+          <span class="card-value">{{ post.publishedDate | timeAgo }}</span>
+        </div>
+
+        <div class="card-row">
+          <span class="card-label">Status:</span>
+          <mat-chip [class]="'status-' + post.status.toLowerCase()">{{
+            post.status
+          }}</mat-chip>
+        </div>
+
+        <div class="card-actions">
+          <button mat-button (click)="viewPost.emit(post.id)" color="primary">
+            <mat-icon>article</mat-icon>
+            View
+          </button>
+          @if(post.status === "HIDDEN"){
+          <button mat-button (click)="unhidePost.emit(post.id)" color="accent">
+            <mat-icon>visibility</mat-icon>
+            Unhide
+          </button>
+          }@else{
+          <button mat-button (click)="hidePost.emit(post.id)" color="warn">
+            <mat-icon>visibility_off</mat-icon>
+            Hide
+          </button>
+          }
+          <button mat-icon-button [matMenuTriggerFor]="mobilePostMenu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #mobilePostMenu="matMenu">
+            <button mat-menu-item (click)="deletePost.emit(post)">
+              <mat-icon>delete</mat-icon>
+              Delete Post
+            </button>
+          </mat-menu>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    }
+  </div>
+  } @if(isLoadingMorePosts) {
+  <div class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+  } @if(!hasMorePosts && posts.length > 10) {
+  <div class="end-message">
+    <p>No more posts to load</p>
+  </div>
+  }
+</div>

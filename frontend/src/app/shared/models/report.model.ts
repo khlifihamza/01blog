@@ -1,3 +1,5 @@
+import { ReportStatus } from './enums.model';
+
 export interface ReportRequest {
   reason: string;
   details: string | null;
@@ -13,7 +15,7 @@ export interface Report {
   reportedBy: string;
   reason: string;
   details: string;
-  status: 'PENDING' | 'RESOLVED' | 'DISMISSED';
+  status: ReportStatus;
   createdAt: string;
   formatedCreatedAt: string;
 }
