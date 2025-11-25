@@ -2,14 +2,21 @@ import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
   name: 'timeAgo',
-  standalone: true
+  standalone: true,
 })
 export class TimeAgoPipe implements PipeTransform {
-  transform(dateStr: string): string {
+  transform(dateStr: string, showDateOnly: boolean = false): string {
     if (!dateStr) return '';
-    
-    const now = new Date();
     const date = new Date(dateStr);
+
+    if (showDateOnly) {
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    }
+    const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));

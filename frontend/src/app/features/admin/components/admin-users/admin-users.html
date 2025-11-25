@@ -43,7 +43,7 @@
 
       <ng-container matColumnDef="joinDate">
         <th mat-header-cell *matHeaderCellDef>Join Date</th>
-        <td mat-cell *matCellDef="let user">{{ user.joinDate | timeAgo }}</td>
+        <td mat-cell *matCellDef="let user">{{ user.joinDate | timeAgo:true }}</td>
       </ng-container>
 
       <ng-container matColumnDef="status">
@@ -127,7 +127,7 @@
 
         <div class="card-row">
           <span class="card-label">Joined:</span>
-          <span class="card-value">{{ user.joinDate | timeAgo }}</span>
+          <span class="card-value">{{ user.joinDate | timeAgo:true }}</span>
         </div>
 
         <div class="card-row">
