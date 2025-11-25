@@ -57,7 +57,7 @@
     }
 
     <!-- Reported User -->
-    @if(data.ReportedUser){
+    @if(data.reportedUser){
     <mat-card class="info-card">
       <mat-card-header>
         <mat-card-title>
@@ -114,7 +114,7 @@
         <mat-icon>article</mat-icon>
         View Post
       </button>
-      } @if(data.ReportedUser){
+      } @if(data.reportedUser){
       <button mat-raised-button class="button-color" (click)="navigateToProfile()">
         <mat-icon>person</mat-icon>
         View Profile

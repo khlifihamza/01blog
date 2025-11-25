@@ -23,9 +23,9 @@
             <strong>{{
               report.postTitle
                 ? 'Post: ' + report.postTitle
-                : 'User: ' + report.ReportedUser
+                : 'User: ' + report.reportedUser
             }}</strong>
-            @if(!report.ReportedUser){
+            @if(!report.reportedUser){
             <small>Post ID: {{ report.postId }}</small>
             }
           </div>
@@ -78,12 +78,12 @@
               <mat-icon>cancel</mat-icon>
               Mark Dismissed
             </button>
-            } @if(report.ReportedUser){
-            <button mat-menu-item (click)="viewUser.emit(report.ReportedUser!)">
+            } @if(report.reportedUser){
+            <button mat-menu-item (click)="viewUser.emit(report.reportedUser!)">
               <mat-icon>person</mat-icon>
               View Profile
             </button>
-            <button mat-menu-item (click)="banUser.emit(report.ReportedUser!)">
+            <button mat-menu-item (click)="banUser.emit(report.reportedUser!)">
               <mat-icon>visibility_off</mat-icon>
               Ban User
             </button>
@@ -123,7 +123,7 @@
             <strong>{{
               report.postTitle
                 ? 'Post: ' + report.postTitle
-                : 'User: ' + report.ReportedUser
+                : 'User: ' + report.reportedUser
             }}</strong>
           </span>
         </div>
@@ -170,12 +170,12 @@
               <mat-icon>cancel</mat-icon>
               Dismiss
             </button>
-            } @if(report.ReportedUser){
-            <button mat-menu-item (click)="viewUser.emit(report.ReportedUser!)">
+            } @if(report.reportedUser){
+            <button mat-menu-item (click)="viewUser.emit(report.reportedUser!)">
               <mat-icon>person</mat-icon>
               View Profile
             </button>
-            <button mat-menu-item (click)="banUser.emit(report.ReportedUser!)">
+            <button mat-menu-item (click)="banUser.emit(report.reportedUser!)">
               <mat-icon>visibility_off</mat-icon>
               Ban User
             </button>

@@ -11,7 +11,7 @@ export interface Report {
   id: string;
   postId: string | null;
   postTitle: string | null;
-  ReportedUser: string | null;
+  reportedUser: string | null;
   reportedBy: string;
   reason: string;
   details: string;

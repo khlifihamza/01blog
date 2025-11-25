@@ -52,9 +52,9 @@ export class ReportDetailsDialogComponent {
   }
 
   navigateToProfile() {
-    if (this.data.ReportedUser) {
+    if (this.data.reportedUser) {
       this.dialogRef.close();
-      this.router.navigate(['/profile', this.data.ReportedUser]);
+      this.router.navigate(['/profile', this.data.reportedUser]);
     }
   }
 
