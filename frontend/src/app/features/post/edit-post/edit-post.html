@@ -40,14 +40,14 @@
         </button>
       </div>
     </div>
-    <form [formGroup]="editForm" class="blog-form">
+    <form [formGroup]="postForm" class="blog-form">
       <!-- Title -->
       <mat-form-field appearance="outline" class="title-field">
         <mat-label>Story Title</mat-label>
         <input matInput formControlName="title" placeholder="Tell your story in a few words..." />
-        @if(editForm.get('title')?.hasError('required')){
+        @if(postForm.get('title')?.hasError('required')){
         <mat-error> Title is required </mat-error>
-        } @if(editForm.get('title')?.hasError('maxlength')){
+        } @if(postForm.get('title')?.hasError('maxlength')){
         <mat-error> Title must be less than 100 characters </mat-error>
         }
       </mat-form-field>

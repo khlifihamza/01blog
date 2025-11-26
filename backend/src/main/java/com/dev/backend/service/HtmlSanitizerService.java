@@ -10,6 +10,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class HtmlSanitizerService {
 
+    private static final Pattern STYLE_PATTERN = Pattern.compile("^(max-width\\s*:\\s*100%.*|height\\s*:\\s*auto.*)$");
+    private static final Pattern URL_PATTERN = Pattern.compile("^https?://.*|^mailto:.*");
+    private static final Pattern TARGET_PATTERN = Pattern.compile("^_blank$");
+
     private final PolicyFactory policy;
 
     @Autowired
@@ -28,7 +32,7 @@ public class HtmlSanitizerService {
                 .allowAttributes("alt", "title")
                 .onElements("img")
                 .allowAttributes("style")
-                .matching(Pattern.compile("^(max-width\\s*:\\s*100%.*|height\\s*:\\s*auto.*)$"))
+                .matching(STYLE_PATTERN)
                 .onElements("img")
 
                 .allowElements("video")
@@ -38,15 +42,15 @@ public class HtmlSanitizerService {
                 .allowAttributes("controls", "preload")
                 .onElements("video")
                 .allowAttributes("style")
-                .matching(Pattern.compile("^(max-width\\s*:\\s*100%.*|height\\s*:\\s*auto.*)$"))
+                .matching(STYLE_PATTERN)
                 .onElements("video")
 
                 .allowElements("a")
                 .allowAttributes("href")
-                .matching(Pattern.compile("^https?://.*|^mailto:.*"))
+                .matching(URL_PATTERN)
                 .onElements("a")
                 .allowAttributes("target")
-                .matching(Pattern.compile("^_blank$"))
+                .matching(TARGET_PATTERN)
                 .onElements("a")
 
                 .allowAttributes("class")

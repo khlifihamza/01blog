@@ -50,7 +50,7 @@
             <div class="author-details">
               <div class="author-name" (click)="viewProfile(post()!.author.username)">{{ post()!.author.username }}</div>
               <div class="publish-info">
-                <span>{{ post()!.publishedDate }}</span>
+                <span>{{ post()!.publishedDate | timeAgo }}</span>
                 <span class="separator">•</span>
                 <span>{{ readTime() }} min read</span>
               </div>
@@ -145,7 +145,7 @@
         </button>
       </div>
 
-      <div class="comments-list">
+      <div class="comments-list" appInfiniteScroll (scrolled)="loadMoreComments()">
         @for(comment of Comments(); track comment.id){
         <div class="comment">
           <img
@@ -158,7 +158,7 @@
             <div class="comment-header">
               <div>
                 <span class="comment-author" (click)="viewProfile(comment.username)">{{ comment.username }}</span>
-                <span class="comment-date">{{ comment.formatedCreatedAt }}</span>
+                <span class="comment-date">{{ comment.createAt | timeAgo }}</span>
               </div>
               @if(comment.isOwner){
               <button mat-icon-button [matMenuTriggerFor]="commentMenu">

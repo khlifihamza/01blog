@@ -1,3 +1,5 @@
+import { UserRole } from './enums.model';
+
 export interface RegistrationRequest {
   username: String;
   email: String;
@@ -7,7 +9,7 @@ export interface RegistrationRequest {
 
 export interface LoginResponse {
   token: String;
-  role: String;
+  role: UserRole;
 }
 
 export interface ApiResponse {
@@ -48,7 +50,7 @@ export interface User {
   username: string;
   email: string;
   avatar: string | null;
-  role: string;
+  role: UserRole;
   joinDate: string;
   postsCount: number;
   status: 'ACTIVE' | 'BANNED';
@@ -68,6 +70,6 @@ export interface DiscoveryUser {
 
 export interface FeedUser {
   username: string;
-  role: string;
+  role: UserRole;
   avatar: string;
 }

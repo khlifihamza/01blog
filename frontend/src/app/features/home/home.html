@@ -5,7 +5,7 @@
   <!-- Main Content -->
   <div class="main-content">
     <!-- Featured Post -->
-    <div class="featured-section">
+    <div class="featured-section" appInfiniteScroll (scrolled)="loadMorePosts()">
       <h2 class="section-title">Stories</h2>
       <!-- Empty State -->
       @if(allPosts().length === 0 && !isLoading()) {

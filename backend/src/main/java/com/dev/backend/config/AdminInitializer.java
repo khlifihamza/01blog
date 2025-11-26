@@ -1,6 +1,7 @@
 package com.dev.backend.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,15 @@ public class AdminInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${admin.username}")
+    private String username;
+
+    @Value("${admin.email}")
+    private String email;
+
+    @Value("${admin.password}")
+    private String password;
+
     @Autowired
     public AdminInitializer(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
@@ -25,12 +35,12 @@ public class AdminInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        userRepository.findByUsername("admin")
+        userRepository.findByUsername(username)
                 .orElseGet(() -> {
                     User admin = new User();
-                    admin.setUsername("admin");
-                    admin.setEmail("admin@01blog.com");
-                    admin.setPassword(passwordEncoder.encode("01Blog123@"));
+                    admin.setUsername(username);
+                    admin.setEmail(email);
+                    admin.setPassword(passwordEncoder.encode(password));
                     admin.setRole(Role.ADMIN);
                     admin.setStatus(UserStatus.ACTIVE);
                     return userRepository.save(admin);

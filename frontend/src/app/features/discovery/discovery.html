@@ -1,4 +1,4 @@
-<div class="discover-container">
+<div class="discover-container" appInfiniteScroll (scrolled)="onScroll()">
   <!-- Header -->
   <app-navbar></app-navbar>
 
@@ -53,7 +53,7 @@
                 <div class="author-info">
                   <span class="author-name">{{ post.author.username }}</span>
                 </div>
-                <span class="publish-date">{{ post.publishedDate }}</span>
+                <span class="publish-date">{{ post.publishedDate | timeAgo }}</span>
               </div>
 
               <h3 class="post-title">{{ post.title }}</h3>
@@ -204,7 +204,7 @@
                 <div class="author-info">
                   <span class="author-name">{{ post.author.username }}</span>
                 </div>
-                <span class="publish-date">{{ post.publishedDate }}</span>
+                <span class="publish-date">{{ post.publishedDate | timeAgo }}</span>
               </div>
 
               <h3 class="post-title">{{ post.title }}</h3>

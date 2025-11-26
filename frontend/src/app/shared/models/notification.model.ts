@@ -1,6 +1,8 @@
+import { NotificationType } from './enums.model';
+
 export interface Notification {
   id: string;
-  type: 'like' | 'comment' | 'follow' | 'post';
+  type: NotificationType;
   title: string;
   message: string;
   createdAt: string;
