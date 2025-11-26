@@ -197,10 +197,10 @@ export class EditPostComponent extends PostEditorBase {
       allFileNames.forEach((name) => formData.append('oldFileNames', name));
 
       this.postService.updatePost(formData, this.postId).subscribe({
-        next: () => {
+        next: (response) => {
           this.isLoading.set(false);
           this.errorService.showSuccess('Post updated successfully');
-          this.goBack();
+          this.router.navigate(['/post', response.message])
         },
         error: (error) => {
           this.errorService.handleError(error);

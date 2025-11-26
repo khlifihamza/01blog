@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -14,6 +14,7 @@ import { DndUploadDirective } from '../../../core/directives/dnd-upload.directiv
 import { NavbarComponent } from '../../../shared/navbar/navbar';
 import { ErrorService } from '../../../core/services/error.service';
 import { PostEditorBase } from '../post-editor/post-editor.base';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-create-post',
@@ -42,7 +43,7 @@ export class CreatePostComponent extends PostEditorBase {
   constructor(
     private postService: PostService,
     errorService: ErrorService,
-    private location: Location
+    private router: Router
   ) {
     super(errorService);
     this.postForm = new FormGroup({
@@ -102,10 +103,10 @@ export class CreatePostComponent extends PostEditorBase {
       orderedFiles.forEach((file) => formData.append('files', file));
 
       this.postService.createPost(formData).subscribe({
-        next: () => {
+        next: (response) => {
           this.isLoading.set(false);
           this.errorService.showSuccess('Blog created successfully');
-          this.goBack();
+          this.router.navigate(['/post', response.message])
         },
         error: (error) => {
           this.errorService.handleError(error);
@@ -113,9 +114,5 @@ export class CreatePostComponent extends PostEditorBase {
         },
       });
     }
-  }
-
-  goBack() {
-    this.location.back();
   }
 }
