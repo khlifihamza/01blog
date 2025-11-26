@@ -1,57 +1,44 @@
-import { Component, OnInit, signal, HostListener } from '@angular/core';
+import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatTableModule } from '@angular/material/table';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatBadgeModule } from '@angular/material/badge';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { MatBadgeModule } from '@angular/material/badge';
+
 import { Report } from '../../shared/models/report.model';
 import { User } from '../../shared/models/user.model';
 import { Post } from '../../shared/models/post.model';
 import { AdminService } from '../../core/services/admin.service';
 import { Insights } from '../../shared/models/admin.model';
 import { ReportDetailsDialogComponent } from '../report/report-details-dialog/report-details-dialog';
-import { MatDialog } from '@angular/material/dialog';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog';
 import { ConfirmDialogData } from '../../shared/models/confirm-dialog.model';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { NavbarComponent } from '../../shared/navbar/navbar';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { ReportStatus } from '../../shared/models/enums.model';
+
+import { AdminStatsComponent } from './components/admin-stats/admin-stats';
+import { AdminReportsComponent } from './components/admin-reports/admin-reports';
+import { AdminUsersComponent } from './components/admin-users/admin-users';
+import { AdminPostsComponent } from './components/admin-posts/admin-posts';
 
 @Component({
   selector: 'app-admin-dashboard',
+  standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
     MatTabsModule,
-    MatTableModule,
-    MatChipsModule,
-    MatMenuModule,
-    MatToolbarModule,
-    MatBadgeModule,
-    MatSelectModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatProgressSpinnerModule,
     NavbarComponent,
+    AdminStatsComponent,
+    AdminReportsComponent,
+    AdminUsersComponent,
+    AdminPostsComponent,
+    MatBadgeModule
   ],
   templateUrl: './admin.html',
   styleUrl: './admin.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminComponent implements OnInit {
   insights = signal<Insights | null>(null);
@@ -63,18 +50,12 @@ export class AdminComponent implements OnInit {
   isMobile = signal(false);
   isTablet = signal(false);
 
-  reportColumns = ['post/user', 'reason', 'reportedBy', 'status', 'date', 'actions'];
-  userColumns = ['user', 'role', 'posts', 'joinDate', 'status', 'actions'];
-  postColumns = ['title', 'author', 'engagement', 'date', 'status', 'actions'];
-
   reports = signal<Report[]>([]);
   users = signal<User[]>([]);
   posts = signal<Post[]>([]);
 
   selectedReportStatus = '';
-  userSearchQuery = new FormControl('');
-  postSearchQuery = new FormControl('');
-
+  
   hasMoreReports = signal(true);
   isLoadingMoreReports = signal(false);
 
@@ -90,6 +71,10 @@ export class AdminComponent implements OnInit {
   isLoadingMorePostSearch = signal(false);
 
   activeTabIndex = 0;
+  
+  // Keep track of current search queries
+  currentUserSearch = '';
+  currentPostSearch = '';
 
   constructor(
     private router: Router,
@@ -115,76 +100,45 @@ export class AdminComponent implements OnInit {
 
   ngOnInit() {
     this.loadData();
-    this.setupSearch();
-  }
-
-  @HostListener('window:scroll')
-  onScroll() {
-    const scrollPosition = window.innerHeight + window.scrollY;
-    const scrollThreshold = document.documentElement.scrollHeight - 300;
-
-    if (scrollPosition >= scrollThreshold) {
-      if (this.activeTabIndex === 1 && this.userSearchQuery.value) {
-        if (this.hasMoreUserSearchResults() && !this.isLoadingMoreUserSearch()) {
-          this.loadMoreUserSearchResults();
-        }
-      } else if (this.activeTabIndex === 2 && this.postSearchQuery.value) {
-        if (this.hasMorePostSearchResults() && !this.isLoadingMorePostSearch()) {
-          this.loadMorePostSearchResults();
-        }
-      } else {
-        if (this.activeTabIndex === 0 && this.hasMoreReports() && !this.isLoadingMoreReports()) {
-          this.loadMoreReports();
-        } else if (this.activeTabIndex === 1 && this.hasMoreUsers() && !this.isLoadingMoreUsers()) {
-          this.loadMoreUsers();
-        } else if (this.activeTabIndex === 2 && this.hasMorePosts() && !this.isLoadingMorePosts()) {
-          this.loadMorePosts();
-        }
-      }
-    }
   }
 
   onTabChange(index: number) {
     this.activeTabIndex = index;
   }
 
-  setupSearch() {
-    this.userSearchQuery.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged())
-      .subscribe((searchValue) => {
-        this.hasMoreUserSearchResults.set(true);
+  onUserSearch(searchValue: string) {
+    this.currentUserSearch = searchValue;
+    this.hasMoreUserSearchResults.set(true);
 
-        if (searchValue) {
-          this.adminService.searchUsers(searchValue.toLowerCase(), '').subscribe({
-            next: (users) => {
-              this.users.set(this.formatUsersDate(users));
-              this.hasMoreUserSearchResults.set(users.length >= 10);
-            },
-            error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
-          });
-        } else {
-          this.loadUsers();
-        }
+    if (searchValue) {
+      this.adminService.searchUsers(searchValue.toLowerCase(), '').subscribe({
+        next: (users) => {
+          this.users.set(users);
+          this.hasMoreUserSearchResults.set(users.length >= 10);
+        },
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
       });
+    } else {
+      this.loadUsers();
+    }
+  }
 
-    this.postSearchQuery.valueChanges
-      .pipe(debounceTime(300), distinctUntilChanged())
-      .subscribe((searchValue) => {
-        this.isLoadingMorePostSearch.set(true);
+  onPostSearch(searchValue: string) {
+    this.currentPostSearch = searchValue;
+    this.isLoadingMorePostSearch.set(true);
 
-        if (searchValue) {
-          this.adminService.searchPosts(searchValue.toLowerCase(), '').subscribe({
-            next: (posts) => {
-              this.posts.set(this.formatPostsDate(posts));
-              this.hasMorePostSearchResults.set(posts.length === 10);
-              this.isLoadingMorePostSearch.set(false);
-            },
-            error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
-          });
-        } else {
-          this.loadPosts();
-        }
+    if (searchValue) {
+      this.adminService.searchPosts(searchValue.toLowerCase(), '').subscribe({
+        next: (posts) => {
+          this.posts.set(posts);
+          this.hasMorePostSearchResults.set(posts.length === 10);
+          this.isLoadingMorePostSearch.set(false);
+        },
+        error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
       });
+    } else {
+      this.loadPosts();
+    }
   }
 
   loadData() {
@@ -209,7 +163,7 @@ export class AdminComponent implements OnInit {
   loadReports() {
     this.adminService.getReports(this.selectedReportStatus, '').subscribe({
       next: (reports) => {
-        this.reports.set(this.formatReportsDate(reports));
+        this.reports.set(reports);
         this.hasMoreReports.set(reports.length >= 10);
       },
       error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
@@ -219,7 +173,7 @@ export class AdminComponent implements OnInit {
   loadUsers() {
     this.adminService.getUsers('').subscribe({
       next: (users) => {
-        this.users.set(this.formatUsersDate(users));
+        this.users.set(users);
         this.hasMoreUsers.set(users.length >= 10);
       },
       error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
@@ -229,7 +183,7 @@ export class AdminComponent implements OnInit {
   loadPosts() {
     this.adminService.getPosts('').subscribe({
       next: (posts) => {
-        this.posts.set(this.formatPostsDate(posts));
+        this.posts.set(posts);
         this.hasMorePosts.set(posts.length === 10);
       },
       error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
@@ -248,7 +202,7 @@ export class AdminComponent implements OnInit {
       next: (newReports) => {
         this.reports.update((currentReports) => [
           ...currentReports,
-          ...this.formatReportsDate(newReports),
+          ...newReports,
         ]);
         this.hasMoreReports.set(newReports.length === 10);
         this.isLoadingMoreReports.set(false);
@@ -261,6 +215,13 @@ export class AdminComponent implements OnInit {
   }
 
   loadMoreUsers() {
+    if (this.activeTabIndex === 1 && this.currentUserSearch) {
+      if (this.hasMoreUserSearchResults() && !this.isLoadingMoreUserSearch()) {
+        this.loadMoreUserSearchResults();
+      }
+      return;
+    }
+
     if (this.isLoadingMoreUsers() || !this.hasMoreUsers()) return;
 
     this.isLoadingMoreUsers.set(true);
@@ -270,7 +231,7 @@ export class AdminComponent implements OnInit {
 
     this.adminService.getUsers(lastUser.joinDate).subscribe({
       next: (newUsers) => {
-        this.users.update((currentUsers) => [...currentUsers, ...this.formatUsersDate(newUsers)]);
+        this.users.update((currentUsers) => [...currentUsers, ...newUsers]);
         this.hasMoreUsers.set(newUsers.length === 10);
         this.isLoadingMoreUsers.set(false);
       },
@@ -282,6 +243,13 @@ export class AdminComponent implements OnInit {
   }
 
   loadMorePosts() {
+    if (this.activeTabIndex === 2 && this.currentPostSearch) {
+      if (this.hasMorePostSearchResults() && !this.isLoadingMorePostSearch()) {
+        this.loadMorePostSearchResults();
+      }
+      return;
+    }
+
     if (this.isLoadingMorePosts() || !this.hasMorePosts()) return;
 
     this.isLoadingMorePosts.set(true);
@@ -291,7 +259,7 @@ export class AdminComponent implements OnInit {
 
     this.adminService.getPosts(lastPost.publishedDate).subscribe({
       next: (newPosts) => {
-        this.posts.update((currentPosts) => [...currentPosts, ...this.formatPostsDate(newPosts)]);
+        this.posts.update((currentPosts) => [...currentPosts, ...newPosts]);
         this.hasMorePosts.set(newPosts.length === 10);
         this.isLoadingMorePosts.set(false);
       },
@@ -302,39 +270,8 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  formatReportsDate(reports: Report[]): Report[] {
-    return reports.map((r) => {
-      return {
-        ...r,
-        formatedCreatedAt: this.formatDate(r.createdAt),
-      };
-    });
-  }
-
-  formatPostsDate(posts: Post[]): Post[] {
-    return posts.map((p) => {
-      return {
-        ...p,
-        formatedPublishedDate: this.formatDate(p.publishedDate),
-      };
-    });
-  }
-
-  formatUsersDate(user: User[]): User[] {
-    return user.map((u) => {
-      return {
-        ...u,
-        formatedJoinDate: this.formatDate(u.joinDate),
-      };
-    });
-  }
-
-  formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString();
-  }
-
-  filterReports() {
+  onFilterReports(status: string) {
+    this.selectedReportStatus = status;
     this.loadReports();
   }
 
@@ -342,7 +279,7 @@ export class AdminComponent implements OnInit {
     if (
       this.isLoadingMoreUserSearch() ||
       !this.hasMoreUserSearchResults() ||
-      !this.userSearchQuery.value
+      !this.currentUserSearch
     )
       return;
 
@@ -352,10 +289,10 @@ export class AdminComponent implements OnInit {
     if (!lastUser) return;
 
     this.adminService
-      .searchUsers(this.userSearchQuery.value.toLowerCase(), lastUser.joinDate)
+      .searchUsers(this.currentUserSearch.toLowerCase(), lastUser.joinDate)
       .subscribe({
         next: (newUsers) => {
-          this.users.update((currentUsers) => [...currentUsers, ...this.formatUsersDate(newUsers)]);
+          this.users.update((currentUsers) => [...currentUsers, ...newUsers]);
           this.hasMoreUserSearchResults.set(newUsers.length >= 10);
           this.isLoadingMoreUserSearch.set(false);
         },
@@ -370,7 +307,7 @@ export class AdminComponent implements OnInit {
     if (
       this.isLoadingMorePostSearch() ||
       !this.hasMorePostSearchResults() ||
-      !this.postSearchQuery.value
+      !this.currentPostSearch
     )
       return;
 
@@ -380,10 +317,10 @@ export class AdminComponent implements OnInit {
     if (!lastPost) return;
 
     this.adminService
-      .searchPosts(this.postSearchQuery.value.toLowerCase(), lastPost.publishedDate)
+      .searchPosts(this.currentPostSearch.toLowerCase(), lastPost.publishedDate)
       .subscribe({
         next: (newPosts) => {
-          this.posts.update((currentPosts) => [...currentPosts, ...this.formatPostsDate(newPosts)]);
+          this.posts.update((currentPosts) => [...currentPosts, ...newPosts]);
           this.hasMorePostSearchResults.set(newPosts.length === 10);
           this.isLoadingMorePostSearch.set(false);
         },
@@ -393,6 +330,7 @@ export class AdminComponent implements OnInit {
         },
       });
   }
+
 
   viewReport(report: Report) {
     const detailedReport = {
@@ -431,7 +369,7 @@ export class AdminComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        report.status = 'RESOLVED';
+        report.status = ReportStatus.RESOLVED;
         this.updateReport(report);
         this.adminService.resolveReport(report.id).subscribe({
           next: () => {
@@ -442,7 +380,7 @@ export class AdminComponent implements OnInit {
             });
           },
           error: (error) => {
-            report.status = 'PENDING';
+            report.status = ReportStatus.PENDING;
             this.updateReport(report);
             this.snackBar.open(error.message, 'Close', { duration: 5000 });
           },
@@ -464,7 +402,7 @@ export class AdminComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        report.status = 'DISMISSED';
+        report.status = ReportStatus.DISMISSED;
         this.updateReport(report);
         this.adminService.dismissReport(report.id).subscribe({
           next: () => {
@@ -475,7 +413,7 @@ export class AdminComponent implements OnInit {
             });
           },
           error: (error) => {
-            report.status = 'PENDING';
+            report.status = ReportStatus.PENDING;
             this.updateReport(report);
             this.snackBar.open(error.message, 'Close', { duration: 5000 });
           },
@@ -495,7 +433,7 @@ export class AdminComponent implements OnInit {
       return reports;
     });
 
-    this.filterReports();
+    this.onFilterReports(this.selectedReportStatus);
   }
 
   viewUser(username: string) {

@@ -28,6 +28,7 @@ import com.dev.backend.dto.FeedPostResponse;
 import com.dev.backend.dto.ProfilePostResponse;
 import com.dev.backend.dto.UpdatePostRequest;
 import com.dev.backend.exception.SafeHtmlException;
+import com.dev.backend.model.Post;
 import com.dev.backend.model.User;
 import com.dev.backend.service.PostService;
 
@@ -63,8 +64,8 @@ public class PostController {
             @RequestParam("thumbnail") MultipartFile thumbnail,
             @AuthenticationPrincipal User currentUser) throws SafeHtmlException, IOException {
         CreatePostRequest createPostRequest = new CreatePostRequest(title, content, files, thumbnail);
-        postService.savePost(currentUser.getId(), createPostRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse("Blog created successfully"));
+        Post post = postService.savePost(currentUser.getId(), createPostRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(post.getId().toString()));
     }
 
     @GetMapping("/{id}")
@@ -101,7 +102,7 @@ public class PostController {
                 oldFileNames);
         postService.updatePost(id,
                 currentUser.getId(), updatePostRequest);
-        return ResponseEntity.ok(new ApiResponse("Blog updated successfully"));
+        return ResponseEntity.ok(new ApiResponse(id.toString()));
     }
 
     @DeleteMapping("/delete/{id}")

@@ -16,6 +16,7 @@ import { NavbarComponent } from '../../shared/navbar/navbar';
 import { calculReadTime } from '../../shared/utils/readtime';
 import { ErrorService } from '../../core/services/error.service';
 import { PostCardComponent } from '../../shared/post-card/post-card';
+import { InfiniteScrollDirective } from '../../shared/directives/infinite-scroll.directive';
 
 @Component({
   selector: 'app-feed',
@@ -34,6 +35,7 @@ import { PostCardComponent } from '../../shared/post-card/post-card';
     MatInputModule,
     NavbarComponent,
     PostCardComponent,
+    InfiniteScrollDirective,
   ],
   templateUrl: './home.html',
   styleUrl: './home.css',
@@ -53,18 +55,6 @@ export class HomeComponent implements OnInit {
 
   ngOnInit() {
     this.loadFeedPosts();
-  }
-
-  @HostListener('window:scroll')
-  onScroll() {
-    if (this.isLoadingMore() || !this.hasMore()) return;
-
-    const scrollPosition = window.innerHeight + window.scrollY;
-    const scrollThreshold = document.documentElement.scrollHeight - 200;
-
-    if (scrollPosition >= scrollThreshold) {
-      this.loadMorePosts();
-    }
   }
   
   getReadTime(htmlString: string): number {
