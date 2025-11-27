@@ -143,10 +143,10 @@ export class EditProfileComponent {
             formData.append('defaultAvatar', this.newAvatarPreview()!);
           }
           this.profileService.EditProfileDetails(formData).subscribe({
-            next: () => {
+            next: (response) => {
               this.isLoading.set(false);
               this.errorService.showSuccess('Profile updated successfully!');
-              this.router.navigate([`/profile/${this.currentProfile()?.username}`]);
+              this.router.navigate([`/profile/${response.message}`]);
             },
             error: (error) => {
               this.errorService.handleError(error);

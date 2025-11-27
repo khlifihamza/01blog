@@ -2,6 +2,8 @@ package com.dev.backend.config;
 
 import org.springframework.security.access.AccessDeniedException;
 import com.dev.backend.service.JwtService;
+import com.dev.backend.repository.UserRepository;
+import java.util.UUID;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,7 +15,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -28,14 +29,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
 
-    private final UserDetailsService userDetailsService;
+    private final UserRepository userRepository;
 
     @Autowired
     public JwtAuthenticationFilter(HandlerExceptionResolver handlerExceptionResolver, JwtService jwtService,
-            UserDetailsService userDetailsService) {
+            UserRepository userRepository) {
         this.handlerExceptionResolver = handlerExceptionResolver;
         this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -52,26 +53,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             final String jwt = authHeader.substring(7);
-            final String username = jwtService.extractUsername(jwt);
+            final String userId = jwtService.extractUserId(jwt);
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-            if (username != null && authentication == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+            if (userId != null && authentication == null) {
+                UserDetails userDetails = this.userRepository.findById(UUID.fromString(userId)).orElse(null);
 
-                if (!userDetails.isAccountNonLocked()) {
-                    SecurityContextHolder.clearContext();
-                    throw new AccessDeniedException("you're banned");
-                }
+                if (userDetails != null) {
+                    if (!userDetails.isAccountNonLocked()) {
+                        SecurityContextHolder.clearContext();
+                        throw new AccessDeniedException("you're banned");
+                    }
 
-                if (jwtService.isTokenValid(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities());
+                    if (jwtService.isTokenValid(jwt, userDetails)) {
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities());
 
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
                 }
             }
 

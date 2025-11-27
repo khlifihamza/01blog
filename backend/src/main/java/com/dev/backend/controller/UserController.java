@@ -54,7 +54,7 @@ public class UserController {
                 UpdateProfileRequest updateProfileRequest = new UpdateProfileRequest(email, username, bio, avatar,
                                 defaultAvatar);
                 userService.saveData(currentUser.getUsername(), updateProfileRequest);
-                return ResponseEntity.ok(new ApiResponse("Profile data updated successfully"));
+                return ResponseEntity.ok(new ApiResponse(username));
         }
 
         @GetMapping("/me")
