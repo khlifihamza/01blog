@@ -63,7 +63,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (userDetails != null) {
                     if (!userDetails.isAccountNonLocked()) {
                         SecurityContextHolder.clearContext();
-                        throw new AccessDeniedException("you're banned");
+                        throw new AccessDeniedException("You have been banned");
                     }
 
                     if (jwtService.isTokenValid(jwt, userDetails)) {

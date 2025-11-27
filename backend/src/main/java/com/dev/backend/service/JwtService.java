@@ -49,8 +49,10 @@ public class JwtService {
             Map<String, Object> extraClaims,
             UserDetails userDetails,
             long expiration) {
-        String subject;
-        subject = ((User) userDetails).getId().toString();
+        if (!(userDetails instanceof User)) {
+            throw new IllegalArgumentException("UserDetails must be a User instance");
+        }
+        String subject = ((User) userDetails).getId().toString();
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
@@ -63,7 +65,10 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String userId = extractUserId(token);
-        return (userId.equals(((User) userDetails).getId().toString())) && !isTokenExpired(token);
+        if (userDetails instanceof User) {
+            return (userId.equals(((User) userDetails).getId().toString())) && !isTokenExpired(token);
+        }
+        return false;
     }
 
     private boolean isTokenExpired(String token) {
