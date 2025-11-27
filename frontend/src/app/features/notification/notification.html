@@ -18,7 +18,7 @@
           <mat-icon>done_all</mat-icon>
           <span>Mark all read</span>
         </button>
-        <button mat-menu-item (click)="clearAll()">
+        <button mat-menu-item (click)="clearAll()" [disabled]="notifications().length === 0">
           <mat-icon>clear_all</mat-icon>
           <span>Delete All</span>
         </button>
