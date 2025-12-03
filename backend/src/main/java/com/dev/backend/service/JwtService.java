@@ -1,11 +1,5 @@
 package com.dev.backend.service;
 
-import com.dev.backend.model.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -15,6 +9,14 @@ import java.util.function.Function;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+
+import com.dev.backend.model.User;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 
 @Service
 public class JwtService {
@@ -65,8 +67,8 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String userId = extractUserId(token);
-        if (userDetails instanceof User) {
-            return (userId.equals(((User) userDetails).getId().toString())) && !isTokenExpired(token);
+        if (userDetails instanceof User user) {
+            return (userId.equals(user.getId().toString())) && !isTokenExpired(token);
         }
         return false;
     }

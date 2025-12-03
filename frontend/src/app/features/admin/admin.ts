@@ -55,7 +55,7 @@ export class AdminComponent implements OnInit {
   posts = signal<Post[]>([]);
 
   selectedReportStatus = '';
-  
+
   hasMoreReports = signal(true);
   isLoadingMoreReports = signal(false);
 
@@ -71,7 +71,7 @@ export class AdminComponent implements OnInit {
   isLoadingMorePostSearch = signal(false);
 
   activeTabIndex = 0;
-  
+
   // Keep track of current search queries
   currentUserSearch = '';
   currentPostSearch = '';
@@ -369,10 +369,10 @@ export class AdminComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        report.status = ReportStatus.RESOLVED;
-        this.updateReport(report);
         this.adminService.resolveReport(report.id).subscribe({
           next: () => {
+            report.status = ReportStatus.RESOLVED;
+            this.updateReport(report);
             this.adminService.getInsights().subscribe({
               next: (insights) => {
                 this.pendingReports.set(insights.pendingReports);
@@ -402,10 +402,10 @@ export class AdminComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        report.status = ReportStatus.DISMISSED;
-        this.updateReport(report);
         this.adminService.dismissReport(report.id).subscribe({
           next: () => {
+            report.status = ReportStatus.DISMISSED;
+            this.updateReport(report);
             this.adminService.getInsights().subscribe({
               next: (insights) => {
                 this.pendingReports.set(insights.pendingReports);
@@ -516,6 +516,11 @@ export class AdminComponent implements OnInit {
         this.adminService.deleteUser(user.username).subscribe({
           next: () => {
             this.users.set(this.users().filter((u) => u.id !== user.id));
+            this.adminService.getInsights().subscribe({
+              next: (insights) => {
+                this.totalUsers.set(insights.totalUsers);
+              },
+            });
           },
           error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
         });
@@ -603,6 +608,11 @@ export class AdminComponent implements OnInit {
         this.adminService.deletePost(post.id).subscribe({
           next: () => {
             this.posts.set(this.posts().filter((p) => p.id !== post.id));
+            this.adminService.getInsights().subscribe({
+              next: (insights) => {
+                this.totalPosts.set(insights.totalPosts);
+              },
+            });
           },
           error: (error) => this.snackBar.open(error.message, 'Close', { duration: 5000 }),
         });
