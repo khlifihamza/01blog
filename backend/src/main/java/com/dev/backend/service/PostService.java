@@ -50,6 +50,7 @@ import jakarta.validation.Valid;
 @Service
 @Validated
 public class PostService {
+
     private final PostRepository postRepository;
 
     private final UserRepository userRepository;
@@ -114,7 +115,9 @@ public class PostService {
 
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-
+        if (post.getStatus().equals(PostStatus.HIDDEN)) {
+            throw new EntityNotFoundException("Post not found");
+        }
         if (!post.getUser().getId().equals(currentUserId)) {
             throw new AccessDeniedException("You cannot delete another user's post.");
         }
@@ -211,8 +214,8 @@ public class PostService {
         for (Post post : posts) {
             Author author = new Author(post.getUser().getUsername(),
                     post.getUser().getAvatar() != null
-                            ? fetchUrl + post.getUser().getAvatar()
-                            : null);
+                    ? fetchUrl + post.getUser().getAvatar()
+                    : null);
             FeedPostResponse feedPost = new FeedPostResponse(post.getId(), post.getTitle(), post.getContent(), author,
                     post.getCreatedAt().toString(), post.getLikes().size(), post.getComments().size(),
                     fetchUrl + post.getThumbnail());
@@ -224,11 +227,14 @@ public class PostService {
     public DetailPostResponse getPost(UUID postId, UUID currentUserId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+        if (post.getStatus().equals(PostStatus.HIDDEN)) {
+            throw new EntityNotFoundException("Post not found");
+        }
         User user = post.getUser();
         UserDto author = new UserDto(user.getUsername(),
                 user.getAvatar() != null
-                        ? fetchUrl + user.getAvatar()
-                        : null,
+                ? fetchUrl + user.getAvatar()
+                : null,
                 user.getBio(), user.getFollowers().size(), user.getFollowing().size(),
                 followService.isCurrentUserFollowUser(currentUserId, user.getId()));
         boolean isAuthor = currentUserId.equals(user.getId());
@@ -243,6 +249,9 @@ public class PostService {
     public EditPostResponse getPostToEdit(UUID postId, UUID currentUserId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found"));
+        if (post.getStatus().equals(PostStatus.HIDDEN)) {
+            throw new EntityNotFoundException("Post not found");
+        }
         if (!post.getUser().getId().equals(currentUserId)) {
             throw new AccessDeniedException("You cannot Edit another user's post.");
         }
@@ -313,9 +322,9 @@ public class PostService {
                     post.getContent(),
                     new Author(post.getUser().getUsername(),
                             post.getUser().getAvatar() != null
-                                    ? fetchUrl
-                                            + post.getUser().getAvatar()
-                                    : null),
+                            ? fetchUrl
+                            + post.getUser().getAvatar()
+                            : null),
                     post.getCreatedAt().toString(), post.getLikes().size(),
                     post.getComments().size(),
                     fetchUrl + post.getThumbnail());
@@ -334,9 +343,9 @@ public class PostService {
                     post.getContent(),
                     new Author(post.getUser().getUsername(),
                             post.getUser().getAvatar() != null
-                                    ? fetchUrl
-                                            + post.getUser().getAvatar()
-                                    : null),
+                            ? fetchUrl
+                            + post.getUser().getAvatar()
+                            : null),
                     post.getCreatedAt().toString(), post.getLikes().size(),
                     post.getComments().size(),
                     fetchUrl + post.getThumbnail());
@@ -418,8 +427,9 @@ public class PostService {
             Files.delete(pathThumbnail);
         }
 
-        if (files.equals(""))
+        if (files.equals("")) {
             return;
+        }
 
         String[] fileNames = files.split(", ");
 

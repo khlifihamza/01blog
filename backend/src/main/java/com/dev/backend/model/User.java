@@ -179,6 +179,7 @@ public class User extends BaseEntity implements UserDetails {
         return email;
     }
 
+    @Override
     public String getPassword() {
         return password;
     }
@@ -227,5 +228,13 @@ public class User extends BaseEntity implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public List<Report> getOwnReports() {
+        return ownReports;
+    }
+
+    public void setOwnReports(List<Report> ownReports) {
+        this.ownReports = ownReports;
     }
 }

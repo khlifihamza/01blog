@@ -146,7 +146,7 @@ public class UserService {
     }
 
     private String uploadAvatar(MultipartFile avatar) throws IOException {
-        String avatarId = "";
+        String avatarId;
         String avatarName = avatar.getOriginalFilename();
         String avatarExtension = (avatarName != null && avatarName.contains("."))
                 ? avatarName.substring(avatarName.lastIndexOf("."))
